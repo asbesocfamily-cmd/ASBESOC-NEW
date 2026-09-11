@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { NavLink } from "react-router-dom";
+import { submitMembership } from "../firebase/submissions";
 
 type NigeriaState = {
   name: string;
@@ -40,7 +46,9 @@ const nigeriaStates: NigeriaState[] = [
       "Guyuk",
       "Hong",
       "Jada",
+      "Jimeta",
       "Lamurde",
+      "Madagali",
       "Maiha",
       "Mayo-Belwa",
       "Michika",
@@ -86,6 +94,7 @@ const nigeriaStates: NigeriaState[] = [
       "Udung Uko",
       "Ukanafun",
       "Uruan",
+      "Urue-Offong/Oruko",
       "Uyo",
     ],
   },
@@ -159,6 +168,7 @@ const nigeriaStates: NigeriaState[] = [
       "Agatu",
       "Apa",
       "Buruku",
+      "Gbajimba",
       "Guma",
       "Gwer East",
       "Gwer West",
@@ -390,6 +400,7 @@ const nigeriaStates: NigeriaState[] = [
       "Owerri Municipal",
       "Owerri North",
       "Owerri West",
+      "Unuimo",
     ],
   },
   {
@@ -960,11 +971,35 @@ const nigeriaStates: NigeriaState[] = [
   },
 ];
 
+const membershipInterests = [
+  "Peace Building",
+  "Human Rights",
+  "Volunteer Activities",
+  "Entrepreneurship / Empowerment",
+  "Training / Capacity Building",
+  "Community Development",
+  "Other",
+];
+
+const discoveryOptions = [
+  "Website",
+  "Social Media",
+  "Referral",
+  "Community",
+  "Event / Programme",
+  "Other",
+];
+
 function Membership() {
+  const [country, setCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedLga, setSelectedLga] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [agree, setAgree] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const isNigeria =
+    country.trim().toLowerCase() === "nigeria";
 
   const selectedStateData = useMemo(
     () =>
@@ -974,551 +1009,508 @@ function Membership() {
     [selectedState]
   );
 
-  useEffect(() => {
-    if (submitted) {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-  }, [submitted]);
+  const handleCountryChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setCountry(event.target.value);
+    setSelectedState("");
+    setSelectedLga("");
+  };
 
   const handleStateChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: ChangeEvent<HTMLSelectElement>
   ) => {
     setSelectedState(event.target.value);
     setSelectedLga("");
   };
 
-  const handleSubmit = (
-    event: React.FormEvent<HTMLFormElement>
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
-    if (!agree) {
-      return;
-    }
+    setIsSubmitting(true);
+    setSubmitError("");
 
-    setSubmitted(true);
+    try {
+      const form = event.currentTarget;
+      const formData = new FormData(form);
+
+      const value = (name: string) =>
+        String(formData.get(name) ?? "").trim();
+
+      await submitMembership({
+        fullName: value("fullName"),
+        dateOfBirth: value("dateOfBirth"),
+        gender: value("gender"),
+        phone: value("phone"),
+        email: value("email"),
+        nationality: value("nationality"),
+        residentialAddress: value("residentialAddress"),
+        country: value("country"),
+
+        ...(isNigeria
+          ? {
+              state: value("state"),
+              lga: value("lga"),
+            }
+          : {
+              region: value("region"),
+              city: value("city"),
+            }),
+
+        occupation: value("occupation"),
+        qualification: value("qualification"),
+        reasonForJoining: value("reasonForJoining"),
+        membershipInterests: formData
+          .getAll("membershipInterests")
+          .map((item) => String(item)),
+        skills: value("skills"),
+        referralSource: value("referralSource"),
+      });
+
+      setSubmitted(true);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } catch (error) {
+      console.error("Membership submission failed:", error);
+
+      setSubmitError(
+        "We could not submit your membership application. Please check your internet connection and try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
     return (
-      <MembershipSuccess
-        onReturn={() => setSubmitted(false)}
-      />
+      <main className="min-h-screen overflow-x-hidden bg-[#f3f7f3] px-4 py-10 sm:py-16">
+        <section className="mx-auto w-full max-w-3xl overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-white shadow-2xl">
+          <div className="relative overflow-hidden bg-[#063b25] px-6 py-14 text-center sm:px-12">
+            <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-amber-400/10" />
+            <div className="absolute -bottom-14 -left-14 h-40 w-40 rounded-full bg-emerald-200/10" />
+
+            <div className="relative z-10">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-2xl font-black text-[#163d31]">
+                ✓
+              </div>
+
+              <p className="mt-6 text-[10px] font-black uppercase tracking-[0.22em] text-amber-300">
+                Membership Application
+              </p>
+
+              <h1 className="mt-3 break-words text-3xl font-black leading-tight text-white sm:text-5xl">
+                Thank you for your interest in ASBESOC.
+              </h1>
+
+              <p className="mx-auto mt-5 max-w-2xl break-words text-sm leading-8 text-emerald-50/80">
+                Your membership application has been submitted
+                successfully. ASBESOC will review your information
+                and contact you when necessary.
+              </p>
+            </div>
+          </div>
+
+          <div className="px-6 py-7 sm:px-10">
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="rounded-full bg-[#1B4332] px-7 py-3.5 text-sm font-black text-white transition hover:bg-amber-400 hover:text-[#163d31]"
+              >
+                New Application
+              </button>
+
+              <NavLink
+                to="/"
+                className="rounded-full border border-emerald-900/10 bg-emerald-50 px-7 py-3.5 text-center text-sm font-black text-[#1B4332] transition hover:bg-emerald-100"
+              >
+                Return Home
+              </NavLink>
+            </div>
+          </div>
+        </section>
+      </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f8f5]">
-      {/* =====================================================
-          HERO / INTRODUCTION
-      ===================================================== */}
-
+    <main className="min-h-screen overflow-x-hidden bg-[#f3f7f3]">
       <section className="relative overflow-hidden bg-[#063b25]">
-        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-400/10 blur-3xl" />
-        <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-400/10" />
+        <div className="absolute -bottom-24 left-[15%] h-56 w-56 rounded-full bg-emerald-200/10" />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20 lg:px-10 lg:py-24">
-          <div className="max-w-4xl">
-            <span className="inline-flex rounded-full border border-amber-400/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
-              ASBESOC Membership
-            </span>
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <span className="inline-flex rounded-full border border-amber-400/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+            Get Involved
+          </span>
 
-            <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Become part of a movement for a better society.
-            </h1>
+          <h1 className="mt-5 max-w-4xl break-words text-4xl font-black leading-tight text-white sm:text-6xl">
+            Become a Member
+          </h1>
 
-            <div className="mt-7 h-1 w-20 rounded-full bg-amber-400" />
+          <div className="mt-5 h-1 w-16 rounded-full bg-amber-400" />
 
-            <p className="mt-7 max-w-3xl text-sm leading-8 text-emerald-50/80 sm:text-base lg:text-lg">
-              Membership connects individuals who believe in peace,
-              empowerment, positive behavioural change, capacity
-              building and sustainable community development.
-            </p>
-
-            <p className="mt-4 max-w-3xl text-sm leading-8 text-emerald-50/65">
-              Complete the membership application below to express
-              your interest in joining ASBESOC Nigeria and becoming
-              part of its community of members and supporters.
-            </p>
-          </div>
+          <p className="mt-6 max-w-3xl break-words text-sm leading-8 text-emerald-50/80 sm:text-base">
+            Join our network and contribute to building a peaceful,
+            empowered and better society. Membership brings together
+            people who share ASBESOC's commitment to positive
+            change, empowerment and sustainable community
+            development.
+          </p>
         </div>
       </section>
 
-      {/* =====================================================
-          MEMBERSHIP BENEFITS
-      ===================================================== */}
+      <section className="mx-auto grid w-full max-w-5xl gap-3 px-3 pt-6 sm:grid-cols-3 sm:px-6">
+        <InfoStrip
+          title="Shared Purpose"
+          text="Connect with people committed to peace, empowerment and positive social transformation."
+        />
 
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-3">
-          <BenefitCard
-            number="01"
-            title="Community"
-            text="Connect with people and communities committed to positive social transformation."
-          />
+        <InfoStrip
+          title="International Participation"
+          text="Membership applications can be completed by individuals in Nigeria and other countries."
+        />
 
-          <BenefitCard
-            number="02"
-            title="Participation"
-            text="Take part in suitable initiatives, programmes and community-development activities."
-          />
-
-          <BenefitCard
-            number="03"
-            title="Impact"
-            text="Contribute your skills, ideas and support toward peaceful and empowered communities."
-          />
-        </div>
+        <InfoStrip
+          title="Meaningful Contribution"
+          text="Bring your skills, experience and interests into ASBESOC programmes and community initiatives."
+        />
       </section>
 
-      {/* =====================================================
-          APPLICATION FORM
-      ===================================================== */}
-
-      <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-5xl px-3 py-6 sm:px-6 sm:py-10">
         <form
           onSubmit={handleSubmit}
-          className="overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-white shadow-xl"
+          className="w-full min-w-0 overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-white shadow-xl"
         >
-          {/* FORM HEADER */}
+          <div className="border-b border-emerald-900/10 bg-gradient-to-r from-emerald-50 via-white to-amber-50 px-5 py-7 sm:px-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
+              Membership Form
+            </p>
 
-          <div className="bg-[#1B4332] px-6 py-9 sm:px-10 sm:py-12">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">
-              Membership Application
-            </span>
-
-            <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">
-              Membership registration
+            <h2 className="mt-2 break-words text-2xl font-black text-[#1B4332] sm:text-3xl">
+              Personal Information
             </h2>
 
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-emerald-50/75">
-              Please provide the information below. The form is
-              currently a demonstration and is not connected to a
-              live membership database.
+            <p className="mt-3 max-w-3xl break-words text-sm leading-7 text-slate-500">
+              Please provide accurate information so ASBESOC can
+              review your membership application and communicate
+              with you appropriately.
             </p>
           </div>
 
-          <div className="space-y-10 p-6 sm:p-10">
-            {/* =================================================
-                SECTION 1
-            ================================================= */}
+          <div className="p-4 sm:p-8 lg:p-10">
+            <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
+              <TextField
+                label="Full Name"
+                name="fullName"
+                placeholder="Enter your full name"
+                required
+              />
 
-            <FormSection
-              number="01"
-              title="Personal Information"
-              description="Tell us a little about yourself."
-            >
-              <div className="grid gap-6 sm:grid-cols-2">
-                <InputField
-                  label="First Name"
-                  name="firstName"
-                  placeholder="Enter your first name"
-                  required
-                />
+              <TextField
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+                required
+              />
 
-                <InputField
-                  label="Last Name"
-                  name="lastName"
-                  placeholder="Enter your last name"
-                  required
-                />
+              <SelectField
+                label="Gender"
+                name="gender"
+                options={[
+                  "Male",
+                  "Female",
+                  "Prefer not to say",
+                ]}
+                required
+              />
 
-                <InputField
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                />
+              <TextField
+                label="Contact Number"
+                name="phone"
+                type="tel"
+                placeholder="+234..."
+                required
+              />
 
-                <InputField
-                  label="Phone Number"
-                  name="phone"
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  required
-                />
+              <TextField
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+              />
 
-                <InputField
-                  label="Date of Birth"
-                  name="dateOfBirth"
-                  type="date"
-                  required
-                />
+              <TextField
+                label="Nationality"
+                name="nationality"
+                placeholder="Enter nationality"
+                required
+              />
 
-                <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    Gender
-                  </label>
-
-                  <select
-                    name="gender"
-                    required
-                    className="form-input"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Prefer not to say">
-                      Prefer not to say
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </FormSection>
-
-            {/* =================================================
-                SECTION 2
-            ================================================= */}
-
-            <FormSection
-              number="02"
-              title="Location"
-              description="Tell us where you are based."
-            >
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    State
-                  </label>
-
-                  <select
-                    value={selectedState}
-                    onChange={handleStateChange}
-                    required
-                    className="form-input"
-                  >
-                    <option value="">
-                      Select your state
-                    </option>
-
-                    {nigeriaStates.map((state) => (
-                      <option
-                        key={state.name}
-                        value={state.name}
-                      >
-                        {state.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    Local Government Area
-                  </label>
-
-                  <select
-                    value={selectedLga}
-                    onChange={(event) =>
-                      setSelectedLga(event.target.value)
-                    }
-                    required
-                    disabled={!selectedStateData}
-                    className="form-input disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">
-                      {selectedStateData
-                        ? "Select your LGA"
-                        : "Select state first"}
-                    </option>
-
-                    {selectedStateData?.lgas.map((lga) => (
-                      <option key={lga} value={lga}>
-                        {lga}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <InputField
-                    label="Residential / Contact Address"
-                    name="address"
-                    placeholder="Enter your address"
-                    required
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            {/* =================================================
-                SECTION 3
-            ================================================= */}
-
-            <FormSection
-              number="03"
-              title="Professional Information"
-              description="Help us understand your background and skills."
-            >
-              <div className="grid gap-6 sm:grid-cols-2">
-                <InputField
-                  label="Occupation / Profession"
-                  name="occupation"
-                  placeholder="e.g. Teacher, Entrepreneur, Student"
-                  required
-                />
-
-                <InputField
-                  label="Organization / Institution"
-                  name="organization"
-                  placeholder="Optional"
-                />
-
-                <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    Employment Status
-                  </label>
-
-                  <select
-                    name="employmentStatus"
-                    required
-                    className="form-input"
-                  >
-                    <option value="">
-                      Select employment status
-                    </option>
-                    <option value="Employed">
-                      Employed
-                    </option>
-                    <option value="Self-employed">
-                      Self-employed
-                    </option>
-                    <option value="Student">
-                      Student
-                    </option>
-                    <option value="Unemployed">
-                      Unemployed
-                    </option>
-                    <option value="Retired">
-                      Retired
-                    </option>
-                    <option value="Other">
-                      Other
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    Preferred Membership Interest
-                  </label>
-
-                  <select
-                    name="membershipInterest"
-                    required
-                    className="form-input"
-                  >
-                    <option value="">
-                      Select an option
-                    </option>
-                    <option value="Community Member">
-                      Community Member
-                    </option>
-                    <option value="Volunteer">
-                      Volunteer
-                    </option>
-                    <option value="Youth Engagement">
-                      Youth Engagement
-                    </option>
-                    <option value="Professional Support">
-                      Professional Support
-                    </option>
-                    <option value="Community Leadership">
-                      Community Leadership
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </FormSection>
-
-            {/* =================================================
-                SECTION 4
-            ================================================= */}
-
-            <FormSection
-              number="04"
-              title="Areas of Interest"
-              description="Select the areas where you would like to contribute or participate."
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <CheckOption
-                  name="peace"
-                  label="Peace Building"
-                />
-
-                <CheckOption
-                  name="behaviouralChange"
-                  label="Positive Behavioural Change"
-                />
-
-                <CheckOption
-                  name="empowerment"
-                  label="Economic Empowerment"
-                />
-
-                <CheckOption
-                  name="capacityBuilding"
-                  label="Capacity Building"
-                />
-
-                <CheckOption
-                  name="communityDevelopment"
-                  label="Community Development"
-                />
-
-                <CheckOption
-                  name="advocacy"
-                  label="Advocacy & Awareness"
-                />
-
-                <CheckOption
-                  name="youth"
-                  label="Youth Development"
-                />
-
-                <CheckOption
-                  name="otherInterest"
-                  label="Other"
-                />
-              </div>
-            </FormSection>
-
-            {/* =================================================
-                SECTION 5
-            ================================================= */}
-
-            <FormSection
-              number="05"
-              title="About Your Interest"
-              description="Tell us why you would like to become an ASBESOC member."
-            >
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                  Why would you like to join ASBESOC?
+              <div className="min-w-0 sm:col-span-2">
+                <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                  Residential Address
                 </label>
 
                 <textarea
-                  name="motivation"
-                  rows={6}
+                  name="residentialAddress"
+                  rows={3}
                   required
-                  placeholder="Tell us briefly about your interest in ASBESOC and how you would like to contribute..."
-                  className="form-input resize-none leading-7"
+                  placeholder="Enter your residential address"
+                  className="form-input box-border w-full min-w-0 max-w-full resize-none"
                 />
               </div>
 
-              <div className="mt-6">
-                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                  How did you hear about ASBESOC?
+              <div className="min-w-0 sm:col-span-2">
+                <div className="rounded-2xl border border-emerald-900/10 bg-[#f8fbf8] p-4 sm:p-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">
+                    Location
+                  </p>
+
+                  <h3 className="mt-1 text-lg font-black text-[#1B4332]">
+                    Where are you based?
+                  </h3>
+
+                  <p className="mt-2 text-xs leading-6 text-slate-500">
+                    Nigerian applicants can select their State and
+                    Local Government Area. International applicants
+                    can enter their region and city.
+                  </p>
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                  Country of Residence
                 </label>
 
-                <select
-                  name="heardAbout"
+                <input
+                  type="text"
+                  name="country"
+                  value={country}
+                  onChange={handleCountryChange}
+                  placeholder="e.g. Nigeria, Ghana, Canada"
                   required
-                  className="form-input"
-                >
-                  <option value="">
-                    Select an option
-                  </option>
-                  <option value="Social Media">
-                    Social Media
-                  </option>
-                  <option value="Friend or Family">
-                    Friend or Family
-                  </option>
-                  <option value="Community">
-                    Community
-                  </option>
-                  <option value="Event">
-                    ASBESOC Event
-                  </option>
-                  <option value="Website">
-                    ASBESOC Website
-                  </option>
-                  <option value="Other">
-                    Other
-                  </option>
-                </select>
+                  className="form-input box-border w-full min-w-0 max-w-full"
+                />
               </div>
-            </FormSection>
 
-            {/* =================================================
-                SECTION 6
-            ================================================= */}
+              {isNigeria ? (
+                <>
+                  <div className="min-w-0">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      State
+                    </label>
 
-            <FormSection
-              number="06"
-              title="Declaration"
-              description="Please review the declaration before submitting."
-            >
-              <div className="rounded-2xl border border-emerald-900/10 bg-emerald-50/60 p-5 sm:p-6">
-                <p className="text-sm leading-7 text-slate-600">
-                  I confirm that the information provided in this
-                  membership application is accurate to the best of
-                  my knowledge. I understand that membership and
-                  participation in ASBESOC activities may be subject
-                  to the organization's applicable policies,
-                  procedures and approval processes.
-                </p>
+                    <select
+                      name="state"
+                      value={selectedState}
+                      onChange={handleStateChange}
+                      required
+                      className="form-input box-border w-full min-w-0 max-w-full"
+                    >
+                      <option value="">
+                        Select your state
+                      </option>
 
-                <label className="mt-5 flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={agree}
-                    onChange={(event) =>
-                      setAgree(event.target.checked)
-                    }
-                    className="mt-1 h-5 w-5 rounded border-slate-300 text-[#1B4332] focus:ring-[#1B4332]"
+                      {nigeriaStates.map((state) => (
+                        <option
+                          key={state.name}
+                          value={state.name}
+                        >
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      Local Government Area
+                    </label>
+
+                    <select
+                      name="lga"
+                      value={selectedLga}
+                      onChange={(event) =>
+                        setSelectedLga(event.target.value)
+                      }
+                      disabled={!selectedStateData}
+                      required
+                      className="form-input box-border w-full min-w-0 max-w-full disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <option value="">
+                        {selectedStateData
+                          ? "Select your LGA"
+                          : "Select state first"}
+                      </option>
+
+                      {selectedStateData?.lgas.map((lga) => (
+                        <option
+                          key={lga}
+                          value={lga}
+                        >
+                          {lga}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              ) : country.trim() ? (
+                <>
+                  <TextField
+                    label="State / Province / Region"
+                    name="region"
+                    placeholder="Enter state, province or region"
+                    required
                   />
 
-                  <span className="text-sm font-bold leading-6 text-[#1B4332]">
-                    I agree to the declaration above and wish to
-                    submit my membership application.
+                  <TextField
+                    label="City / District"
+                    name="city"
+                    placeholder="Enter city or district"
+                    required
+                  />
+                </>
+              ) : null}
+
+              <TextField
+                label="Occupation / Profession"
+                name="occupation"
+                placeholder="Enter occupation or profession"
+                required
+              />
+
+              <TextField
+                label="Educational Qualification"
+                name="qualification"
+                placeholder="Enter highest qualification"
+                required
+              />
+
+              <div className="min-w-0 sm:col-span-2">
+                <div className="mt-2 rounded-2xl bg-[#063b25] px-5 py-6 sm:px-6">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+                    Membership Information
+                  </p>
+
+                  <h3 className="mt-2 break-words text-xl font-black text-white sm:text-2xl">
+                    Tell us about your interest
+                  </h3>
+
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-emerald-50/75">
+                    Help us understand what inspires you to join
+                    ASBESOC and the areas where you would like to
+                    contribute.
+                  </p>
+                </div>
+              </div>
+
+              <div className="min-w-0 sm:col-span-2">
+                <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                  Why would you like to become an ASBESOC member?
+                </label>
+
+                <textarea
+                  name="reasonForJoining"
+                  rows={5}
+                  required
+                  placeholder="Tell us why you would like to join ASBESOC..."
+                  className="form-input box-border w-full min-w-0 max-w-full resize-none"
+                />
+              </div>
+
+              <CheckboxGroup
+                title="Area(s) you are interested in"
+                name="membershipInterests"
+                options={membershipInterests}
+              />
+
+              <div className="min-w-0 sm:col-span-2">
+                <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                  Relevant Skills / Experience
+                </label>
+
+                <textarea
+                  name="skills"
+                  rows={5}
+                  placeholder="Tell us about relevant skills, professional experience, community work or volunteering..."
+                  className="form-input box-border w-full min-w-0 max-w-full resize-none"
+                />
+              </div>
+
+              <SelectField
+                label="How did you hear about ASBESOC?"
+                name="referralSource"
+                options={discoveryOptions}
+                required
+              />
+
+              <div className="min-w-0 sm:col-span-2">
+                <label className="flex min-w-0 cursor-pointer items-start gap-3 rounded-2xl border border-emerald-900/10 bg-gradient-to-r from-emerald-50 to-white p-4 sm:p-5">
+                  <input
+                    type="checkbox"
+                    name="declaration"
+                    required
+                    className="mt-1 h-4 w-4 shrink-0"
+                  />
+
+                  <span className="min-w-0">
+                    <span className="block break-words text-sm font-black text-[#1B4332]">
+                      Membership Declaration
+                    </span>
+
+                    <span className="mt-1 block break-words text-xs leading-6 text-slate-500">
+                      I confirm that the information provided in
+                      this application is accurate. I understand
+                      that membership is subject to ASBESOC's
+                      review and applicable membership procedures.
+                    </span>
                   </span>
                 </label>
               </div>
-            </FormSection>
+            </div>
 
-            {/* =================================================
-                SUBMIT
-            ================================================= */}
-
-            <div className="border-t border-slate-100 pt-8">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.15em] text-amber-500">
-                    Final Step
-                  </p>
-
-                  <p className="mt-2 max-w-xl text-xs leading-6 text-slate-500">
-                    This is currently a demonstration membership
-                    application. It does not send your information
-                    to a live database.
+            <div className="mt-8 border-t border-emerald-900/10 pt-7">
+              {submitError && (
+                <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
+                  <p className="text-sm font-bold text-red-700">
+                    {submitError}
                   </p>
                 </div>
+              )}
+
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="min-w-0 max-w-2xl break-words text-xs leading-5 text-slate-500">
+                  Your information will be used for membership review,
+                  communication and relevant ASBESOC membership
+                  activities.
+                </p>
 
                 <button
                   type="submit"
-                  disabled={!agree}
-                  className="inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full bg-[#1B4332] px-8 py-4 text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31] disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled={isSubmitting}
+                  className="w-full shrink-0 rounded-full bg-[#1B4332] px-7 py-4 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-400 hover:text-[#163d31] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  Submit Membership Application
-
-                  <span>→</span>
+                  {isSubmitting
+                    ? "Submitting..."
+                    : "Submit Membership Application →"}
                 </button>
               </div>
             </div>
           </div>
         </form>
 
-        {/* BACK HOME */}
-
-        <div className="flex justify-center py-10">
+        <div className="flex justify-center py-8">
           <NavLink
             to="/"
-            className="rounded-full bg-[#1B4332] px-8 py-4 text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31]"
+            className="rounded-full px-5 py-2 text-sm font-bold text-[#1B4332] transition hover:bg-emerald-50 hover:text-amber-600"
           >
             ← Back to ASBESOC
           </NavLink>
@@ -1528,94 +1520,48 @@ function Membership() {
   );
 }
 
-/* =========================================================
-   BENEFIT CARD
-========================================================= */
-
-function BenefitCard({
-  number,
-  title,
-  text,
-}: {
-  number: string;
+type InfoStripProps = {
   title: string;
   text: string;
-}) {
-  return (
-    <div className="rounded-[1.75rem] border border-emerald-900/10 bg-white p-6 shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl">
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1B4332] text-xs font-black text-white">
-        {number}
-      </div>
+};
 
-      <h3 className="mt-6 text-xl font-black text-[#1B4332]">
+function InfoStrip({
+  title,
+  text,
+}: InfoStripProps) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-emerald-900/10 bg-white px-4 py-4 shadow-sm">
+      <div className="mb-3 h-1 w-10 rounded-full bg-amber-400" />
+
+      <h3 className="break-words text-sm font-black text-[#1B4332]">
         {title}
       </h3>
 
-      <p className="mt-3 text-sm leading-7 text-slate-500">
+      <p className="mt-2 break-words text-xs leading-6 text-slate-500">
         {text}
       </p>
     </div>
   );
 }
 
-/* =========================================================
-   FORM SECTION
-========================================================= */
-
-function FormSection({
-  number,
-  title,
-  description,
-  children,
-}: {
-  number: string;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1B4332] text-xs font-black text-white">
-          {number}
-        </div>
-
-        <div>
-          <h3 className="text-xl font-black text-[#1B4332] sm:text-2xl">
-            {title}
-          </h3>
-
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            {description}
-          </p>
-        </div>
-      </div>
-
-      {children}
-    </section>
-  );
-}
-
-/* =========================================================
-   INPUT FIELD
-========================================================= */
-
-function InputField({
-  label,
-  name,
-  placeholder,
-  type = "text",
-  required = false,
-}: {
+type TextFieldProps = {
   label: string;
   name: string;
-  placeholder?: string;
   type?: string;
+  placeholder?: string;
   required?: boolean;
-}) {
+};
+
+function TextField({
+  label,
+  name,
+  type = "text",
+  placeholder,
+  required = false,
+}: TextFieldProps) {
   return (
-    <div>
-      <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+    <div className="min-w-0">
+      <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
         {label}
       </label>
 
@@ -1624,163 +1570,94 @@ function InputField({
         name={name}
         placeholder={placeholder}
         required={required}
-        className="form-input"
+        className="form-input box-border w-full min-w-0 max-w-full"
       />
     </div>
   );
 }
 
-/* =========================================================
-   CHECK OPTION
-========================================================= */
-
-function CheckOption({
-  name,
-  label,
-}: {
-  name: string;
+type SelectFieldProps = {
   label: string;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 transition hover:border-emerald-900/20 hover:bg-emerald-50">
-      <input
-        type="checkbox"
-        name={name}
-        className="h-5 w-5 rounded border-slate-300 text-[#1B4332] focus:ring-[#1B4332]"
-      />
+  name: string;
+  options: string[];
+  required?: boolean;
+};
 
-      <span className="text-sm font-bold text-slate-700">
+function SelectField({
+  label,
+  name,
+  options,
+  required = false,
+}: SelectFieldProps) {
+  return (
+    <div className="min-w-0">
+      <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
         {label}
-      </span>
-    </label>
-  );
-}
+      </label>
 
-/* =========================================================
-   SUCCESS SCREEN
-========================================================= */
+      <select
+        name={name}
+        defaultValue=""
+        required={required}
+        className="form-input box-border w-full min-w-0 max-w-full"
+      >
+        <option
+          value=""
+          disabled
+        >
+          Select an option
+        </option>
 
-function MembershipSuccess({
-  onReturn,
-}: {
-  onReturn: () => void;
-}) {
-  return (
-    <main className="min-h-screen bg-[#f5f8f5]">
-      <section className="bg-[#063b25] px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-5xl font-black text-[#1B4332] shadow-xl">
-            ✓
-          </div>
-
-          <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-amber-300">
-            Application Submitted
-          </p>
-
-          <h1 className="mt-3 text-4xl font-black leading-tight text-white sm:text-6xl">
-            Welcome to the ASBESOC community.
-          </h1>
-
-          <div className="mx-auto mt-6 h-1 w-16 rounded-full bg-amber-400" />
-
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-emerald-50/80 sm:text-base">
-            Thank you for expressing your interest in becoming
-            an ASBESOC member. Your membership application has
-            been recorded as a demonstration submission.
-          </p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
-        <div className="rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-          <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-            What Happens Next
-          </span>
-
-          <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-            Membership application received
-          </h2>
-
-          <div className="mt-6 space-y-4">
-            <NextStep
-              number="01"
-              title="Application Review"
-              text="In the live system, the appropriate ASBESOC team would review the submitted membership application."
-            />
-
-            <NextStep
-              number="02"
-              title="Membership Follow-up"
-              text="Applicants could receive further information about membership procedures, activities and participation."
-            />
-
-            <NextStep
-              number="03"
-              title="Get Involved"
-              text="Approved members can participate in suitable ASBESOC initiatives and community-development activities."
-            />
-          </div>
-
-          <div className="mt-8 rounded-2xl bg-emerald-50 p-5">
-            <p className="text-xs leading-6 text-[#1B4332]">
-              <strong>Demo notice:</strong> This membership
-              application is currently a front-end demonstration.
-              No personal information has been stored in a live
-              database.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <button
-            type="button"
-            onClick={onReturn}
-            className="rounded-full border border-[#1B4332] bg-white px-8 py-4 text-sm font-black text-[#1B4332] shadow-lg transition hover:bg-emerald-50"
+        {options.map((option) => (
+          <option
+            key={option}
+            value={option}
           >
-            ← Submit Another Application
-          </button>
-
-          <NavLink
-            to="/"
-            className="rounded-full bg-[#1B4332] px-8 py-4 text-center text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31]"
-          >
-            Return to ASBESOC →
-          </NavLink>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-/* =========================================================
-   NEXT STEP
-========================================================= */
-
-function NextStep({
-  number,
-  title,
-  text,
-}: {
-  number: string;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1B4332] text-xs font-black text-white">
-        {number}
-      </div>
-
-      <div>
-        <h3 className="font-black text-[#1B4332]">
-          {title}
-        </h3>
-
-        <p className="mt-1 text-sm leading-7 text-slate-500">
-          {text}
-        </p>
-      </div>
+            {option}
+          </option>
+        ))}
+      </select>
     </div>
+  );
+}
+
+type CheckboxGroupProps = {
+  title: string;
+  name: string;
+  options: string[];
+};
+
+function CheckboxGroup({
+  title,
+  name,
+  options,
+}: CheckboxGroupProps) {
+  return (
+    <fieldset className="min-w-0 sm:col-span-2">
+      <legend className="mb-3 max-w-full break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+        {title}
+      </legend>
+
+      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+        {options.map((option) => (
+          <label
+            key={option}
+            className="flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-[#f9fbf9] px-4 py-3 transition hover:border-emerald-300 hover:bg-emerald-50"
+          >
+            <input
+              type="checkbox"
+              name={name}
+              value={option}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+
+            <span className="min-w-0 break-words text-sm font-semibold text-slate-700">
+              {option}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

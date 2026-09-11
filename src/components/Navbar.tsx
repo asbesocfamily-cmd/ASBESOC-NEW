@@ -1,24 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { NavLink } from "react-router-dom";
 import logo from "../assets/logo.PNG";
+import {
+  submitPartnership,
+  submitSupport,
+} from "../firebase/submissions";
 
 type FormType = "Support" | "Partnership";
-
-type SupportCategory =
-  | "Financial Support"
-  | "Materials / Resources"
-  | "Volunteer Support"
-  | "Community Support"
-  | "Other";
 
 type NigeriaState = {
   name: string;
   lgas: string[];
 };
-
-/* =========================================================
-   NIGERIA STATES + LOCAL GOVERNMENT AREAS
-========================================================= */
 
 const nigeriaStates: NigeriaState[] = [
   {
@@ -43,7 +42,6 @@ const nigeriaStates: NigeriaState[] = [
       "Umunneochi",
     ],
   },
-
   {
     name: "Adamawa",
     lgas: [
@@ -71,7 +69,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yola South",
     ],
   },
-
   {
     name: "Akwa Ibom",
     lgas: [
@@ -108,7 +105,6 @@ const nigeriaStates: NigeriaState[] = [
       "Uyo",
     ],
   },
-
   {
     name: "Anambra",
     lgas: [
@@ -135,7 +131,6 @@ const nigeriaStates: NigeriaState[] = [
       "Oyi",
     ],
   },
-
   {
     name: "Bauchi",
     lgas: [
@@ -160,7 +155,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zaki",
     ],
   },
-
   {
     name: "Bayelsa",
     lgas: [
@@ -174,7 +168,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yenagoa",
     ],
   },
-
   {
     name: "Benue",
     lgas: [
@@ -201,7 +194,6 @@ const nigeriaStates: NigeriaState[] = [
       "Vandeikya",
     ],
   },
-
   {
     name: "Borno",
     lgas: [
@@ -234,7 +226,6 @@ const nigeriaStates: NigeriaState[] = [
       "Shani",
     ],
   },
-
   {
     name: "Cross River",
     lgas: [
@@ -258,7 +249,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yala",
     ],
   },
-
   {
     name: "Delta",
     lgas: [
@@ -289,7 +279,6 @@ const nigeriaStates: NigeriaState[] = [
       "Warri South West",
     ],
   },
-
   {
     name: "Ebonyi",
     lgas: [
@@ -307,7 +296,6 @@ const nigeriaStates: NigeriaState[] = [
       "Onicha",
     ],
   },
-
   {
     name: "Edo",
     lgas: [
@@ -331,7 +319,6 @@ const nigeriaStates: NigeriaState[] = [
       "Uhunmwonde",
     ],
   },
-
   {
     name: "Ekiti",
     lgas: [
@@ -353,7 +340,6 @@ const nigeriaStates: NigeriaState[] = [
       "Oye",
     ],
   },
-
   {
     name: "Enugu",
     lgas: [
@@ -376,7 +362,6 @@ const nigeriaStates: NigeriaState[] = [
       "Uzo-Uwani",
     ],
   },
-
   {
     name: "Gombe",
     lgas: [
@@ -393,7 +378,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yamaltu/Deba",
     ],
   },
-
   {
     name: "Imo",
     lgas: [
@@ -426,7 +410,6 @@ const nigeriaStates: NigeriaState[] = [
       "Unuimo",
     ],
   },
-
   {
     name: "Jigawa",
     lgas: [
@@ -459,7 +442,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yankwashi",
     ],
   },
-
   {
     name: "Kaduna",
     lgas: [
@@ -488,7 +470,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zaria",
     ],
   },
-
   {
     name: "Kano",
     lgas: [
@@ -538,7 +519,6 @@ const nigeriaStates: NigeriaState[] = [
       "Wudil",
     ],
   },
-
   {
     name: "Katsina",
     lgas: [
@@ -579,7 +559,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zango",
     ],
   },
-
   {
     name: "Kebbi",
     lgas: [
@@ -606,7 +585,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zuru",
     ],
   },
-
   {
     name: "Kogi",
     lgas: [
@@ -633,7 +611,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yagba West",
     ],
   },
-
   {
     name: "Kwara",
     lgas: [
@@ -655,7 +632,6 @@ const nigeriaStates: NigeriaState[] = [
       "Pategi",
     ],
   },
-
   {
     name: "Lagos",
     lgas: [
@@ -681,7 +657,6 @@ const nigeriaStates: NigeriaState[] = [
       "Surulere",
     ],
   },
-
   {
     name: "Nasarawa",
     lgas: [
@@ -700,7 +675,6 @@ const nigeriaStates: NigeriaState[] = [
       "Wamba",
     ],
   },
-
   {
     name: "Niger",
     lgas: [
@@ -731,7 +705,6 @@ const nigeriaStates: NigeriaState[] = [
       "Wushishi",
     ],
   },
-
   {
     name: "Ogun",
     lgas: [
@@ -756,7 +729,6 @@ const nigeriaStates: NigeriaState[] = [
       "Sagamu",
     ],
   },
-
   {
     name: "Ondo",
     lgas: [
@@ -780,7 +752,6 @@ const nigeriaStates: NigeriaState[] = [
       "Owo",
     ],
   },
-
   {
     name: "Osun",
     lgas: [
@@ -815,7 +786,6 @@ const nigeriaStates: NigeriaState[] = [
       "Osogbo",
     ],
   },
-
   {
     name: "Oyo",
     lgas: [
@@ -854,7 +824,6 @@ const nigeriaStates: NigeriaState[] = [
       "Surulere",
     ],
   },
-
   {
     name: "Plateau",
     lgas: [
@@ -877,7 +846,6 @@ const nigeriaStates: NigeriaState[] = [
       "Wase",
     ],
   },
-
   {
     name: "Rivers",
     lgas: [
@@ -906,7 +874,6 @@ const nigeriaStates: NigeriaState[] = [
       "Tai",
     ],
   },
-
   {
     name: "Sokoto",
     lgas: [
@@ -935,7 +902,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yabo",
     ],
   },
-
   {
     name: "Taraba",
     lgas: [
@@ -957,7 +923,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zing",
     ],
   },
-
   {
     name: "Yobe",
     lgas: [
@@ -980,7 +945,6 @@ const nigeriaStates: NigeriaState[] = [
       "Yusufari",
     ],
   },
-
   {
     name: "Zamfara",
     lgas: [
@@ -1001,7 +965,6 @@ const nigeriaStates: NigeriaState[] = [
       "Zurmi",
     ],
   },
-
   {
     name: "Federal Capital Territory",
     lgas: [
@@ -1015,14 +978,52 @@ const nigeriaStates: NigeriaState[] = [
   },
 ];
 
-/* =========================================================
-   NAVBAR
-========================================================= */
+const supportTypes = [
+  "Financial Support",
+  "Material / Equipment",
+  "Technical Expertise",
+  "Training / Professional Services",
+  "Programme Support",
+  "Other",
+];
+
+const organizationTypes = [
+  "NGO / CSO",
+  "Government Institution",
+  "Private Sector / Business",
+  "Foundation / Donor Organization",
+  "Community-Based Organization",
+  "Academic Institution",
+  "International Organization",
+  "Other",
+];
+
+const partnershipInterests = [
+  "Peace Building and Behavioural Change",
+  "Entrepreneurship / Empowerment",
+  "Human Capital Development",
+  "Advocacy",
+  "Research / Training",
+  "Community Development",
+  "Housing",
+  "Other",
+];
+
+const partnershipMethods = [
+  "Technical Support",
+  "Financial Partnership",
+  "Programme Implementation",
+  "Training / Capacity Building",
+  "Research / Knowledge Sharing",
+  "Community Mobilization",
+  "Other",
+];
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [getInvolvedOpen, setGetInvolvedOpen] = useState(false);
-  const [selectedForm, setSelectedForm] = useState<FormType | null>(null);
+  const [selectedForm, setSelectedForm] =
+    useState<FormType | null>(null);
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -1046,14 +1047,11 @@ function Navbar() {
 
   return (
     <>
-      {/* ================= DESKTOP / MAIN NAVBAR ================= */}
-
       <header className="sticky top-0 z-50 w-full border-b border-emerald-900/10 bg-white shadow-sm">
         <div className="mx-auto flex min-h-[76px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <NavLink
             to="/"
             onClick={closeMenu}
-            aria-label="ASBESOC Nigeria Home"
             className="flex min-w-0 shrink-0 items-center gap-2.5"
           >
             <img
@@ -1062,51 +1060,33 @@ function Navbar() {
               className="h-[56px] w-auto max-w-[130px] object-contain sm:h-[62px] sm:max-w-[150px]"
             />
 
-            <div className="leading-tight">
-              <div className="whitespace-nowrap text-base font-extrabold tracking-tight text-[#1B4332] sm:text-xl">
+            <div className="min-w-0 leading-tight">
+              <div className="whitespace-nowrap text-base font-extrabold text-[#1B4332] sm:text-xl">
                 ASBESOC
               </div>
-
               <div className="whitespace-nowrap text-[10px] font-extrabold tracking-[0.12em] text-slate-700 sm:text-xs">
                 NIGERIA
               </div>
             </div>
           </NavLink>
 
-          <nav
-            aria-label="Main navigation"
-            className="hidden items-center gap-1.5 lg:flex"
-          >
+          <nav className="hidden items-center gap-1.5 lg:flex">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 end={link.path === "/"}
                 className={({ isActive }) =>
-                  `group relative flex min-h-[44px] items-center rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${
+                  `flex min-h-[44px] items-center rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
                     isActive
-                      ? "bg-[#1B4332] text-white shadow-sm"
+                      ? "bg-[#1B4332] text-white"
                       : "bg-emerald-50 text-slate-800 hover:bg-emerald-100 hover:text-[#1B4332]"
                   }`
                 }
               >
-                {({ isActive }) => (
-                  <>
-                    <span>{link.name}</span>
-
-                    <span
-                      className={`absolute bottom-1 left-3 right-3 h-[2px] rounded-full bg-[#D4AF37] transition-all duration-200 ${
-                        isActive
-                          ? "opacity-100"
-                          : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                      }`}
-                    />
-                  </>
-                )}
+                {link.name}
               </NavLink>
             ))}
-
-            {/* ================= GET INVOLVED DROPDOWN ================= */}
 
             <div className="relative">
               <button
@@ -1114,91 +1094,59 @@ function Navbar() {
                 onClick={() =>
                   setGetInvolvedOpen((open) => !open)
                 }
-                aria-expanded={getInvolvedOpen}
-                aria-haspopup="menu"
-                className={`group relative flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${
+                className={`flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
                   getInvolvedOpen
-                    ? "bg-[#1B4332] text-white shadow-sm"
-                    : "bg-emerald-50 text-slate-800 hover:bg-emerald-100 hover:text-[#1B4332]"
+                    ? "bg-[#1B4332] text-white"
+                    : "bg-emerald-50 text-slate-800 hover:bg-emerald-100"
                 }`}
               >
-                <span>Get Involved</span>
-
-                <svg
-                  className={`h-4 w-4 transition-transform duration-200 ${
+                Get Involved
+                <span
+                  className={`transition ${
                     getInvolvedOpen ? "rotate-180" : ""
                   }`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
                 >
-                  <path
-                    d="m6 9 6 6 6-6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-
-                <span
-                  className={`absolute bottom-1 left-3 right-3 h-[2px] rounded-full bg-[#D4AF37] transition-all duration-200 ${
-                    getInvolvedOpen
-                      ? "opacity-100"
-                      : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                  }`}
-                />
+                  ↓
+                </span>
               </button>
 
               {getInvolvedOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-[80] w-56 overflow-hidden rounded-2xl border border-emerald-900/10 bg-white p-2 shadow-2xl">
+                <div className="absolute right-0 top-[calc(100%+10px)] z-[80] w-56 rounded-2xl border border-emerald-900/10 bg-white p-2 shadow-2xl">
                   <NavLink
                     to="/membership"
-                    onClick={() => setGetInvolvedOpen(false)}
-                    className="group flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-emerald-50 hover:text-[#1B4332]"
+                    onClick={() =>
+                      setGetInvolvedOpen(false)
+                    }
+                    className="flex justify-between rounded-xl px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-emerald-50"
                   >
-                    <span>Membership</span>
-
-                    <span className="opacity-0 transition group-hover:translate-x-1 group-hover:opacity-100">
-                      →
-                    </span>
+                    Membership <span>→</span>
                   </NavLink>
 
                   <button
                     type="button"
                     onClick={() => openForm("Support")}
-                    className="group flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-800 transition hover:bg-emerald-50 hover:text-[#1B4332]"
+                    className="flex w-full justify-between rounded-xl px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-emerald-50"
                   >
-                    <span>Support</span>
-
-                    <span className="opacity-0 transition group-hover:translate-x-1 group-hover:opacity-100">
-                      →
-                    </span>
+                    Support <span>→</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => openForm("Partnership")}
-                    className="group flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-800 transition hover:bg-emerald-50 hover:text-[#1B4332]"
+                    className="flex w-full justify-between rounded-xl px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-emerald-50"
                   >
-                    <span>Partnership</span>
-
-                    <span className="opacity-0 transition group-hover:translate-x-1 group-hover:opacity-100">
-                      →
-                    </span>
+                    Partnership <span>→</span>
                   </button>
                 </div>
               )}
             </div>
           </nav>
 
-          {/* ================= MOBILE MENU BUTTON ================= */}
-
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
-            aria-label="Open navigation menu"
-            aria-expanded={menuOpen}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-emerald-900/10 bg-emerald-50 text-[#1B4332] transition hover:bg-emerald-100 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-[#1B4332] lg:hidden"
+            aria-label="Open menu"
           >
             <svg
               className="h-6 w-6"
@@ -1215,42 +1163,37 @@ function Navbar() {
         </div>
       </header>
 
-      {/* ================= MOBILE BACKDROP ================= */}
-
       <div
         onClick={closeMenu}
-        className={`fixed inset-0 z-[60] bg-black/30 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-[60] bg-black/30 transition lg:hidden ${
           menuOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
         }`}
       />
 
-      {/* ================= MOBILE DRAWER ================= */}
-
       <aside
-        className={`fixed right-0 top-0 z-[70] h-screen w-[62vw] max-w-[280px] bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed right-0 top-0 z-[70] h-screen w-[62vw] max-w-[280px] bg-white shadow-2xl transition-transform duration-300 lg:hidden ${
           menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex h-full flex-col">
-          <div className="flex shrink-0 items-center justify-between border-b border-emerald-900/10 px-3 py-3">
+          <div className="flex items-center justify-between border-b border-emerald-900/10 px-3 py-3">
             <NavLink
               to="/"
               onClick={closeMenu}
-              className="flex items-center gap-1.5"
+              className="flex min-w-0 items-center gap-1.5"
             >
               <img
                 src={logo}
-                alt="ASBESOC Nigeria Logo"
+                alt="ASBESOC"
                 className="h-11 w-auto max-w-[92px] object-contain"
               />
 
-              <div className="leading-tight">
+              <div className="min-w-0">
                 <div className="text-[14px] font-extrabold text-[#1B4332]">
                   ASBESOC
                 </div>
-
                 <div className="text-[9px] font-extrabold tracking-[0.08em] text-slate-700">
                   NIGERIA
                 </div>
@@ -1260,19 +1203,9 @@ function Navbar() {
             <button
               type="button"
               onClick={closeMenu}
-              aria-label="Close navigation menu"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-[#1B4332] hover:bg-emerald-50"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-[#1B4332]"
             >
-              <svg
-                className="h-6 w-6"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <line x1="6" y1="6" x2="18" y2="18" />
-                <line x1="18" y1="6" x2="6" y2="18" />
-              </svg>
+              ✕
             </button>
           </div>
 
@@ -1287,7 +1220,7 @@ function Navbar() {
                   `flex min-h-[44px] items-center rounded-xl px-3 text-[13px] font-bold ${
                     isActive
                       ? "bg-[#1B4332] text-white"
-                      : "bg-emerald-50 text-slate-800 hover:bg-emerald-100"
+                      : "bg-emerald-50 text-slate-800"
                   }`
                 }
               >
@@ -1295,73 +1228,55 @@ function Navbar() {
               </NavLink>
             ))}
 
-            {/* MOBILE GET INVOLVED */}
+            <button
+              type="button"
+              onClick={() =>
+                setGetInvolvedOpen((open) => !open)
+              }
+              className={`flex min-h-[44px] items-center justify-between rounded-xl px-3 text-[13px] font-bold ${
+                getInvolvedOpen
+                  ? "bg-[#1B4332] text-white"
+                  : "bg-emerald-50 text-slate-800"
+              }`}
+            >
+              Get Involved <span>↓</span>
+            </button>
 
-            <div>
-              <button
-                type="button"
-                onClick={() =>
-                  setGetInvolvedOpen((open) => !open)
-                }
-                className={`flex min-h-[44px] w-full items-center justify-between rounded-xl px-3 text-[13px] font-bold ${
-                  getInvolvedOpen
-                    ? "bg-[#1B4332] text-white"
-                    : "bg-emerald-50 text-slate-800 hover:bg-emerald-100"
-                }`}
-              >
-                <span>Get Involved</span>
-
-                <span
-                  className={`transition-transform ${
-                    getInvolvedOpen ? "rotate-180" : ""
-                  }`}
+            {getInvolvedOpen && (
+              <div className="space-y-1 rounded-xl bg-emerald-50 p-1.5">
+                <NavLink
+                  to="/membership"
+                  onClick={closeMenu}
+                  className="flex min-h-[42px] items-center rounded-lg px-3 text-xs font-bold"
                 >
-                  ↓
-                </span>
-              </button>
+                  Membership
+                </NavLink>
 
-              {getInvolvedOpen && (
-                <div className="mt-1.5 space-y-1 rounded-xl bg-emerald-50 p-1.5">
-                  <NavLink
-                    to="/membership"
-                    onClick={closeMenu}
-                    className="flex min-h-[42px] items-center rounded-lg px-3 text-[12px] font-bold text-slate-700 hover:bg-white hover:text-[#1B4332]"
-                  >
-                    Membership
-                  </NavLink>
+                <button
+                  type="button"
+                  onClick={() => openForm("Support")}
+                  className="flex min-h-[42px] w-full items-center rounded-lg px-3 text-left text-xs font-bold"
+                >
+                  Support
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => openForm("Support")}
-                    className="flex min-h-[42px] w-full items-center rounded-lg px-3 text-left text-[12px] font-bold text-slate-700 hover:bg-white hover:text-[#1B4332]"
-                  >
-                    Support
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => openForm("Partnership")}
-                    className="flex min-h-[42px] w-full items-center rounded-lg px-3 text-left text-[12px] font-bold text-slate-700 hover:bg-white hover:text-[#1B4332]"
-                  >
-                    Partnership
-                  </button>
-                </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openForm("Partnership")
+                  }
+                  className="flex min-h-[42px] w-full items-center rounded-lg px-3 text-left text-xs font-bold"
+                >
+                  Partnership
+                </button>
+              </div>
+            )}
           </nav>
-
-          <div className="border-t border-emerald-900/10 px-3 py-3 text-center">
-            <p className="text-[10px] font-extrabold tracking-[0.12em] text-[#1B4332]">
-              ASBESOC NIGERIA
-            </p>
-          </div>
         </div>
       </aside>
 
-      {/* ================= FORM SYSTEM ================= */}
-
       {selectedForm && (
-        <DemoForm
+        <GetInvolvedForm
           type={selectedForm}
           onClose={() => setSelectedForm(null)}
         />
@@ -1370,28 +1285,33 @@ function Navbar() {
   );
 }
 
-/* =========================================================
-   MAIN FORM SYSTEM
-========================================================= */
-
-type DemoFormProps = {
+type GetInvolvedFormProps = {
   type: FormType;
   onClose: () => void;
 };
 
-function DemoForm({ type, onClose }: DemoFormProps) {
+function GetInvolvedForm({
+  type,
+  onClose,
+}: GetInvolvedFormProps) {
   const isSupport = type === "Support";
 
-  const [supportCategory, setSupportCategory] =
-    useState<SupportCategory>("Financial Support");
-
+  const [country, setCountry] = useState("");
+  const [selectedState, setSelectedState] =
+    useState("");
+  const [selectedLga, setSelectedLga] =
+    useState("");
+  const [supportType, setSupportType] =
+    useState("Financial Support");
   const [anonymous, setAnonymous] = useState(false);
-
-  const [selectedState, setSelectedState] = useState("");
-
-  const [selectedLga, setSelectedLga] = useState("");
-
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+  const [submitError, setSubmitError] =
+    useState("");
+
+  const isNigeria =
+    country.trim().toLowerCase() === "nigeria";
 
   const selectedStateData = useMemo(
     () =>
@@ -1402,971 +1322,804 @@ function DemoForm({ type, onClose }: DemoFormProps) {
   );
 
   useEffect(() => {
+    const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const handleEscape = (event: KeyboardEvent) => {
+    const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
 
-    window.addEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", escape);
 
     return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = oldOverflow;
+      window.removeEventListener("keydown", escape);
     };
   }, [onClose]);
 
-  const handleStateChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+  const changeCountry = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setCountry(event.target.value);
+    setSelectedState("");
+    setSelectedLga("");
+  };
+
+  const changeState = (
+    event: ChangeEvent<HTMLSelectElement>
   ) => {
     setSelectedState(event.target.value);
     setSelectedLga("");
   };
 
-  const handleSubmit = (
-    event: React.FormEvent<HTMLFormElement>
+  const submitForm = async (
+    event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-    setSubmitted(true);
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const value = (name: string) =>
+      String(formData.get(name) ?? "").trim();
+
+    try {
+      if (isSupport) {
+        await submitSupport({
+          fullNameOrOrganization: anonymous
+            ? ""
+            : value("fullNameOrOrganization"),
+          email: value("email"),
+          phone: value("phone"),
+          supportType: value("supportType"),
+          anonymous,
+          country: value("country"),
+
+          ...(isNigeria
+            ? {
+                state: value("state"),
+                lga: value("lga"),
+              }
+            : {
+                region: value("region"),
+                city: value("city"),
+              }),
+
+          supportDescription: value(
+            "supportDescription"
+          ),
+          message: value("message"),
+        });
+      } else {
+        await submitPartnership({
+          organization: value("organization"),
+          organizationType: value(
+            "organizationType"
+          ),
+          contactPerson: value("contactPerson"),
+          jobTitle: value("jobTitle"),
+          email: value("email"),
+          phone: value("phone"),
+          website: value("website"),
+          nationality: value("nationality"),
+          country: value("country"),
+
+          ...(isNigeria
+            ? {
+                state: value("state"),
+                lga: value("lga"),
+              }
+            : {
+                region: value("region"),
+                city: value("city"),
+              }),
+
+          areasOfInterest: formData
+            .getAll("areasOfInterest")
+            .map((item) => String(item)),
+
+          partnershipMethods: formData
+            .getAll("partnershipMethod")
+            .map((item) => String(item)),
+
+          message: value("message"),
+        });
+      }
+
+      setSubmitted(true);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } catch (error) {
+      console.error(
+        `${type} submission failed:`,
+        error
+      );
+
+      setSubmitError(
+        isSupport
+          ? "We could not submit your support request. Please check your internet connection and try again."
+          : "We could not submit your partnership request. Please check your internet connection and try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
     return (
-      <SuccessScreen
-        type={type}
-        supportCategory={supportCategory}
-        onClose={onClose}
-      />
+      <div className="fixed inset-0 z-[99999] overflow-y-auto bg-[#f2f7f3]">
+        <div className="flex min-h-screen items-center justify-center px-4 py-10">
+          <section className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-white shadow-2xl">
+            <div className="bg-[#063b25] px-6 py-12 text-center sm:px-12">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-2xl font-black text-[#163d31]">
+                ✓
+              </div>
+
+              <p className="mt-6 text-[11px] font-black uppercase tracking-[0.2em] text-amber-300">
+                ASBESOC Nigeria
+              </p>
+
+              <h2 className="mt-3 break-words text-3xl font-black text-white sm:text-4xl">
+                {isSupport
+                  ? "Thank you for supporting our work."
+                  : "Thank you for your partnership interest."}
+              </h2>
+
+              <p className="mx-auto mt-5 max-w-xl break-words text-sm leading-7 text-emerald-50/80">
+                {isSupport
+                  ? "Your support request has been submitted successfully. ASBESOC will review your information and contact you when necessary."
+                  : "Your partnership request has been submitted successfully. ASBESOC will review your information and contact you when necessary."}
+              </p>
+            </div>
+
+            <div className="px-6 py-7 text-center sm:px-10">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full bg-[#1B4332] px-7 py-3.5 text-sm font-black text-white transition hover:bg-amber-400 hover:text-[#163d31]"
+              >
+                Return to ASBESOC
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-[99999] h-screen w-screen overflow-y-auto bg-[#f5f8f5]">
-      {/* TOP BAR */}
+    <div className="fixed inset-0 z-[99999] overflow-x-hidden overflow-y-auto bg-[#f3f7f3]">
+      <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex min-h-[68px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">
+              Get Involved
+            </p>
 
-      <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-xl sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1B4332] text-xs font-black text-white">
-              {isSupport ? "01" : "02"}
-            </div>
-
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-500">
-                ASBESOC Nigeria
-              </p>
-
-              <p className="text-xs font-bold text-[#1B4332]">
-                {isSupport
-                  ? "Support & Contribution"
-                  : "Partnership Enquiry"}
-              </p>
-            </div>
+            <p className="mt-1 truncate text-sm font-black text-[#1B4332] sm:text-base">
+              {isSupport
+                ? "Support Our Work"
+                : "Partner With Us"}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1B4332] text-2xl text-white transition hover:bg-amber-400 hover:text-[#163d31]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-900/10 bg-emerald-50 text-xl font-bold text-[#1B4332] transition hover:bg-[#1B4332] hover:text-white"
+            aria-label="Close form"
           >
             ×
           </button>
         </div>
       </div>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        {isSupport ? (
-          <SupportIntroduction
-            category={supportCategory}
-            onCategoryChange={setSupportCategory}
-          />
-        ) : (
-          <section className="rounded-[2rem] bg-[#063b25] px-6 py-10 shadow-xl sm:px-10 sm:py-14">
-            <span className="inline-flex rounded-full border border-amber-400/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
-              Work With ASBESOC
+      <main className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-10">
+        <section className="relative overflow-hidden rounded-[2rem] bg-[#063b25] px-5 py-10 shadow-2xl sm:px-10 sm:py-12">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-400/10" />
+          <div className="absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-emerald-300/10" />
+
+          <div className="relative z-10 max-w-3xl">
+            <span className="inline-flex rounded-full border border-amber-300/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+              Be Part of the Change
             </span>
 
-            <h1 className="mt-5 text-3xl font-black leading-tight text-white sm:text-5xl">
-              Partnership Enquiry
+            <h1 className="mt-5 break-words text-3xl font-black leading-tight text-white sm:text-5xl">
+              {isSupport
+                ? "Support Our Work"
+                : "Partner With Us"}
             </h1>
 
-            <div className="mt-5 h-1 w-16 rounded-full bg-amber-400" />
+            <div className="mt-4 h-1 w-16 rounded-full bg-amber-400" />
 
-            <p className="mt-6 max-w-2xl text-sm leading-8 text-emerald-50/80 sm:text-base">
-              ASBESOC welcomes responsible partnerships with
-              organizations, institutions, businesses and
-              stakeholders that share a commitment to peaceful
-              communities, empowerment and sustainable development.
+            <p className="mt-6 max-w-2xl break-words text-sm leading-7 text-emerald-50/80 sm:text-base">
+              {isSupport
+                ? "Help ASBESOC expand programmes, strengthen communities and reach more individuals through meaningful support."
+                : "Collaborate with ASBESOC to develop practical, sustainable solutions that strengthen people and communities."}
             </p>
-          </section>
-        )}
+          </div>
+        </section>
 
-        {/* ================= FORM ================= */}
+        <section className="mt-5 grid gap-3 sm:grid-cols-3">
+          <InfoStrip
+            title={
+              isSupport
+                ? "Direct Impact"
+                : "Shared Purpose"
+            }
+            text={
+              isSupport
+                ? "Support that contributes to real programmes and community initiatives."
+                : "Work with us around common development goals."
+            }
+          />
+
+          <InfoStrip
+            title={
+              isSupport
+                ? "Flexible Support"
+                : "International Reach"
+            }
+            text={
+              isSupport
+                ? "Financial, material, technical and professional support are welcome."
+                : "Partnership opportunities are open to organizations locally and internationally."
+            }
+          />
+
+          <InfoStrip
+            title="Responsible Engagement"
+            text="Information submitted will be reviewed for relevant ASBESOC engagement."
+          />
+        </section>
 
         <form
-          onSubmit={handleSubmit}
-          className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-6 shadow-xl sm:p-10"
+          onSubmit={submitForm}
+          className="mt-6 w-full min-w-0 overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-white shadow-xl"
         >
-          <div className="mb-8">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
+          <div className="border-b border-emerald-900/10 bg-gradient-to-r from-emerald-50 via-white to-amber-50 px-5 py-6 sm:px-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
               {isSupport
-                ? "Support Request"
-                : "Partnership Enquiry"}
-            </span>
+                ? "Support Information"
+                : "Partnership Information"}
+            </p>
 
-            <h2 className="mt-2 text-2xl font-black text-[#1B4332] sm:text-3xl">
+            <h2 className="mt-2 break-words text-2xl font-black text-[#1B4332]">
               {isSupport
                 ? "Tell us how you would like to support"
                 : "Tell us about your organization"}
             </h2>
 
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-              {isSupport
-                ? "Complete the form below so the ASBESOC team can understand your proposed support and the community context involved."
-                : "Share your organization details and the kind of partnership you would like to explore with ASBESOC."}
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Complete the information below. Fields are
+              designed to accommodate both Nigerian and
+              international participants.
             </p>
           </div>
 
-          {/* SUPPORT CATEGORY */}
+          <div className="p-4 sm:p-8">
+            <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
+              {isSupport ? (
+                <>
+                  {!anonymous && (
+                    <TextField
+                      label="Full Name / Organization Name"
+                      name="fullNameOrOrganization"
+                      placeholder="Enter your name or organization"
+                      required
+                    />
+                  )}
 
-          {isSupport && (
-            <div className="mb-8 rounded-2xl border border-emerald-900/10 bg-emerald-50/60 p-5">
-              <label className="mb-3 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                Support Category
-              </label>
+                  <TextField
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                  />
 
-              <select
-                value={supportCategory}
-                onChange={(event) =>
-                  setSupportCategory(
-                    event.target.value as SupportCategory
-                  )
-                }
-                className="w-full rounded-xl border border-emerald-900/10 bg-white px-4 py-3.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#1B4332] focus:ring-2 focus:ring-[#1B4332]/10"
-              >
-                <option>Financial Support</option>
-                <option>Materials / Resources</option>
-                <option>Volunteer Support</option>
-                <option>Community Support</option>
-                <option>Other</option>
-              </select>
-            </div>
-          )}
+                  <TextField
+                    label="Contact Number"
+                    name="phone"
+                    type="tel"
+                    placeholder="+234..."
+                    required
+                  />
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            {/* FULL NAME */}
+                  <SelectField
+                    label="Type of Support"
+                    name="supportType"
+                    options={supportTypes}
+                    value={supportType}
+                    onChange={setSupportType}
+                    required
+                  />
 
-            {(!anonymous || !isSupport) && (
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                  Full Name
+                  <div className="min-w-0 sm:col-span-2">
+                    <label className="flex min-w-0 cursor-pointer items-start gap-3 rounded-2xl border border-emerald-900/10 bg-emerald-50/70 p-4 transition hover:bg-emerald-50">
+                      <input
+                        type="checkbox"
+                        checked={anonymous}
+                        onChange={(event) =>
+                          setAnonymous(
+                            event.target.checked
+                          )
+                        }
+                        className="mt-1 h-4 w-4 shrink-0"
+                      />
+
+                      <span className="min-w-0">
+                        <span className="block break-words text-sm font-black text-[#1B4332]">
+                          I would like to remain anonymous
+                        </span>
+
+                        <span className="mt-1 block text-xs leading-5 text-slate-500">
+                          Your personal name will not be
+                          displayed publicly as part of the
+                          support.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <TextField
+                    label="Organization / Institution Name"
+                    name="organization"
+                    placeholder="Enter organization name"
+                    required
+                  />
+
+                  <SelectField
+                    label="Type of Organization"
+                    name="organizationType"
+                    options={organizationTypes}
+                    required
+                  />
+
+                  <TextField
+                    label="Contact Person"
+                    name="contactPerson"
+                    placeholder="Enter contact person's name"
+                    required
+                  />
+
+                  <TextField
+                    label="Position / Job Title"
+                    name="jobTitle"
+                    placeholder="Enter position"
+                    required
+                  />
+
+                  <TextField
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    placeholder="contact@example.com"
+                    required
+                  />
+
+                  <TextField
+                    label="Contact Number"
+                    name="phone"
+                    type="tel"
+                    placeholder="+234..."
+                    required
+                  />
+
+                  <TextField
+                    label="Website / Social Media"
+                    name="website"
+                    placeholder="Website or social media link"
+                  />
+
+                  <TextField
+                    label="Nationality"
+                    name="nationality"
+                    placeholder="Enter nationality"
+                  />
+                </>
+              )}
+
+              <div className="min-w-0">
+                <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                  Country
                 </label>
 
                 <input
                   type="text"
-                  placeholder="Enter your full name"
-                  required={!anonymous || !isSupport}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-[#1B4332] focus:bg-white focus:ring-2 focus:ring-[#1B4332]/10"
+                  name="country"
+                  value={country}
+                  onChange={changeCountry}
+                  placeholder="e.g. Nigeria"
+                  required
+                  className="form-input box-border w-full min-w-0 max-w-full"
                 />
               </div>
-            )}
 
-            {/* EMAIL */}
-
-            <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                placeholder="you@example.com"
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-[#1B4332] focus:bg-white focus:ring-2 focus:ring-[#1B4332]/10"
-              />
-            </div>
-
-            {/* PHONE */}
-
-            <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                Phone Number
-              </label>
-
-              <input
-                type="tel"
-                placeholder="Enter your phone number"
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-[#1B4332] focus:bg-white focus:ring-2 focus:ring-[#1B4332]/10"
-              />
-            </div>
-
-            {/* STATE */}
-
-            <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                State
-              </label>
-
-              <select
-                value={selectedState}
-                onChange={handleStateChange}
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-[#1B4332] focus:bg-white"
-              >
-                <option value="">Select your state</option>
-
-                {nigeriaStates.map((state) => (
-                  <option key={state.name} value={state.name}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* LGA */}
-
-            <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                Local Government Area
-              </label>
-
-              <select
-                value={selectedLga}
-                onChange={(event) =>
-                  setSelectedLga(event.target.value)
-                }
-                required
-                disabled={!selectedStateData}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60 focus:border-[#1B4332] focus:bg-white"
-              >
-                <option value="">
-                  {selectedStateData
-                    ? "Select your LGA"
-                    : "Select state first"}
-                </option>
-
-                {selectedStateData?.lgas.map((lga) => (
-                  <option key={lga} value={lga}>
-                    {lga}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* ANONYMOUS */}
-
-            {isSupport && (
-              <div className="sm:col-span-2">
-                <div className="flex items-start gap-4 rounded-2xl border border-emerald-900/10 bg-slate-50 p-5">
-                  <input
-                    id="anonymous-support"
-                    type="checkbox"
-                    checked={anonymous}
-                    onChange={(event) =>
-                      setAnonymous(event.target.checked)
-                    }
-                    className="mt-1 h-5 w-5 rounded border-slate-300 text-[#1B4332] focus:ring-[#1B4332]"
-                  />
-
-                  <div>
-                    <label
-                      htmlFor="anonymous-support"
-                      className="cursor-pointer text-sm font-black text-[#1B4332]"
-                    >
-                      I would like to remain anonymous
+              {isNigeria ? (
+                <>
+                  <div className="min-w-0">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      State
                     </label>
 
-                    <p className="mt-1 text-xs leading-6 text-slate-500">
-                      Select this option if you do not want your
-                      name displayed with your support request.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* FINANCIAL AMOUNT */}
-
-            {isSupport &&
-              supportCategory === "Financial Support" && (
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                    Intended Support Amount
-                  </label>
-
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-[#1B4332]">
-                      ₦
-                    </span>
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Enter amount"
+                    <select
+                      name="state"
+                      value={selectedState}
+                      onChange={changeState}
                       required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-9 pr-4 text-sm outline-none focus:border-[#1B4332] focus:bg-white"
+                      className="form-input box-border w-full min-w-0 max-w-full"
+                    >
+                      <option value="">
+                        Select state
+                      </option>
+
+                      {nigeriaStates.map((state) => (
+                        <option
+                          key={state.name}
+                          value={state.name}
+                        >
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      Local Government Area
+                    </label>
+
+                    <select
+                      name="lga"
+                      value={selectedLga}
+                      onChange={(event) =>
+                        setSelectedLga(
+                          event.target.value
+                        )
+                      }
+                      disabled={!selectedStateData}
+                      required
+                      className="form-input box-border w-full min-w-0 max-w-full disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <option value="">
+                        {selectedStateData
+                          ? "Select LGA"
+                          : "Select state first"}
+                      </option>
+
+                      {selectedStateData?.lgas.map(
+                        (lga) => (
+                          <option
+                            key={lga}
+                            value={lga}
+                          >
+                            {lga}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+                </>
+              ) : country.trim() ? (
+                <>
+                  <TextField
+                    label="State / Province / Region"
+                    name="region"
+                    placeholder="Enter state, province or region"
+                    required
+                  />
+
+                  <TextField
+                    label="City / District"
+                    name="city"
+                    placeholder="Enter city or district"
+                    required
+                  />
+                </>
+              ) : null}
+
+              {isSupport && (
+                <>
+                  <div className="min-w-0 sm:col-span-2">
+                    <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      Amount / Description of Support
+                    </label>
+
+                    <textarea
+                      name="supportDescription"
+                      rows={4}
+                      required
+                      placeholder={
+                        supportType ===
+                        "Financial Support"
+                          ? "Enter amount and currency..."
+                          : "Describe the support you would like to provide..."
+                      }
+                      className="form-input box-border w-full min-w-0 max-w-full resize-none"
                     />
                   </div>
 
-                  <p className="mt-2 text-[11px] text-slate-400">
-                    Demonstration only. No real payment will be
-                    processed.
+                  {supportType ===
+                    "Financial Support" && (
+                    <div className="min-w-0 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 sm:col-span-2">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-sm font-black text-[#163d31]">
+                          ₦
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="break-words text-xs font-black uppercase tracking-[0.14em] text-amber-700">
+                            Financial Support Payment
+                            Details
+                          </p>
+
+                          <h3 className="mt-2 break-words text-base font-black text-[#1B4332]">
+                            Official account details will
+                            appear here.
+                          </h3>
+
+                          <p className="mt-2 break-words text-sm leading-6 text-slate-600">
+                            This section is reserved only
+                            for verified ASBESOC financial
+                            support payment or bank
+                            details. The final account
+                            information can be added later
+                            without changing the rest of
+                            the form.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="min-w-0 sm:col-span-2">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      Additional Message
+                    </label>
+
+                    <textarea
+                      name="message"
+                      rows={5}
+                      placeholder="Add any additional information..."
+                      className="form-input box-border w-full min-w-0 max-w-full resize-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {!isSupport && (
+                <>
+                  <CheckboxGroup
+                    title="Area(s) of Interest"
+                    name="areasOfInterest"
+                    options={partnershipInterests}
+                  />
+
+                  <CheckboxGroup
+                    title="How would you like to partner with ASBESOC?"
+                    name="partnershipMethod"
+                    options={partnershipMethods}
+                  />
+
+                  <div className="min-w-0 sm:col-span-2">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
+                      Additional Information
+                    </label>
+
+                    <textarea
+                      name="message"
+                      rows={5}
+                      placeholder="Tell us anything else that may help us understand the partnership opportunity..."
+                      className="form-input box-border w-full min-w-0 max-w-full resize-none"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-8 border-t border-emerald-900/10 pt-7">
+              {submitError && (
+                <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
+                  <p className="text-sm font-bold text-red-700">
+                    {submitError}
                   </p>
                 </div>
               )}
 
-            {/* PARTNERSHIP ORGANIZATION */}
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="min-w-0 max-w-2xl break-words text-xs leading-5 text-slate-500">
+                  Your information will be reviewed by
+                  ASBESOC for the purpose of responding
+                  to your request and determining the
+                  appropriate next steps.
+                </p>
 
-            {!isSupport && (
-              <div className="sm:col-span-2">
-                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                  Organization / Company
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Enter organization name"
-                  required
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-[#1B4332] focus:bg-white"
-                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full shrink-0 rounded-full bg-[#1B4332] px-7 py-4 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-400 hover:text-[#163d31] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  {isSubmitting
+                    ? "Submitting..."
+                    : isSupport
+                      ? "Submit Support Request →"
+                      : "Submit Partnership Request →"}
+                </button>
               </div>
-            )}
-
-            {/* MESSAGE */}
-
-            <div className="sm:col-span-2">
-              <label className="mb-2 block text-xs font-black uppercase tracking-wider text-[#1B4332]">
-                Message
-              </label>
-
-              <textarea
-                rows={6}
-                placeholder={
-                  isSupport
-                    ? "Tell ASBESOC more about the support you would like to provide..."
-                    : "Tell us about your organization and the partnership you have in mind..."
-                }
-                required
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm leading-7 outline-none focus:border-[#1B4332] focus:bg-white"
-              />
             </div>
-          </div>
-
-          {/* SUBMIT */}
-
-          <div className="mt-8 flex flex-col gap-4 border-t border-slate-100 pt-8 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs leading-5 text-slate-500">
-              Demonstration form — information is not connected
-              to a live database yet.
-            </p>
-
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1B4332] px-7 py-4 text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31]"
-            >
-              {isSupport
-                ? "Submit Support Request"
-                : "Submit Partnership Enquiry"}
-
-              <span>→</span>
-            </button>
           </div>
         </form>
 
-        <div className="flex justify-center py-10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full bg-[#1B4332] px-7 py-4 text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31]"
-          >
-            ← Back to ASBESOC
-          </button>
-        </div>
+        <p className="px-4 py-8 text-center text-xs leading-6 text-slate-400">
+          Building a peaceful, empowered and better society
+          requires collective action.
+        </p>
       </main>
     </div>
   );
 }
 
-/* =========================================================
-   SUPPORT INTRODUCTION
-========================================================= */
-
-type SupportIntroductionProps = {
-  category: SupportCategory;
-  onCategoryChange: (category: SupportCategory) => void;
-};
-
-function SupportIntroduction({
-  category,
-  onCategoryChange,
-}: SupportIntroductionProps) {
-  return (
-    <>
-      <section className="overflow-hidden rounded-[2rem] bg-[#063b25] shadow-xl">
-        <div className="px-6 py-10 sm:px-10 sm:py-14">
-          <span className="inline-flex rounded-full border border-amber-400/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
-            Support ASBESOC
-          </span>
-
-          <h1 className="mt-5 max-w-4xl text-3xl font-black leading-tight text-white sm:text-5xl">
-            Your support helps strengthen communities and
-            create lasting positive change.
-          </h1>
-
-          <div className="mt-6 h-1 w-16 rounded-full bg-amber-400" />
-
-          <p className="mt-6 max-w-3xl text-sm leading-8 text-emerald-50/80 sm:text-base">
-            ASBESOC works with communities, individuals,
-            institutions, development organizations and
-            partners to promote peace, empowerment, positive
-            behavioural change, capacity building and
-            sustainable community development.
-          </p>
-        </div>
-
-        <div className="grid border-t border-white/10 sm:grid-cols-3">
-          <SupportStat
-            number="01"
-            title="Empower"
-            text="Support initiatives that help people build skills, confidence and opportunity."
-          />
-
-          <SupportStat
-            number="02"
-            title="Transform"
-            text="Contribute to programmes focused on positive behavioural and social change."
-          />
-
-          <SupportStat
-            number="03"
-            title="Build"
-            text="Help communities develop practical and sustainable solutions to social challenges."
-          />
-        </div>
-      </section>
-
-      {/* WAYS TO SUPPORT */}
-
-      <section className="mt-8">
-        <div className="mb-6">
-          <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-            Ways You Can Help
-          </span>
-
-          <h2 className="mt-2 text-2xl font-black text-[#1B4332] sm:text-3xl">
-            Choose how you would like to support
-          </h2>
-
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-            Every form of support can contribute to stronger
-            communities. Select a category below to see what
-            your support could mean.
-          </p>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2">
-          <SupportCategoryCard
-            number="01"
-            title="Financial Support"
-            description="Provide financial assistance that can help strengthen approved programmes, community initiatives, empowerment activities and capacity building."
-            active={category === "Financial Support"}
-            onClick={() =>
-              onCategoryChange("Financial Support")
-            }
-          />
-
-          <SupportCategoryCard
-            number="02"
-            title="Materials & Resources"
-            description="Support ASBESOC with useful educational, programme, community-development or operational resources."
-            active={category === "Materials / Resources"}
-            onClick={() =>
-              onCategoryChange("Materials / Resources")
-            }
-          />
-
-          <SupportCategoryCard
-            number="03"
-            title="Volunteer Support"
-            description="Offer your time, professional skills, knowledge or practical assistance to suitable ASBESOC initiatives."
-            active={category === "Volunteer Support"}
-            onClick={() =>
-              onCategoryChange("Volunteer Support")
-            }
-          />
-
-          <SupportCategoryCard
-            number="04"
-            title="Community Support"
-            description="Support community-led activities through participation, mobilization, resources and practical assistance."
-            active={category === "Community Support"}
-            onClick={() =>
-              onCategoryChange("Community Support")
-            }
-          />
-        </div>
-
-        <div className="mt-5 rounded-[1.5rem] border border-emerald-900/10 bg-white p-6 shadow-lg">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-                Selected Support
-              </p>
-
-              <h3 className="mt-1 text-xl font-black text-[#1B4332]">
-                {category}
-              </h3>
-            </div>
-
-            <div className="rounded-full bg-emerald-50 px-5 py-2.5 text-xs font-bold text-[#1B4332]">
-              Complete the form below
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-/* =========================================================
-   SUPPORT STAT
-========================================================= */
-
-type SupportStatProps = {
-  number: string;
+type InfoStripProps = {
   title: string;
   text: string;
 };
 
-function SupportStat({
-  number,
+function InfoStrip({
   title,
   text,
-}: SupportStatProps) {
+}: InfoStripProps) {
   return (
-    <div className="border-white/10 px-6 py-6 sm:border-r sm:px-8 last:border-r-0">
-      <span className="text-xs font-black tracking-[0.2em] text-amber-300">
-        {number}
-      </span>
+    <div className="min-w-0 rounded-2xl border border-emerald-900/10 bg-white px-4 py-4 shadow-sm">
+      <div className="mb-3 h-1 w-10 rounded-full bg-amber-400" />
 
-      <h3 className="mt-2 text-lg font-black text-white">
+      <h3 className="break-words text-sm font-black text-[#1B4332]">
         {title}
       </h3>
 
-      <p className="mt-2 text-xs leading-6 text-emerald-50/70">
+      <p className="mt-2 break-words text-xs leading-6 text-slate-500">
         {text}
       </p>
     </div>
   );
 }
 
-/* =========================================================
-   SUPPORT CATEGORY CARD
-========================================================= */
-
-type SupportCategoryCardProps = {
-  number: string;
-  title: string;
-  description: string;
-  active: boolean;
-  onClick: () => void;
+type TextFieldProps = {
+  label: string;
+  name: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
 };
 
-function SupportCategoryCard({
-  number,
-  title,
-  description,
-  active,
-  onClick,
-}: SupportCategoryCardProps) {
+function TextField({
+  label,
+  name,
+  type = "text",
+  placeholder,
+  required = false,
+}: TextFieldProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group rounded-[1.75rem] border p-6 text-left shadow-lg transition-all duration-200 hover:-translate-y-1 ${
-        active
-          ? "border-[#1B4332] bg-[#1B4332] text-white shadow-xl"
-          : "border-emerald-900/10 bg-white text-slate-800 hover:border-[#1B4332]/30"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div
-          className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-black ${
-            active
-              ? "bg-amber-400 text-[#163d31]"
-              : "bg-emerald-50 text-[#1B4332]"
-          }`}
-        >
-          {number}
-        </div>
+    <div className="min-w-0">
+      <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+        {label}
+      </label>
 
-        <span
-          className={`text-xl transition-transform group-hover:translate-x-1 ${
-            active ? "text-amber-300" : "text-[#1B4332]"
-          }`}
-        >
-          →
-        </span>
-      </div>
-
-      <h3
-        className={`mt-6 text-xl font-black ${
-          active ? "text-white" : "text-[#1B4332]"
-        }`}
-      >
-        {title}
-      </h3>
-
-      <p
-        className={`mt-3 text-sm leading-7 ${
-          active ? "text-emerald-50/75" : "text-slate-500"
-        }`}
-      >
-        {description}
-      </p>
-    </button>
+      <input
+        type={type}
+        name={name}
+        placeholder={placeholder}
+        required={required}
+        className="form-input box-border w-full min-w-0 max-w-full"
+      />
+    </div>
   );
 }
 
-/* =========================================================
-   SUCCESS SCREEN
-========================================================= */
-
-type SuccessScreenProps = {
-  type: FormType;
-  supportCategory: SupportCategory;
-  onClose: () => void;
+type SelectFieldProps = {
+  label: string;
+  name: string;
+  options: string[];
+  required?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
-function SuccessScreen({
-  type,
-  supportCategory,
-  onClose,
-}: SuccessScreenProps) {
-  const isSupport = type === "Support";
-
+function SelectField({
+  label,
+  name,
+  options,
+  required = false,
+  value,
+  onChange,
+}: SelectFieldProps) {
   return (
-    <div className="fixed inset-0 z-[99999] h-screen w-screen overflow-y-auto bg-[#f5f8f5]">
-      <div className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-xl sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="ASBESOC Nigeria Logo"
-              className="h-11 w-auto max-w-[95px] object-contain"
+    <div className="min-w-0">
+      <label className="mb-2 block break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+        {label}
+      </label>
+
+      <select
+        name={name}
+        value={value}
+        defaultValue={
+          value === undefined ? "" : undefined
+        }
+        onChange={
+          onChange
+            ? (event) =>
+                onChange(event.target.value)
+            : undefined
+        }
+        required={required}
+        className="form-input box-border w-full min-w-0 max-w-full"
+      >
+        {value === undefined && (
+          <option value="" disabled>
+            Select an option
+          </option>
+        )}
+
+        {options.map((option) => (
+          <option
+            key={option}
+            value={option}
+          >
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+type CheckboxGroupProps = {
+  title: string;
+  name: string;
+  options: string[];
+};
+
+function CheckboxGroup({
+  title,
+  name,
+  options,
+}: CheckboxGroupProps) {
+  return (
+    <fieldset className="min-w-0 sm:col-span-2">
+      <legend className="mb-3 max-w-full break-words text-xs font-black uppercase tracking-wider text-[#1B4332]">
+        {title}
+      </legend>
+
+      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+        {options.map((option) => (
+          <label
+            key={option}
+            className="flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-[#f9fbf9] px-4 py-3 transition hover:border-emerald-300 hover:bg-emerald-50"
+          >
+            <input
+              type="checkbox"
+              name={name}
+              value={option}
+              className="mt-1 h-4 w-4 shrink-0"
             />
 
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-500">
-                ASBESOC Nigeria
-              </p>
-
-              <p className="text-xs font-bold text-[#1B4332]">
-                Submission Confirmation
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-        {/* SUCCESS */}
-
-        <section className="overflow-hidden rounded-[2rem] bg-[#063b25] text-center shadow-2xl">
-          <div className="px-6 py-12 sm:px-12 sm:py-16">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-[#1B4332]">
-              ✓
-            </div>
-
-            <p className="mt-7 text-xs font-black uppercase tracking-[0.2em] text-amber-300">
-              Request Submitted Successfully
-            </p>
-
-            <h1 className="mt-3 text-3xl font-black text-white sm:text-5xl">
-              Thank you for getting involved.
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-emerald-50/80 sm:text-base">
-              {isSupport
-                ? `Your ${supportCategory.toLowerCase()} support request has been recorded as a demonstration submission.`
-                : "Your partnership enquiry has been recorded as a demonstration submission."}
-            </p>
-          </div>
-        </section>
-
-        {/* SUPPORT-SPECIFIC NEXT STEPS */}
-
-        {isSupport && (
-          <SupportNextSteps category={supportCategory} />
-        )}
-
-        {/* PARTNERSHIP NEXT STEPS */}
-
-        {!isSupport && (
-          <section className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-              Next Steps
+            <span className="min-w-0 break-words text-sm font-semibold text-slate-700">
+              {option}
             </span>
-
-            <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-              Partnership enquiry received
-            </h2>
-
-            <p className="mt-4 text-sm leading-8 text-slate-500">
-              In the live version of the website, this
-              information would be securely delivered to the
-              appropriate ASBESOC team for review and
-              follow-up.
-            </p>
-
-            <div className="mt-6 rounded-2xl bg-emerald-50 p-5 text-sm leading-7 text-[#1B4332]">
-              <strong>Demo notice:</strong> No information has
-              been sent to a live database yet.
-            </div>
-          </section>
-        )}
-
-        <div className="flex justify-center py-10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full bg-[#1B4332] px-8 py-4 text-sm font-black text-white shadow-lg transition hover:bg-amber-400 hover:text-[#163d31]"
-          >
-            ← Return to ASBESOC
-          </button>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   CATEGORY-SPECIFIC SUPPORT DETAILS
-========================================================= */
-
-function SupportNextSteps({
-  category,
-}: {
-  category: SupportCategory;
-}) {
-  /* FINANCIAL */
-
-  if (category === "Financial Support") {
-    return (
-      <section className="mt-8 rounded-[2rem] border border-amber-200 bg-white p-7 shadow-xl sm:p-10">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-          Financial Support
-        </span>
-
-        <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-          Mock contribution details
-        </h2>
-
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-          In the live ASBESOC website, approved financial
-          support instructions would appear here. The details
-          below are deliberately marked as demonstration
-          information and are not real payment instructions.
-        </p>
-
-        <div className="mt-7 rounded-[1.5rem] bg-[#063b25] p-6 text-white sm:p-8">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
-                Bank
-              </p>
-
-              <p className="mt-2 text-lg font-black">
-                ASBESOC DEMO BANK
-              </p>
-            </div>
-
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
-                Account Name
-              </p>
-
-              <p className="mt-2 text-lg font-black">
-                ASBESOC NIGERIA — DEMO
-              </p>
-            </div>
-
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
-                Account Number
-              </p>
-
-              <p className="mt-2 text-xl font-black tracking-wider">
-                0000000000
-              </p>
-            </div>
-
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
-                Reference
-              </p>
-
-              <p className="mt-2 text-lg font-black">
-                ASBESOC-SUPPORT-DEMO
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-7 border-t border-white/10 pt-6">
-            <p className="text-xs leading-6 text-emerald-50/70">
-              ⚠ DEMONSTRATION ONLY — The bank, account name,
-              account number and reference above are mock data.
-              Do not transfer money using these details.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  /* MATERIALS */
-
-  if (category === "Materials / Resources") {
-    return (
-      <section className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-          Materials & Resources
-        </span>
-
-        <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-          Thank you for offering practical resources
-        </h2>
-
-        <p className="mt-4 text-sm leading-8 text-slate-500">
-          In the live version, the ASBESOC team would provide
-          appropriate delivery, verification and coordination
-          instructions for the resources being offered.
-        </p>
-
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <InfoBox
-            title="Educational"
-            text="Training materials, books and learning resources."
-          />
-
-          <InfoBox
-            title="Programme"
-            text="Resources that can support approved community activities."
-          />
-
-          <InfoBox
-            title="Equipment"
-            text="Useful equipment and practical community resources."
-          />
-        </div>
-      </section>
-    );
-  }
-
-  /* VOLUNTEER */
-
-  if (category === "Volunteer Support") {
-    return (
-      <section className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-          Volunteer Support
-        </span>
-
-        <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-          Your skills can make a difference
-        </h2>
-
-        <p className="mt-4 text-sm leading-8 text-slate-500">
-          The next stage of the live system can connect
-          suitable volunteers with programmes based on their
-          skills, interests, availability and location.
-        </p>
-
-        <div className="mt-6 rounded-2xl bg-emerald-50 p-6">
-          <p className="text-sm font-bold leading-7 text-[#1B4332]">
-            Demo next step: ASBESOC would review the volunteer
-            request and contact the applicant with suitable
-            opportunities.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  /* COMMUNITY */
-
-  if (category === "Community Support") {
-    return (
-      <section className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-          Community Support
-        </span>
-
-        <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-          Community support request received
-        </h2>
-
-        <p className="mt-4 text-sm leading-8 text-slate-500">
-          In the live system, community support requests could
-          be reviewed according to the needs described,
-          available programmes and relevant ASBESOC
-          partnerships.
-        </p>
-
-        <div className="mt-6 rounded-2xl bg-emerald-50 p-6">
-          <p className="text-sm font-bold leading-7 text-[#1B4332]">
-            Demo next step: the relevant ASBESOC team would
-            review the request and determine the appropriate
-            follow-up.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  /* OTHER */
-
-  return (
-    <section className="mt-8 rounded-[2rem] border border-emerald-900/10 bg-white p-7 shadow-xl sm:p-10">
-      <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
-        Support Request
-      </span>
-
-      <h2 className="mt-3 text-2xl font-black text-[#1B4332] sm:text-3xl">
-        Your message has been received
-      </h2>
-
-      <p className="mt-4 text-sm leading-8 text-slate-500">
-        Thank you for offering to support ASBESOC. In the
-        live version, your request would be reviewed and
-        directed to the appropriate team.
-      </p>
-    </section>
-  );
-}
-
-/* =========================================================
-   INFORMATION BOX
-========================================================= */
-
-function InfoBox({
-  title,
-  text,
-}: {
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-2xl bg-emerald-50 p-5">
-      <h3 className="font-black text-[#1B4332]">{title}</h3>
-
-      <p className="mt-2 text-xs leading-6 text-slate-500">
-        {text}
-      </p>
-    </div>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
