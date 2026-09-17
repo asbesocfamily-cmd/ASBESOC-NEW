@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import heroImage from "../assets/hero.jpg";
-import membershipImage from "../assets/membership.jpg";
-import executiveImage1 from "../assets/executives/image1.jpg";
-import executiveImage2 from "../assets/executives/image2.jpg";
+import heroImage from "../assets/hero.webp";
+import membershipImage from "../assets/membership.webp";
+import executiveImage1 from "../assets/executives/image1.webp";
+import executiveImage2 from "../assets/executives/image2.webp";
+import executiveImage3 from "../assets/executives/image3.webp";
 
 function Hero() {
   const statistics = [
@@ -134,34 +135,116 @@ function Hero() {
     },
   ];
 
+  const executives = [
+    {
+      name: "Chief Honourable Engr. Dr. Igwe Chibuike Elias Elijah",
+      role: "FOUNDER & CHIEF EXECUTIVE OFFICER",
+      badge: "FOUNDER / CEO",
+      image: executiveImage1,
+      description:
+        "Founder and Chief Executive Officer of ASBESOC, leading sustainable community development and positive social impact.",
+      highlight: "Leadership With Purpose",
+      highlightText: "Building a better society",
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path d="M12 2 4 5v6c0 5.5 3.5 9.5 8 11 4.5-1.5 8-5.5 8-11V5l-8-3Z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      name: "Anekwe Benedict Ikechukwu, Esq.",
+      role: "SECRETARY",
+      badge: "SECRETARY",
+      image: executiveImage2,
+      description:
+        "Secretary of ASBESOC, supporting effective administration, coordination, and organizational development.",
+      highlight: "Service & Commitment",
+      highlightText: "Supporting organizational impact",
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path d="M4 5h16v14H4z" />
+          <path d="M8 9h8M8 13h5" />
+        </svg>
+      ),
+    },
+    {
+      name: "Dr. Isaiah Onyeka",
+      role: "MANAGING DIRECTOR",
+      badge: "MANAGING DIRECTOR",
+      image: executiveImage3,
+      description:
+        "Managing Director of ASBESOC, providing strategic leadership and overseeing organizational operations and development.",
+      highlight: "Strategic Leadership",
+      highlightText: "Advancing the mission of ASBESOC",
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <rect x="3" y="7" width="18" height="13" rx="2" />
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path d="M3 12h18M10 12v2h4v-2" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <main className="w-full overflow-hidden bg-[#f7fbf8]">
-      {/* =========================================================
-          HERO SECTION
-      ========================================================= */}
+      {/* HERO SECTION */}
       <section className="px-4 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[26px] bg-[#063b25] shadow-[0_20px_55px_rgba(6,59,37,0.16)] sm:rounded-[30px] lg:rounded-[34px]">
-          {/* Hero Image */}
           <img
             src={heroImage}
             alt="ASBESOC community empowerment initiative"
+            width="1600"
+            height="900"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
 
-          {/* Brighter Dark Green Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#032e1d]/75 via-[#063b25]/55 to-[#063b25]/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#032e1d]/80 via-[#063b25]/55 to-[#063b25]/10" />
+          <div className="absolute inset-0 bg-[#032e1d]/15 lg:hidden" />
 
-          {/* Extra Mobile Overlay */}
-          <div className="absolute inset-0 bg-[#032e1d]/10 lg:hidden" />
+          <div
+            className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl"
+            aria-hidden="true"
+          />
 
-          {/* Decorative Glow */}
-          <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
-          <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-green-300/10 blur-3xl" />
+          <div
+            className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-green-300/10 blur-3xl"
+            aria-hidden="true"
+          />
 
           <div className="relative z-10 grid min-h-[620px] items-center lg:min-h-[640px] lg:grid-cols-[0.95fr_1.05fr]">
-            {/* Hero Content */}
             <div className="px-6 py-14 sm:px-10 sm:py-16 lg:px-12 lg:py-20 xl:px-16">
-              {/* Registration + Organization Label */}
               <div className="mb-6 flex flex-col items-start gap-2">
                 <div className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-white/95 px-4 py-1.5 text-[11px] font-black tracking-[0.12em] text-[#063b25] shadow-sm backdrop-blur-sm sm:text-xs">
                   RC 22526
@@ -176,23 +259,19 @@ function Hero() {
                 </div>
               </div>
 
-              {/* Heading */}
               <h1 className="max-w-2xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-[68px] xl:text-[76px]">
-                Building A{" "}
-                <span className="text-[#00a844]">Better</span> Society
+                Building A <span className="text-[#00a844]">Better</span>{" "}
+                Society
               </h1>
 
-              {/* Accent Line */}
               <div className="my-6 h-1 w-12 rounded-full bg-[#00b848] sm:my-7" />
 
-              {/* Description */}
               <p className="max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">
                 Together, we create positive change through community
-                development, empowerment, trust, and sustainable solutions
-                that transform lives and build a better tomorrow.
+                development, empowerment, trust, and sustainable solutions that
+                transform lives and build a better tomorrow.
               </p>
 
-              {/* CTA Buttons */}
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   to="/membership"
@@ -213,15 +292,12 @@ function Hero() {
               </div>
             </div>
 
-            {/* Image Balance Area */}
             <div className="hidden h-full lg:block" />
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          STATISTICS
-      ========================================================= */}
+      {/* STATISTICS */}
       <section className="px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5 lg:gap-6">
           {statistics.map((stat) => (
@@ -255,44 +331,45 @@ function Hero() {
         </div>
       </section>
 
-      {/* =========================================================
-          MEMBERSHIP SECTION
-      ========================================================= */}
+      {/* MEMBERSHIP SECTION */}
       <section className="px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[26px] shadow-[0_20px_55px_rgba(6,59,37,0.18)] sm:rounded-[30px]">
-          {/* Membership Image */}
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[26px] bg-[#031f14] shadow-[0_20px_55px_rgba(6,59,37,0.18)] sm:rounded-[30px]">
           <img
             src={membershipImage}
             alt="ASBESOC members working together"
+            width="1400"
+            height="800"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
 
-          {/* Brighter Dark Overlay */}
-          <div className="absolute inset-0 bg-[#031f14]/55" />
+          <div className="absolute inset-0 bg-[#031f14]/60" />
 
-          {/* Green Glow */}
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-green-500/10 blur-3xl" />
-          <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div
+            className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-green-500/10 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div
+            className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl"
+            aria-hidden="true"
+          />
 
           <div className="relative z-10 px-5 py-12 text-center sm:px-10 sm:py-14 lg:px-16 lg:py-16">
-            {/* Section Label */}
             <p className="text-sm font-black tracking-wide text-[#00d457] sm:text-base">
               JOIN ASBESOC
             </p>
 
-            {/* Heading */}
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Become Part Of{" "}
-              <span className="text-[#00c94f]">ASBESOC</span>
+              Become Part Of <span className="text-[#00c94f]">ASBESOC</span>
             </h2>
 
-            {/* Description */}
             <p className="mx-auto mt-5 max-w-3xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7 lg:text-lg">
               Join a thriving community focused on leadership, innovation,
               transformation, and building a better society.
             </p>
 
-            {/* Membership Button */}
             <Link
               to="/membership"
               className="mt-7 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-[#00a844] px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-black/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#008f3b] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#00d457] focus:ring-offset-2 focus:ring-offset-[#031f14] sm:px-8"
@@ -303,7 +380,6 @@ function Hero() {
               </span>
             </Link>
 
-            {/* Benefits */}
             <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3 md:gap-0">
               {benefits.map((benefit, index) => (
                 <div
@@ -332,12 +408,9 @@ function Hero() {
         </div>
       </section>
 
-      {/* =========================================================
-          EXECUTIVES
-      ========================================================= */}
+      {/* EXECUTIVES */}
       <section className="px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
         <div className="mx-auto max-w-7xl">
-          {/* Section Heading */}
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-black tracking-[0.18em] text-[#008f3b]">
               OUR LEADERSHIP
@@ -355,141 +428,63 @@ function Hero() {
             </p>
           </div>
 
-          {/* Executive Cards */}
-          <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* =====================================================
-                CEO
-            ===================================================== */}
-            <article className="group overflow-hidden rounded-[28px] border border-emerald-900/10 bg-white shadow-[0_18px_55px_rgba(6,59,37,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_65px_rgba(6,59,37,0.15)]">
-              {/* Executive Image */}
-              <div className="relative h-[360px] overflow-hidden bg-[#063b25] sm:h-[420px]">
-                <img
-                  src={executiveImage1}
-                  alt="Chief Honourable Engr. Dr. Igwe Chibuike Elias Elijah"
-                  className="absolute inset-0 h-full w-full object-cover object-center lg:object-top transition-transform duration-500 group-hover:scale-[1.02]"
-                />
+          <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-3">
+            {executives.map((executive) => (
+              <article
+                key={executive.name}
+                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] border border-emerald-900/10 bg-white shadow-[0_18px_50px_rgba(6,59,37,0.09)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(6,59,37,0.14)]"
+              >
+                <div className="relative h-[340px] overflow-hidden bg-[#063b25] sm:h-[380px] lg:h-[420px]">
+                  <img
+                    src={executive.image}
+                    alt={executive.name}
+                    width="900"
+                    height="1100"
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02] lg:object-top"
+                  />
 
-                {/* Image Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#031f14]/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#031f14]/65 via-transparent to-transparent" />
 
-                {/* Founder Badge */}
-                <div className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-white/95 px-4 py-2 text-xs font-black text-[#087f3e] shadow-lg backdrop-blur-sm">
-                  FOUNDER / CEO
-                </div>
-              </div>
-
-              {/* Executive Information */}
-              <div className="px-6 py-9 sm:px-8 sm:py-10">
-                <p className="text-xs font-black tracking-[0.18em] text-[#00a844]">
-                  FOUNDER & CHIEF EXECUTIVE OFFICER
-                </p>
-
-                <h3 className="mt-4 text-2xl font-black leading-tight tracking-tight text-[#063b25] sm:text-3xl">
-                  Chief Honourable Engr. Dr. Igwe Chibuike Elias Elijah
-                </h3>
-
-                <div className="mt-5 h-1 w-12 rounded-full bg-[#D4AF37]" />
-
-                <p className="mt-5 text-sm leading-6 text-slate-600">
-                  Founder and Chief Executive Officer of ASBESOC, leading
-                  sustainable community development and positive social impact.
-                </p>
-
-                <div className="mt-7 flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#008f3b]">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 2 4 5v6c0 5.5 3.5 9.5 8 11 4.5-1.5 8-5.5 8-11V5l-8-3Z" />
-                      <path d="m9 12 2 2 4-4" />
-                    </svg>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-extrabold text-[#063b25]">
-                      Leadership With Purpose
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Building a better society
-                    </p>
+                  <div className="absolute bottom-5 left-5 max-w-[calc(100%-2.5rem)] rounded-full border border-white/20 bg-white/95 px-4 py-2 text-xs font-black text-[#087f3e] shadow-lg backdrop-blur-sm">
+                    {executive.badge}
                   </div>
                 </div>
-              </div>
-            </article>
 
-            {/* =====================================================
-                SECRETARY
-            ===================================================== */}
-            <article className="group overflow-hidden rounded-[28px] border border-emerald-900/10 bg-white shadow-[0_18px_55px_rgba(6,59,37,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_65px_rgba(6,59,37,0.15)]">
-              {/* Executive Image */}
-              <div className="relative h-[360px] overflow-hidden bg-[#063b25] sm:h-[420px]">
-                <img
-                  src={executiveImage2}
-                  alt="Anekwe Benedict Ikechukwu, Esq."
-                  className="absolute inset-0 h-full w-full object-cover object-center lg:object-top transition-transform duration-500 group-hover:scale-[1.02]"
-                />
+                <div className="flex flex-1 flex-col px-5 py-8 sm:px-6 lg:px-7 lg:py-9">
+                  <p className="text-[11px] font-black tracking-[0.14em] text-[#00a844] sm:text-xs">
+                    {executive.role}
+                  </p>
 
-                {/* Image Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#031f14]/60 via-transparent to-transparent" />
+                  <h3 className="mt-4 break-words text-xl font-black leading-tight tracking-tight text-[#063b25] sm:text-2xl lg:text-[27px]">
+                    {executive.name}
+                  </h3>
 
-                {/* Secretary Badge */}
-                <div className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-white/95 px-4 py-2 text-xs font-black text-[#087f3e] shadow-lg backdrop-blur-sm">
-                  SECRETARY
-                </div>
-              </div>
+                  <div className="mt-5 h-1 w-12 rounded-full bg-[#D4AF37]" />
 
-              {/* Executive Information */}
-              <div className="px-6 py-9 sm:px-8 sm:py-10">
-                <p className="text-xs font-black tracking-[0.18em] text-[#00a844]">
-                  SECRETARY
-                </p>
+                  <p className="mt-5 text-sm leading-6 text-slate-600">
+                    {executive.description}
+                  </p>
 
-                <h3 className="mt-4 text-2xl font-black leading-tight tracking-tight text-[#063b25] sm:text-3xl">
-                  Anekwe Benedict Ikechukwu, Esq.
-                </h3>
+                  <div className="mt-auto flex items-center gap-3 pt-7">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#008f3b]">
+                      {executive.icon}
+                    </div>
 
-                <div className="mt-5 h-1 w-12 rounded-full bg-[#D4AF37]" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-extrabold text-[#063b25]">
+                        {executive.highlight}
+                      </p>
 
-                <p className="mt-5 text-sm leading-6 text-slate-600">
-                  Secretary of ASBESOC, supporting effective administration,
-                  coordination, and organizational development.
-                </p>
-
-                <div className="mt-7 flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#008f3b]">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                      aria-hidden="true"
-                    >
-                      <path d="M4 5h16v14H4z" />
-                      <path d="M8 9h8M8 13h5" />
-                    </svg>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-extrabold text-[#063b25]">
-                      Service & Commitment
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Supporting organizational impact
-                    </p>
+                      <p className="text-xs text-slate-500">
+                        {executive.highlightText}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            ))}
           </div>
         </div>
       </section>
