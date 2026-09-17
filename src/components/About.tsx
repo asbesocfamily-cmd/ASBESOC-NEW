@@ -4,18 +4,119 @@ import logo from "../assets/logo.PNG";
 
 type SectionKey = "whoWeAre" | "history" | "commitment" | null;
 
+const coreValues = [
+  {
+    title: "Integrity & Transparency",
+    description:
+      "We uphold honesty, accountability, openness, and ethical conduct in all our activities and relationships.",
+  },
+  {
+    title: "Human Dignity & Respect",
+    description:
+      "We respect the dignity, rights, freedoms, and worth of every individual and community.",
+  },
+  {
+    title: "Peace & Non-Violence",
+    description:
+      "We promote peaceful coexistence, dialogue, tolerance, conflict prevention, and non-violent approaches to resolving disputes.",
+  },
+  {
+    title: "Justice & Human Rights",
+    description:
+      "We advocate for equality, fairness, access to justice, and the protection of fundamental human rights.",
+  },
+  {
+    title: "Gender Sensitivity & Inclusion",
+    description:
+      "We promote equal opportunities and meaningful participation of women, men, girls, boys, persons with disabilities, and other vulnerable groups.",
+  },
+  {
+    title: "Community Participation & Ownership",
+    description:
+      "We believe sustainable development is achieved when communities actively participate in identifying problems, developing solutions, and taking ownership of interventions.",
+  },
+  {
+    title: "Empowerment & Human Capital Development",
+    description:
+      "We equip individuals and communities with knowledge, skills, opportunities, and resources that enable them to improve their lives and contribute positively to society.",
+  },
+  {
+    title: "Accountability & Responsibility",
+    description:
+      "We take responsibility for our decisions, commitments, resources, and impact on the communities we serve.",
+  },
+  {
+    title: "Professionalism & Excellence",
+    description:
+      "We maintain high standards of competence, quality, efficiency, teamwork, and continuous improvement.",
+  },
+  {
+    title: "Innovation & Creativity",
+    description:
+      "We encourage creative thinking, learning, technology, and innovative approaches to addressing social and community challenges.",
+  },
+  {
+    title: "Security & Community Resilience",
+    description:
+      "We support responsible security awareness, community vigilance, early warning, prevention, and resilience while respecting human rights and the rule of law.",
+  },
+  {
+    title: "Partnership & Collaboration",
+    description:
+      "We work with government institutions, security agencies, civil society organizations, traditional and religious institutions, communities, and other stakeholders to achieve sustainable impact.",
+  },
+];
+
+const focusAreas = [
+  {
+    number: "01",
+    title: "Peace",
+    text: "Promoting peaceful communities and positive social relationships.",
+  },
+  {
+    number: "02",
+    title: "Human Empowerment",
+    text: "Supporting people to develop their capacity and improve their lives.",
+  },
+  {
+    number: "03",
+    title: "Capacity Building",
+    text: "Strengthening individuals and communities through knowledge and practical development.",
+  },
+  {
+    number: "04",
+    title: "Sustainable Development",
+    text: "Creating community-based solutions designed for meaningful and lasting impact.",
+  },
+];
+
+const commitmentPoints = [
+  "Community Participation",
+  "Empowerment",
+  "Partnership",
+  "Sustainable Impact",
+];
+
 function About() {
   const [openSection, setOpenSection] = useState<SectionKey>(null);
 
   useEffect(() => {
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenSection(null);
+      }
+    };
+
     if (openSection) {
       document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", closeWithEscape);
     } else {
       document.body.style.overflow = "";
     }
 
     return () => {
       document.body.style.overflow = "";
+      window.removeEventListener("keydown", closeWithEscape);
     };
   }, [openSection]);
 
@@ -58,21 +159,24 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
   return (
     <>
       <main className="min-h-screen overflow-hidden bg-[#f5f8f5] text-slate-800">
-
-        {/* =========================================================
-            HERO
-        ========================================================= */}
+        {/* HERO */}
         <section className="relative overflow-hidden bg-[#064e3b]">
-          {/* Background shapes */}
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-400/10 blur-2xl" />
-          <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-emerald-300/10 blur-3xl" />
+          <div
+            className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-400/10 blur-2xl"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-emerald-300/10 blur-3xl"
+            aria-hidden="true"
+          />
 
           <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 sm:px-8 lg:grid-cols-2 lg:px-10 lg:py-28">
-
-            {/* Text */}
             <div className="max-w-2xl">
               <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-sm">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span
+                  className="h-2 w-2 rounded-full bg-amber-400"
+                  aria-hidden="true"
+                />
                 <span className="text-xs font-semibold tracking-[0.2em] text-white/80">
                   ABOUT ASBESOC
                 </span>
@@ -84,45 +188,44 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
               </h1>
 
               <p className="mt-6 max-w-xl text-base leading-8 text-emerald-50/85 sm:text-lg">
-                ASBESOC is committed to peace, empowerment, positive
-                behavioural change and sustainable community development.
+                ASBESOC is committed to peace, empowerment, positive behavioural
+                change and sustainable community development.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-4">
                 <button
                   type="button"
                   onClick={() => setOpenSection("whoWeAre")}
-                  className="rounded-full bg-amber-400 px-6 py-3.5 text-sm font-bold text-[#163d31] shadow-lg shadow-amber-950/20 transition duration-300 hover:-translate-y-1 hover:bg-amber-300"
+                  className="rounded-full bg-amber-400 px-6 py-3.5 text-sm font-bold text-[#163d31] shadow-lg shadow-amber-950/20 transition duration-300 hover:-translate-y-1 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   Learn More
                 </button>
 
                 <Link
                   to="/programs"
-                  className="rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#064e3b]"
+                  className="rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#064e3b] focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   Explore Our Programs
                 </Link>
               </div>
             </div>
 
-            {/* Large logo visual */}
             <div className="relative flex min-h-[350px] items-center justify-center lg:min-h-[500px]">
-              {/* Large decorative circle */}
               <div className="absolute h-[310px] w-[310px] rounded-full border border-white/10 sm:h-[400px] sm:w-[400px]" />
 
               <div className="absolute h-[250px] w-[250px] rounded-full bg-white/5 blur-sm sm:h-[340px] sm:w-[340px]" />
 
-              {/* Logo card */}
               <div className="relative flex h-[270px] w-[270px] items-center justify-center rounded-[2rem] bg-white p-8 shadow-2xl shadow-black/20 sm:h-[370px] sm:w-[370px] sm:p-12">
                 <img
                   src={logo}
-                  alt="ASBESOC"
+                  alt="Association for a Better Society Nigeria"
+                  width="730"
+                  height="615"
+                  decoding="async"
                   className="h-full w-full object-contain"
                 />
               </div>
 
-              {/* Small accent */}
               <div className="absolute bottom-4 right-8 hidden rounded-2xl border border-white/10 bg-white/10 px-5 py-4 backdrop-blur-md sm:block">
                 <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-100/70">
                   Since
@@ -133,12 +236,9 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
           </div>
         </section>
 
-        {/* =========================================================
-            WHO WE ARE
-        ========================================================= */}
+        {/* WHO WE ARE */}
         <section className="bg-white px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-
             <div>
               <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
                 WHO WE ARE
@@ -162,8 +262,8 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
 
               <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">
                 We work with individuals, communities, government institutions,
-                development organizations, stakeholders and partners to identify
-                social and economic challenges and develop practical,
+                development organizations, stakeholders and partners to
+                identify social and economic challenges and develop practical,
                 community-based solutions.
               </p>
 
@@ -179,12 +279,9 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
           </div>
         </section>
 
-        {/* =========================================================
-            HISTORY — BEFORE VISION & MISSION
-        ========================================================= */}
+        {/* HISTORY */}
         <section className="bg-[#eef6f1] px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="mx-auto max-w-7xl">
-
             <div className="max-w-3xl">
               <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
                 OUR HISTORY
@@ -203,47 +300,47 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
             </div>
 
             <div className="mt-12 grid gap-6 md:grid-cols-3">
-
-              {/* 1999 */}
-              <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <article className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <p className="text-4xl font-black text-[#064e3b]">1999</p>
                 <div className="mt-5 h-px w-full bg-slate-200" />
+
                 <h3 className="mt-5 text-lg font-bold text-slate-900">
                   The Beginning
                 </h3>
+
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   ASBESOC was founded in response to increasing social
                   challenges and the need for practical community solutions.
                 </p>
-              </div>
+              </article>
 
-              {/* 2001 */}
-              <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <article className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <p className="text-4xl font-black text-[#064e3b]">2001</p>
                 <div className="mt-5 h-px w-full bg-slate-200" />
+
                 <h3 className="mt-5 text-lg font-bold text-slate-900">
                   Head Office
                 </h3>
+
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  The organization's head office was established in Enugu,
+                  The organization&apos;s head office was established in Enugu,
                   Enugu State, Nigeria.
                 </p>
-              </div>
+              </article>
 
-              {/* Today */}
-              <div className="rounded-3xl bg-[#064e3b] p-7 text-white shadow-xl shadow-emerald-950/10 transition duration-300 hover:-translate-y-1">
-                <p className="text-4xl font-black text-amber-400">
-                  Today
-                </p>
+              <article className="rounded-3xl bg-[#064e3b] p-7 text-white shadow-xl shadow-emerald-950/10 transition duration-300 hover:-translate-y-1">
+                <p className="text-4xl font-black text-amber-400">Today</p>
                 <div className="mt-5 h-px w-full bg-white/15" />
+
                 <h3 className="mt-5 text-lg font-bold">
                   Continuing the Mission
                 </h3>
+
                 <p className="mt-3 text-sm leading-7 text-emerald-50/75">
                   ASBESOC continues to work towards peace, empowerment,
                   positive behavioural change and sustainable development.
                 </p>
-              </div>
+              </article>
             </div>
 
             <button
@@ -256,12 +353,9 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
           </div>
         </section>
 
-        {/* =========================================================
-            VISION + MISSION
-        ========================================================= */}
+        {/* VISION AND MISSION */}
         <section className="bg-white px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="mx-auto max-w-7xl">
-
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
                 WHAT GUIDES US
@@ -272,21 +366,16 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
               </h2>
 
               <p className="mt-5 leading-8 text-slate-600">
-                Two commitments that guide the work we do and the change we
-                seek to create.
+                Two commitments that guide the work we do and the change we seek
+                to create.
               </p>
             </div>
 
             <div className="mt-14 grid gap-7 lg:grid-cols-2">
-
-              {/* VISION */}
               <article className="group relative overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-[#f5f8f5] p-8 sm:p-10">
-
                 <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-100/70 transition duration-500 group-hover:scale-125" />
 
                 <div className="relative">
-
-                  {/* Mature Vision Icon */}
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#064e3b] shadow-lg shadow-emerald-950/15">
                     <div className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-amber-400">
                       <div className="h-3 w-3 rounded-full bg-amber-400" />
@@ -313,14 +402,10 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                 </div>
               </article>
 
-              {/* MISSION */}
               <article className="group relative overflow-hidden rounded-[2rem] bg-[#064e3b] p-8 text-white shadow-xl shadow-emerald-950/10 sm:p-10">
-
                 <div className="absolute -bottom-24 -right-20 h-56 w-56 rounded-full bg-emerald-400/10 transition duration-500 group-hover:scale-125" />
 
                 <div className="relative">
-
-                  {/* Mature Mission Icon */}
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10">
                     <div className="relative h-8 w-8">
                       <div className="absolute left-1 top-1 h-6 w-6 rounded-full border-2 border-amber-400" />
@@ -351,19 +436,86 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
           </div>
         </section>
 
-        {/* =========================================================
-            OUR COMMITMENT
-        ========================================================= */}
+        {/* CORE VALUES */}
+        <section className="relative overflow-hidden bg-[#eef6f1] px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
+          <div
+            className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div
+            className="pointer-events-none absolute -bottom-40 -left-32 h-[450px] w-[450px] rounded-full bg-emerald-500/10 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div className="relative mx-auto max-w-7xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
+                OUR CORE VALUES
+              </p>
+
+              <h2 className="mt-4 text-3xl font-bold leading-tight text-[#064e3b] sm:text-5xl">
+                The principles that guide our service and impact.
+              </h2>
+
+              <div className="mx-auto mt-6 h-1 w-16 rounded-full bg-amber-400" />
+
+              <p className="mt-6 text-base leading-8 text-slate-600 sm:text-lg">
+                These values shape our decisions, relationships, partnerships
+                and commitment to the individuals and communities we serve.
+              </p>
+            </div>
+
+            <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {coreValues.map((value, index) => (
+                <article
+                  key={value.title}
+                  className="group flex h-full flex-col rounded-[1.75rem] border border-emerald-900/10 bg-white p-7 shadow-[0_10px_35px_rgba(6,78,59,0.06)] transition duration-300 hover:-translate-y-1 hover:border-emerald-700/20 hover:shadow-[0_18px_45px_rgba(6,78,59,0.12)] sm:p-8"
+                >
+                  <div className="flex items-start justify-between gap-5">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#064e3b] text-sm font-black text-amber-400 shadow-lg shadow-emerald-950/10">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+
+                    <span
+                      className="mt-2 h-2.5 w-2.5 rounded-full bg-amber-400 transition duration-300 group-hover:scale-125"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-bold leading-snug text-[#064e3b]">
+                    {value.title}
+                  </h3>
+
+                  <div className="mt-4 h-[2px] w-10 rounded-full bg-amber-400" />
+
+                  <p className="mt-4 text-sm leading-7 text-slate-600">
+                    {value.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-12 rounded-[1.75rem] bg-[#064e3b] px-6 py-7 text-center shadow-xl shadow-emerald-950/10 sm:px-10">
+              <p className="text-sm font-semibold leading-7 text-emerald-50/85 sm:text-base">
+                Integrity • Human Dignity • Peace • Justice • Inclusion •
+                Community Participation • Empowerment • Accountability •
+                Professionalism • Innovation • Security • Partnership
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* OUR COMMITMENT */}
         <section className="bg-[#f5f8f5] px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-
             <div>
               <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
                 OUR COMMITMENT
               </p>
 
               <h2 className="mt-4 text-3xl font-bold leading-tight text-[#064e3b] sm:text-5xl">
-                Building a better society is everyone's responsibility.
+                Building a better society is everyone&apos;s responsibility.
               </h2>
 
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -384,57 +536,34 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
 
             <div className="relative">
               <div className="rounded-[2rem] bg-[#064e3b] p-8 shadow-2xl shadow-emerald-950/15 sm:p-10">
-
                 <div className="grid gap-6">
+                  {commitmentPoints.map((point, index) => (
+                    <div
+                      key={point}
+                      className={
+                        index !== commitmentPoints.length - 1
+                          ? "border-b border-white/10 pb-6"
+                          : ""
+                      }
+                    >
+                      <p className="text-xs font-bold tracking-[0.18em] text-amber-400">
+                        {String(index + 1).padStart(2, "0")}
+                      </p>
 
-                  <div className="border-b border-white/10 pb-6">
-                    <p className="text-xs font-bold tracking-[0.18em] text-amber-400">
-                      01
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-white">
-                      Community Participation
-                    </h3>
-                  </div>
-
-                  <div className="border-b border-white/10 pb-6">
-                    <p className="text-xs font-bold tracking-[0.18em] text-amber-400">
-                      02
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-white">
-                      Empowerment
-                    </h3>
-                  </div>
-
-                  <div className="border-b border-white/10 pb-6">
-                    <p className="text-xs font-bold tracking-[0.18em] text-amber-400">
-                      03
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-white">
-                      Partnership
-                    </h3>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold tracking-[0.18em] text-amber-400">
-                      04
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-white">
-                      Sustainable Impact
-                    </h3>
-                  </div>
-
+                      <h3 className="mt-2 text-xl font-bold text-white">
+                        {point}
+                      </h3>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* =========================================================
-            OUR FOCUS
-        ========================================================= */}
+        {/* OUR FOCUS */}
         <section className="bg-white px-6 py-20 sm:px-8 lg:px-10 lg:py-28">
           <div className="mx-auto max-w-7xl">
-
             <div className="max-w-2xl">
               <p className="text-sm font-bold tracking-[0.2em] text-amber-500">
                 OUR FOCUS
@@ -446,30 +575,8 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
             </div>
 
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-              {[
-                {
-                  number: "01",
-                  title: "Peace",
-                  text: "Promoting peaceful communities and positive social relationships.",
-                },
-                {
-                  number: "02",
-                  title: "Human Empowerment",
-                  text: "Supporting people to develop their capacity and improve their lives.",
-                },
-                {
-                  number: "03",
-                  title: "Capacity Building",
-                  text: "Strengthening individuals and communities through knowledge and practical development.",
-                },
-                {
-                  number: "04",
-                  title: "Sustainable Development",
-                  text: "Creating community-based solutions designed for meaningful and lasting impact.",
-                },
-              ].map((item) => (
-                <div
+              {focusAreas.map((item) => (
+                <article
                   key={item.number}
                   className="rounded-3xl border border-slate-200 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl"
                 >
@@ -484,18 +591,15 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {item.text}
                   </p>
-                </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* =========================================================
-            CTA
-        ========================================================= */}
+        {/* CTA */}
         <section className="bg-[#064e3b] px-6 py-20 sm:px-8 lg:px-10">
           <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
-
             <div className="max-w-2xl">
               <p className="text-sm font-bold tracking-[0.2em] text-amber-400">
                 BE PART OF THE CHANGE
@@ -530,24 +634,33 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
         </section>
       </main>
 
-      {/* =========================================================
-          FULL-SCREEN LEARN MORE EXPERIENCE
-      ========================================================= */}
+      {/* FULL-SCREEN INFORMATION EXPERIENCE */}
       {openSection && (
-        <div className="fixed inset-0 z-[999] overflow-y-auto bg-[#064e3b]">
+        <div
+          className="fixed inset-0 z-[999] overflow-y-auto bg-[#064e3b]"
+          role="dialog"
+          aria-modal="true"
+          aria-label={sectionContent[openSection].title}
+        >
+          <div
+            className="pointer-events-none fixed -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-emerald-300/10 blur-3xl"
+            aria-hidden="true"
+          />
 
-          {/* Decorative background */}
-          <div className="pointer-events-none fixed -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-emerald-300/10 blur-3xl" />
-          <div className="pointer-events-none fixed -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-amber-400/10 blur-3xl" />
+          <div
+            className="pointer-events-none fixed -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-amber-400/10 blur-3xl"
+            aria-hidden="true"
+          />
 
           <div className="relative min-h-screen">
-
-            {/* Top bar */}
             <div className="sticky top-0 z-20 border-b border-white/10 bg-[#064e3b]/90 backdrop-blur-xl">
               <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 sm:px-8">
-
                 <div className="flex items-center gap-3">
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  <div
+                    className="h-2.5 w-2.5 rounded-full bg-amber-400"
+                    aria-hidden="true"
+                  />
+
                   <span className="text-xs font-bold tracking-[0.2em] text-white/70">
                     ASBESOC
                   </span>
@@ -556,7 +669,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                 <button
                   type="button"
                   onClick={() => setOpenSection(null)}
-                  aria-label="Close"
+                  aria-label="Close information"
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-xl text-white transition hover:bg-amber-400 hover:text-[#163d31]"
                 >
                   ×
@@ -564,11 +677,8 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
               </div>
             </div>
 
-            {/* Full page content */}
             <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-5xl items-center px-6 py-16 sm:px-8 lg:py-24">
-
               <article className="w-full">
-
                 <div className="max-w-3xl">
                   <p className="text-xs font-bold tracking-[0.25em] text-amber-400">
                     {sectionContent[openSection].eyebrow}
@@ -586,7 +696,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                     .split("\n\n")
                     .map((paragraph, index) => (
                       <p
-                        key={index}
+                        key={`${openSection}-${index}`}
                         className="mb-7 text-base leading-8 text-emerald-50/80 last:mb-0 sm:text-lg sm:leading-9"
                       >
                         {paragraph}
@@ -601,7 +711,6 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                 >
                   Back to About →
                 </button>
-
               </article>
             </div>
           </div>
