@@ -557,21 +557,6 @@ function Membership() {
     }));
   }
 
-  function startNewApplication() {
-    setValues(createEmptyForm());
-    setTouched({});
-    setAttempted(false);
-    setSubmitError("");
-    setSubmitted(false);
-    submissionLock.current = false;
-
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "auto",
-    });
-  }
-
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -694,14 +679,6 @@ function Membership() {
               >
                 Return Home
               </NavLink>
-
-              <button
-                type="button"
-                onClick={startNewApplication}
-                className={`inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-900/15 bg-white px-7 py-3 text-sm font-bold text-[#063b25] transition hover:bg-emerald-50 ${focusClass}`}
-              >
-                New Application
-              </button>
             </div>
           </div>
         </section>
@@ -756,7 +733,6 @@ function Membership() {
                   <h2 className="text-sm font-bold text-amber-300">
                     Shared Purpose
                   </h2>
-
                   <p className="mt-2 text-xs leading-6 text-white/75">
                     Connect with people committed to peace,
                     empowerment and positive social
@@ -768,7 +744,6 @@ function Membership() {
                   <h2 className="text-sm font-bold text-amber-300">
                     International Participation
                   </h2>
-
                   <p className="mt-2 text-xs leading-6 text-white/75">
                     Membership applications can be completed
                     by individuals in Nigeria and other
@@ -780,7 +755,6 @@ function Membership() {
                   <h2 className="text-sm font-bold text-amber-300">
                     Meaningful Contribution
                   </h2>
-
                   <p className="mt-2 text-xs leading-6 text-white/75">
                     Bring your skills, experience and interests
                     into ASBESOC programmes and community
@@ -959,9 +933,7 @@ function Membership() {
                         {...bindField("lga")}
                         label="Local Government Area"
                         kind="select"
-                        options={
-                          selectedStateData?.lgas ?? []
-                        }
+                        options={selectedStateData?.lgas ?? []}
                         placeholder={
                           selectedStateData
                             ? "Select your LGA"
@@ -1045,53 +1017,45 @@ function Membership() {
                     </p>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      {membershipInterests.map(
-                        (interest, index) => {
-                          const checked =
-                            values.membershipInterests.includes(
-                              interest,
-                            );
+                      {membershipInterests.map((interest, index) => {
+                        const checked =
+                          values.membershipInterests.includes(interest);
 
-                          return (
-                            <label
-                              key={interest}
-                              className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
-                                checked
-                                  ? "border-emerald-700 bg-emerald-50"
-                                  : "border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/40"
-                              }`}
-                            >
-                              <input
-                                id={`membership-interest-${index}`}
-                                type="checkbox"
-                                name="membershipInterests"
-                                value={interest}
-                                checked={checked}
-                                onChange={() =>
-                                  toggleInterest(interest)
-                                }
-                                className={`mt-0.5 h-4 w-4 shrink-0 accent-emerald-800 ${focusClass}`}
-                              />
+                        return (
+                          <label
+                            key={interest}
+                            className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
+                              checked
+                                ? "border-emerald-700 bg-emerald-50"
+                                : "border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/40"
+                            }`}
+                          >
+                            <input
+                              id={`membership-interest-${index}`}
+                              type="checkbox"
+                              name="membershipInterests"
+                              value={interest}
+                              checked={checked}
+                              onChange={() =>
+                                toggleInterest(interest)
+                              }
+                              className={`mt-0.5 h-4 w-4 shrink-0 accent-emerald-800 ${focusClass}`}
+                            />
 
-                              <span className="min-w-0 text-sm font-medium leading-6 text-[#163d31]">
-                                {interest}
-                              </span>
-                            </label>
-                          );
-                        },
-                      )}
+                            <span className="min-w-0 text-sm font-medium leading-6 text-[#163d31]">
+                              {interest}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
 
-                    {visibleError(
-                      "membershipInterests",
-                    ) && (
+                    {visibleError("membershipInterests") && (
                       <p
                         id="membership-interests-error"
                         className="mt-2 text-sm text-rose-700"
                       >
-                        {visibleError(
-                          "membershipInterests",
-                        )}
+                        {visibleError("membershipInterests")}
                       </p>
                     )}
                   </fieldset>
@@ -1150,8 +1114,7 @@ function Membership() {
                           touchField("declaration")
                         }
                         onChange={(event) => {
-                          const checked =
-                            event.target.checked;
+                          const checked = event.target.checked;
 
                           setValues((current) => ({
                             ...current,
@@ -1202,10 +1165,7 @@ function Membership() {
             </fieldset>
 
             {/* Submission feedback */}
-            <div
-              aria-live="polite"
-              aria-atomic="true"
-            >
+            <div aria-live="polite" aria-atomic="true">
               {isSubmitting && (
                 <p className="mt-6 text-sm font-medium text-emerald-800">
                   Sending your application. Please keep this
