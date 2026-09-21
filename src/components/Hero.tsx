@@ -442,7 +442,7 @@ function Hero() {
                     height="1100"
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02] lg:object-top"
+                    className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
                   />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-[#031f14]/65 via-transparent to-transparent" />

@@ -134,7 +134,7 @@ function Footer() {
                   </svg>
 
                   <span className="break-all">
-                    asbesocngo@gmail.com
+                    asbesocng@gmail.com
                   </span>
                 </a>
 
@@ -165,7 +165,7 @@ function Footer() {
                 <span className="font-semibold text-white">
                   Head Office:
                 </span>{" "}
-                Plot 359, Mmirinaezoruora Avenue, New G.R.A,
+                Plot 359, Mmiri N'ezere Ora Avenue, New G.R.A,
                 Trans Ekulu, Enugu State.
               </p>
 
