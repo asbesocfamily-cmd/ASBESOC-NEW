@@ -17,16 +17,39 @@ function rootJpgAssets(): Plugin {
           return;
         }
 
-        const fileName = decodeURIComponent(url.slice(1));
+        let fileName: string;
+
+        try {
+          fileName = decodeURIComponent(url.slice(1));
+        } catch {
+          next();
+          return;
+        }
+
+        if (
+          fileName.includes("/") ||
+          fileName.includes("\\") ||
+          fileName.includes("\0")
+        ) {
+          next();
+          return;
+        }
+
         const filePath = path.resolve(process.cwd(), fileName);
 
-        if (!fs.existsSync(filePath)) {
+        if (
+          !fs.existsSync(filePath) ||
+          !fs.statSync(filePath).isFile()
+        ) {
           next();
           return;
         }
 
         res.setHeader("Content-Type", "image/jpeg");
-        fs.createReadStream(filePath).pipe(res);
+
+        const stream = fs.createReadStream(filePath);
+        stream.on("error", () => res.destroy());
+        stream.pipe(res);
       });
     },
 
@@ -38,24 +61,25 @@ function rootJpgAssets(): Plugin {
         return;
       }
 
-      const files = fs.readdirSync(root);
-
-      for (const file of files) {
-        if (!/^.+\.jpe?g$/i.test(file)) {
+      for (const file of fs.readdirSync(root)) {
+        if (!/\.jpe?g$/i.test(file)) {
           continue;
         }
 
         const source = path.resolve(root, file);
-        const destination = path.resolve(dist, file);
 
-        fs.copyFileSync(source, destination);
+        if (!fs.statSync(source).isFile()) {
+          continue;
+        }
+
+        fs.copyFileSync(source, path.resolve(dist, file));
       }
     },
   };
 }
 
 export default defineConfig({
-  base: "/ASBESOC-NEW/",
+  base: "/",
 
   plugins: [
     react(),
