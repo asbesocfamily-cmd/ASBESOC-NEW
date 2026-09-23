@@ -273,9 +273,10 @@ function Hero() {
               </p>
 
               <p className="mt-4 max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">
-                We also work for human rights protection, awareness and
-                education, conflict management and resolution, security
-                surveillance, and mediation.
+                However, our areas of intervention also include human rights
+                protection, awareness and education; conflict management,
+                resolution and mediation; security surveillance; and human
+                capital development.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
