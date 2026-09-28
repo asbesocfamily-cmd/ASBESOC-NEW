@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 
+import AccountNav from "./AccountNav";
 import logo from "../assets/logo.PNG";
 import {
   submitPartnership,
@@ -26,7 +27,7 @@ type NigeriaState = {
 const nigeriaStates: NigeriaState[] = [
   {
     name: "Abia",
-    lgas: "Aba North|Aba South|Arochukwu|Bende|Ikwuano|Isiala Ngwa North|Isiala Ngwa South|Isuikwuato|Obi Ngwa|Ohafia|Osisioma Ngwa|Ugwunagbo|Ukwa East|Ukwa West|Umuahia North|Umuahia South|Umunneochi".split("|"),
+    lgas: "Aba North|Aba South|Arochukwu|Bende|Ikwuano|Isiala Ngwa North|Isuikwuato|Obi Ngwa|Ohafia|Osisioma Ngwa|Ugwunagbo|Ukwa East|Ukwa West|Umuahia North|Umuahia South|Umunneochi".split("|"),
   },
   {
     name: "Adamawa",
@@ -289,7 +290,7 @@ function Navbar() {
 
           <nav
             aria-label="Main navigation"
-            className="hidden items-center gap-1.5 lg:flex"
+            className="hidden min-w-0 flex-wrap items-center justify-end gap-1.5 py-2 lg:flex"
           >
             {navLinks.map((link) => (
               <NavLink
@@ -360,6 +361,8 @@ function Navbar() {
                 </div>
               )}
             </div>
+
+            <AccountNav onNavigate={closeMenu} />
           </nav>
 
           <button
@@ -503,6 +506,8 @@ function Navbar() {
                   ))}
                 </div>
               )}
+
+              <AccountNav mobile onNavigate={closeMenu} />
             </div>
           </nav>
         </div>
@@ -681,7 +686,8 @@ function validateForm(
     (!/^\+?\d{7,15}$/.test(normalizedPhone) ||
       /^\+?0+$/.test(normalizedPhone))
   ) {
-    errors.phone = "Please enter a valid phone number, including country code if needed.";
+    errors.phone =
+      "Please enter a valid phone number, including country code if needed.";
   }
 
   if (isNigeriaCountry(values.country)) {

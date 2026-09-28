@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function admin() {
+      return verified() && request.auth.uid == 'RJJhn4WSoBhUQ5vMF7G9vxLB98E2';
+    }
+    function text(value, minimum, maximum) {
+      return value is string && value.size() >= minimum && value.size() <= maximum;
+    }
+    function location(data) {
+      return text(data.country, 1, 120)
+        && text(data.get('state', ''), 0, 120)
+        && text(data.get('lga', ''), 0, 120)
+        && text(data.get('region', ''), 0, 120)
+        && text(data.get('city', ''), 0, 120);
+    }
+    function contact(data) {
+      return text(data.email, 3, 254) && text(data.phone, 7, 40) && location(data);
+    }
+    function reviewTransition(before, after) {
+      return before in ['new', 'pending', 'under_review']
+        && after in ['under_review', 'approved', 'rejected'] && before != after;
+    }
+    match /profiles/{uid} {
+      allow get: if verified() && (request.auth.uid == uid || admin());
+      allow list: if admin();
+      allow create, update: if verified() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['fullName', 'phone', 'updatedAt'])
+        && text(request.resource.data.fullName, 2, 120)
+        && text(request.resource.data.phone, 0, 25)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    match /membershipApplications/{applicationId} {
+      // The account UID is the document ID, including for a missing-document check.
+      allow get: if admin() || (verified() && request.auth.uid == applicationId);
+      allow list: if admin();
+      allow create: if verified() && request.auth.uid == applicationId
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.submissionType == 'membership'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly(['userId', 'fullName', 'dateOfBirth', 'gender', 'phone', 'email', 'nationality', 'residentialAddress', 'country', 'state', 'lga', 'region', 'city', 'occupation', 'qualification', 'reasonForJoining', 'membershipInterests', 'skills', 'referralSource', 'status', 'createdAt', 'submissionType'])
+        && contact(request.resource.data)
+        && text(request.resource.data.fullName, 1, 150)
+        && text(request.resource.data.dateOfBirth, 10, 10)
+        && text(request.resource.data.gender, 1, 50)
+        && text(request.resource.data.nationality, 1, 120)
+        && text(request.resource.data.residentialAddress, 1, 500)
+        && text(request.resource.data.occupation, 1, 200)
+        && text(request.resource.data.qualification, 1, 200)
+        && text(request.resource.data.reasonForJoining, 1, 3000)
+        && request.resource.data.membershipInterests is list
+        && request.resource.data.membershipInterests.size() <= 20
+        && text(request.resource.data.get('skills', ''), 0, 3000)
+        && text(request.resource.data.referralSource, 1, 200);
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt', 'reviewedBy'])
+        && reviewTransition(resource.data.status, request.resource.data.status)
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && text(request.resource.data.reviewNote, request.resource.data.status == 'rejected' ? 1 : 0, 2000)
+        && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)/reviews/$(request.resource.data.status)).data.createdAt == request.time;
+      allow delete: if false;
+      match /reviews/{decision} {
+        allow read: if admin();
+        allow create: if admin()
+          && request.resource.data.keys().hasOnly(['status', 'previousStatus', 'note', 'reviewedBy', 'createdAt'])
+          && request.resource.data.status == decision
+          && request.resource.data.previousStatus == get(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.status
+          && reviewTransition(request.resource.data.previousStatus, decision)
+          && request.resource.data.reviewedBy == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.status == decision
+          && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.reviewNote == request.resource.data.note
+          && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.reviewedAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+    match /supportRequests/{id} {
+      allow read: if admin();
+      allow create: if request.resource.data.keys().hasOnly(['fullNameOrOrganization', 'email', 'phone', 'supportType', 'anonymous', 'country', 'state', 'lga', 'region', 'city', 'supportDescription', 'message', 'status', 'createdAt', 'submissionType'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.submissionType == 'support'
+        && request.resource.data.createdAt == request.time
+        && contact(request.resource.data)
+        && request.resource.data.anonymous is bool
+        && text(request.resource.data.get('fullNameOrOrganization', ''), 0, 200)
+        && text(request.resource.data.supportType, 1, 150)
+        && text(request.resource.data.supportDescription, 1, 5000)
+        && text(request.resource.data.get('message', ''), 0, 5000);
+      allow update, delete: if false;
+    }
+    match /partnershipRequests/{id} {
+      allow read: if admin();
+      allow create: if request.resource.data.keys().hasOnly(['organization', 'organizationType', 'contactPerson', 'jobTitle', 'email', 'phone', 'website', 'nationality', 'country', 'state', 'lga', 'region', 'city', 'areasOfInterest', 'partnershipMethods', 'message', 'status', 'createdAt', 'submissionType'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.submissionType == 'partnership'
+        && request.resource.data.createdAt == request.time
+        && contact(request.resource.data)
+        && text(request.resource.data.organization, 1, 200)
+        && text(request.resource.data.organizationType, 1, 150)
+        && text(request.resource.data.contactPerson, 1, 150)
+        && text(request.resource.data.jobTitle, 1, 150)
+        && text(request.resource.data.get('website', ''), 0, 500)
+        && text(request.resource.data.get('nationality', ''), 0, 120)
+        && request.resource.data.areasOfInterest is list
+        && request.resource.data.areasOfInterest.size() <= 20
+        && request.resource.data.partnershipMethods is list
+        && request.resource.data.partnershipMethods.size() <= 20
+        && text(request.resource.data.get('message', ''), 0, 5000);
+      allow update, delete: if false;
+    }
+    // Messaging, certified-member privileges and payments are not enabled yet.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -26,7 +26,8 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 
-const ADMIN_UID = "RJJhn4WSoBhUQ5vMF7G9vxLB98E2";
+import { ADMIN_UID } from "../firebase/membership";
+import ApplicationReview from "./ApplicationReview";
 const PAGE_SIZE = 20;
 
 const sections = [
@@ -264,6 +265,10 @@ function Admin() {
         </section>
       </main>
     );
+  }
+
+  if (!user.emailVerified) {
+    return <main className="min-h-[70vh] bg-[#f3f7f3] px-4 py-12"><section className="mx-auto max-w-lg space-y-5 rounded-3xl bg-white p-8 text-[#063b25]"><h1 className="text-2xl font-bold">Verify your administrator email</h1><p>Verify your account email before accessing membership records or making review decisions.</p><NavLink to="/verify-email" className={buttonStyle}>Verify email</NavLink><p className="text-sm">After verification, return to the admin page. If needed, sign out and sign in again.</p><button className={buttonStyle} disabled={signingOut} onClick={logout}>Sign out</button>{sessionError && <p role="alert">{sessionError}</p>}</section></main>;
   }
 
   return (
@@ -681,6 +686,8 @@ function SubmissionList({ section }: { section: Section }) {
                       </div>
                     ))}
                   </dl>
+
+                  {section.id === "membershipApplications" && <ApplicationReview id={row.id} status={String(row.data.status)} linked={typeof row.data.userId === "string"} onSaved={refresh} />}
 
                   <p className="mt-6 break-all border-t border-slate-100 pt-4 text-xs text-slate-400">
                     Reference: {row.id}

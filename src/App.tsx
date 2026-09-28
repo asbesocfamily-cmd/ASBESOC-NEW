@@ -10,8 +10,18 @@ import Membership from "./components/Membership";
 import Contact from "./components/Contact";
 import Gallery from "./components/Gallery";
 import Footer from "./components/Footer";
+import RequireAuth from "./components/RequireAuth";
 
 const Admin = lazy(() => import("./components/Admin"));
+const SignUp = lazy(() => import("./components/SignUp"));
+const Login = lazy(() => import("./components/Login"));
+const VerifyEmail = lazy(() => import("./components/VerifyEmail"));
+const ForgotPassword = lazy(
+  () => import("./components/ForgotPassword"),
+);
+const MemberDashboard = lazy(
+  () => import("./components/MemberDashboard"),
+);
 
 function ScrollToTop() {
   const { pathname, key } = useLocation();
@@ -42,20 +52,46 @@ function App() {
       <Suspense
         fallback={
           <main className="flex min-h-screen items-center justify-center bg-[#f3f7f3]">
-            <p role="status" className="text-sm font-semibold text-[#063b25]">
+            <p
+              role="status"
+              className="text-sm font-semibold text-[#063b25]"
+            >
               Loading…
             </p>
           </main>
         }
       >
         <Routes>
+          {/* Public website */}
           <Route path="/" element={<Hero />} />
           <Route path="/about" element={<About />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/membership" element={<Membership />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* Account pages */}
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+
+          {/* Login required; email verification may be incomplete */}
+          <Route
+            element={<RequireAuth requireVerifiedEmail={false} />}
+          >
+            <Route path="/verify-email" element={<VerifyEmail />} />
+          </Route>
+
+          {/* Login and verified email required */}
+          <Route element={<RequireAuth />}>
+            <Route path="/dashboard/*" element={<MemberDashboard />} />
+            <Route path="/membership" element={<Membership />} />
+          </Route>
+
+          {/* Existing admin area */}
           <Route path="/admin/*" element={<Admin />} />
         </Routes>
       </Suspense>

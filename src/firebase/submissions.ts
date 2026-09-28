@@ -4,6 +4,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import { createApplication } from "./membership";
 
 export type SubmissionStatus = "new";
 
@@ -65,12 +66,7 @@ export type PartnershipSubmission = {
 export async function submitMembership(
   data: MembershipSubmission
 ) {
-  return addDoc(collection(db, "membershipApplications"), {
-    ...data,
-    status: "new" as SubmissionStatus,
-    createdAt: serverTimestamp(),
-    submissionType: "membership",
-  });
+  return createApplication(data);
 }
 
 export async function submitSupport(

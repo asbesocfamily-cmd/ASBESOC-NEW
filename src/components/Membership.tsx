@@ -9,6 +9,10 @@ import {
 } from "react";
 import { NavLink } from "react-router-dom";
 import { submitMembership } from "../firebase/submissions";
+import { useAuth } from "../contexts/useAuth";
+import { useMembership } from "../contexts/useMembership";
+import { memberError } from "../firebase/membership";
+import type { User } from "firebase/auth";
 
 type NigeriaState = {
   name: string;
@@ -431,9 +435,9 @@ const focusClass =
   "focus-visible:outline-none focus-visible:ring-2 " +
   "focus-visible:ring-emerald-700 focus-visible:ring-offset-2";
 
-function Membership() {
+function Membership({ user }: { user: User }) {
   const [values, setValues] =
-    useState<FormValues>(createEmptyForm);
+    useState<FormValues>(() => ({ ...createEmptyForm(), fullName: user.displayName || "", email: user.email || "" }));
 
   const [touched, setTouched] = useState<
     Partial<Record<FieldName, boolean>>
@@ -478,7 +482,7 @@ function Membership() {
   }, [submitted]);
 
   function updateText(name: TextFieldName, value: string) {
-    if (submissionLock.current) return;
+    if (isSubmitting) return;
 
     setValues((current) => {
       const next = { ...current, [name]: value };
@@ -620,9 +624,9 @@ function Membership() {
       });
 
       setSubmitted(true);
-    } catch {
+    } catch (caught) {
       setSubmitError(
-        "We couldn’t confirm your submission. Your answers are still here. Please check your connection and try again. If this continues, contact asbesocngo@gmail.com.",
+        `${memberError(caught)} Your answers are still here.`,
       );
     } finally {
       submissionLock.current = false;
@@ -882,6 +886,8 @@ function Membership() {
                     label="Email Address"
                     type="email"
                     autoComplete="email"
+                    readOnly
+                    hint="This is the verified email address on your account."
                     placeholder="you@example.com"
                   />
 
@@ -1321,6 +1327,7 @@ type FieldProps = {
   type?: HTMLInputTypeAttribute;
   required?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   options?: string[];
   rows?: number;
   max?: string;
@@ -1340,6 +1347,7 @@ function Field({
   type = "text",
   required = true,
   disabled = false,
+  readOnly = false,
   options = [],
   rows = 4,
   max,
@@ -1446,6 +1454,7 @@ function Field({
       ) : (
         <input
           {...shared}
+          readOnly={readOnly}
           type={type}
           max={max}
           maxLength={fieldLimits[name]}
@@ -1518,4 +1527,19 @@ function CheckIcon({
   );
 }
 
-export default Membership;
+function MembershipPage() {
+  const { user } = useAuth();
+  return user ? <ApplicationGate key={user.uid} user={user} /> : null;
+}
+
+function ApplicationGate({ user }: { user: User }) {
+  const { application, loading, error, retry } = useMembership(user.uid);
+  if (!loading && !error && !application) return <Membership user={user} />;
+  return <main className="min-h-[65vh] bg-[#f3f7f3] px-4 py-12"><section className="mx-auto max-w-2xl space-y-5 rounded-3xl border border-emerald-900/10 bg-white p-8 text-[#063b25]">
+    <h1 className="text-3xl font-bold">Membership application</h1>
+    {loading ? <p role="status">Checking your application…</p> : error ? <><p role="alert">{error}</p><button className="min-h-11 rounded-xl bg-[#063b25] px-5 py-3 text-white" onClick={retry}>Try again</button></> : <p>Your application has been saved. You can view it and follow its review status in your dashboard.</p>}
+    <NavLink className="inline-flex min-h-11 items-center font-semibold underline" to="/dashboard/membership">View membership dashboard</NavLink>
+  </section></main>;
+}
+
+export default MembershipPage;
