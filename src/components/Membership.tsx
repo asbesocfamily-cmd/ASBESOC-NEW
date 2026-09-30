@@ -1258,11 +1258,11 @@ function Membership({ user }: { user: User }) {
 
         <div className="mt-7 flex justify-center">
           <NavLink
-            to="/"
+            to="/dashboard"
             className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#063b25] transition hover:bg-emerald-100/60 ${focusClass}`}
           >
             <span aria-hidden="true">←</span>
-            Back to ASBESOC
+            Back to Dashboard
           </NavLink>
         </div>
       </div>
