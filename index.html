@@ -15,6 +15,26 @@
     />
 
     <meta name="theme-color" content="#063b25" />
+
+    <script>
+      (function () {
+        var redirect = sessionStorage.redirect;
+
+        if (redirect) {
+          delete sessionStorage.redirect;
+
+          var url = new URL(redirect);
+
+          if (url.origin === window.location.origin) {
+            history.replaceState(
+              null,
+              "",
+              url.pathname + url.search + url.hash
+            );
+          }
+        }
+      })();
+    </script>
   </head>
 
   <body>
