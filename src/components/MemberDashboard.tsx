@@ -20,6 +20,13 @@ import { useAuth } from "../contexts/useAuth";
 import { useMembership } from "../contexts/useMembership";
 import { db } from "../firebase/firebaseConfig";
 import {
+  chatError,
+  ensureMemberChat,
+  sendMemberMessage,
+  watchMemberMessages,
+  type ChatMessage,
+} from "../firebase/chat";
+import {
   applicationLabel,
   certificateLabel,
   getCertificateStatus,
@@ -32,7 +39,7 @@ import {
 } from "../firebase/membership";
 
 /* -------------------------------------------------------------------------- */
-/*                                   STYLES                                   */
+/*                                  STYLES                                    */
 /* -------------------------------------------------------------------------- */
 
 const primaryButton =
@@ -59,11 +66,7 @@ type IconName =
   | "menu"
   | "close"
   | "document"
-  | "community"
-  | "wallet"
-  | "certificate"
-  | "spark"
-  | "lock";
+  | "community";
 
 const navigation: {
   path: string;
@@ -84,7 +87,7 @@ const navigation: {
   },
   {
     path: "/dashboard/inbox",
-    label: "Inbox",
+    label: "Chat with ASBESOC",
     icon: "inbox",
   },
   {
@@ -105,7 +108,7 @@ const navigation: {
 ];
 
 /* -------------------------------------------------------------------------- */
-/*                                    ICON                                    */
+/*                                   ICON                                     */
 /* -------------------------------------------------------------------------- */
 
 function Icon({
@@ -251,46 +254,11 @@ function Icon({
           <path d="M15 15c3 0 5 1.5 5 4" />
         </svg>
       );
-
-    case "wallet":
-      return (
-        <svg {...common}>
-          <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H18a2 2 0 0 1 2 2v13H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3" />
-          <path d="M15 10h6v5h-6a2.5 2.5 0 0 1 0-5Z" />
-          <circle cx="16" cy="12.5" r=".5" fill="currentColor" />
-        </svg>
-      );
-
-    case "certificate":
-      return (
-        <svg {...common}>
-          <path d="M6 3h12v13H6z" />
-          <path d="M9 7h6M9 10h6" />
-          <circle cx="12" cy="16" r="3" />
-          <path d="m10.5 18.5-.5 3 2-1 2 1-.5-3" />
-        </svg>
-      );
-
-    case "spark":
-      return (
-        <svg {...common}>
-          <path d="m12 3 1.3 4.2L17 9l-3.7 1.8L12 15l-1.3-4.2L7 9l3.7-1.8L12 3Z" />
-          <path d="m19 14 .7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14Z" />
-        </svg>
-      );
-
-    case "lock":
-      return (
-        <svg {...common}>
-          <rect x="5" y="10" width="14" height="11" rx="2" />
-          <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-        </svg>
-      );
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               REUSABLE UI                                  */
+/*                              REUSABLE UI                                   */
 /* -------------------------------------------------------------------------- */
 
 function Card({
@@ -302,7 +270,7 @@ function Card({
 }) {
   return (
     <section
-      className={`rounded-[24px] border border-slate-200/70 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.045)] ${className}`}
+      className={`rounded-[24px] border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] ${className}`}
     >
       {children}
     </section>
@@ -321,7 +289,7 @@ function PageHeading({
   return (
     <div>
       {eyebrow && (
-        <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#d97706]">
+        <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#d97706]">
           {eyebrow}
         </p>
       )}
@@ -352,7 +320,9 @@ function initials(name: string, email: string | null) {
 function firstName(user: User) {
   const name = user.displayName?.trim();
 
-  if (!name) return "Member";
+  if (!name) {
+    return "Member";
+  }
 
   return name.split(/\s+/)[0];
 }
@@ -362,7 +332,6 @@ function greeting() {
 
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
-
   return "Good evening";
 }
 
@@ -405,11 +374,22 @@ function Dashboard({ user }: { user: User }) {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-[#f5f7f5] text-slate-700">
-      {/* MOBILE HEADER */}
+  const applicationPanel = membership.loading ? (
+    <MembershipLoading />
+  ) : membership.error ? (
+    <MembershipError
+      message={membership.error}
+      retry={membership.retry}
+    />
+  ) : (
+    <MembershipPanel application={membership.application} />
+  );
 
-      <div className="sticky top-0 z-40 flex h-[70px] items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur lg:hidden">
+  return (
+    <div className="min-h-screen bg-[#f6f8f6] text-slate-700">
+      {/* Mobile top bar */}
+
+      <div className="sticky top-0 z-40 flex h-[72px] items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
         <Link to="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#063b25] text-sm font-black text-white">
             A
@@ -419,8 +399,7 @@ function Dashboard({ user }: { user: User }) {
             <p className="text-sm font-black tracking-wide text-[#063b25]">
               ASBESOC
             </p>
-
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
               Member Portal
             </p>
           </div>
@@ -428,18 +407,39 @@ function Dashboard({ user }: { user: User }) {
 
         <button
           type="button"
-          aria-label="Open dashboard menu"
+          aria-label="Open member dashboard menu"
+          aria-expanded={mobileMenuOpen}
           onClick={() => setMobileMenuOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#063b25]"
+          className="group flex items-center gap-2 rounded-2xl border border-slate-200 bg-white py-1.5 pl-1.5 pr-2.5 text-left text-[#063b25] shadow-sm transition hover:border-emerald-900/15 hover:bg-emerald-50/50"
         >
-          <Icon name="menu" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-xs font-black text-[#063b25]">
+            {initials(user.displayName || "", user.email)}
+          </span>
+          <span className="hidden min-[390px]:block">
+            <span className="block max-w-[90px] truncate text-[11px] font-black leading-4 text-[#063b25]">
+              {firstName(user)}
+            </span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              Menu
+            </span>
+          </span>
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4 text-slate-400 transition group-hover:text-[#063b25]"
+            aria-hidden="true"
+          >
+            <path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
 
-      <div className="mx-auto flex min-h-screen max-w-[1700px]">
-        {/* DESKTOP SIDEBAR */}
+      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+        {/* Sidebar desktop */}
 
-        <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col bg-[#052f1e] text-white lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-[280px] shrink-0 flex-col bg-[#052f1e] text-white lg:flex">
           <SidebarContent
             user={user}
             busy={busy}
@@ -448,14 +448,13 @@ function Dashboard({ user }: { user: User }) {
           />
         </aside>
 
-        {/* MOBILE SIDEBAR */}
+        {/* Mobile drawer backdrop */}
 
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
-              type="button"
               aria-label="Close dashboard menu"
-              className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]"
               onClick={() => setMobileMenuOpen(false)}
             />
 
@@ -464,7 +463,7 @@ function Dashboard({ user }: { user: User }) {
                 type="button"
                 aria-label="Close dashboard menu"
                 onClick={() => setMobileMenuOpen(false)}
-                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"
+                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white"
               >
                 <Icon name="close" />
               </button>
@@ -480,43 +479,43 @@ function Dashboard({ user }: { user: User }) {
           </div>
         )}
 
-        {/* DASHBOARD */}
+        {/* Main dashboard */}
 
         <main className="min-w-0 flex-1">
-          <header className="hidden h-[78px] items-center justify-between border-b border-slate-200/70 bg-white px-8 lg:flex xl:px-10">
+          {/* Desktop top bar */}
+
+          <header className="hidden h-[82px] items-center justify-between border-b border-slate-200/80 bg-white px-8 xl:px-10 lg:flex">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-slate-400">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
                 Association for a Better Society
               </p>
-
               <p className="mt-1 text-sm font-bold text-[#063b25]">
-                Member Dashboard
+                Member Portal
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <NavLink
                 to="/dashboard/notifications"
                 aria-label="Notifications"
-                className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-[#063b25]"
+                className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-[#063b25]"
               >
-                <Icon name="bell" className="h-[18px] w-[18px]" />
+                <Icon name="bell" />
               </NavLink>
 
               <NavLink
                 to="/dashboard/profile"
-                className="ml-2 flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-slate-50"
+                className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-slate-50"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf7f1] text-sm font-black text-[#063b25]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-sm font-black text-[#063b25]">
                   {initials(user.displayName || "", user.email)}
                 </div>
 
-                <div className="max-w-[180px]">
+                <div className="max-w-[190px]">
                   <p className="truncate text-sm font-bold text-slate-800">
                     {user.displayName?.trim() || "ASBESOC Member"}
                   </p>
-
-                  <p className="truncate text-[11px] text-slate-400">
+                  <p className="truncate text-xs text-slate-400">
                     {user.email}
                   </p>
                 </div>
@@ -524,7 +523,7 @@ function Dashboard({ user }: { user: User }) {
             </div>
           </header>
 
-          <div className="px-4 py-6 sm:px-6 lg:px-8 xl:px-10 xl:py-9">
+          <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 xl:py-10">
             <Routes>
               <Route
                 index
@@ -532,7 +531,7 @@ function Dashboard({ user }: { user: User }) {
                   <Overview
                     user={user}
                     application={membership.application}
-                    loading={membership.loading}
+                    membershipLoading={membership.loading}
                   />
                 }
               />
@@ -540,12 +539,21 @@ function Dashboard({ user }: { user: User }) {
               <Route
                 path="membership"
                 element={
-                  <MembershipPage
-                    application={membership.application}
-                    loading={membership.loading}
-                    error={membership.error}
-                    retry={membership.retry}
-                  />
+                  <div className="mx-auto max-w-5xl">
+                    <PageHeading
+                      eyebrow="Membership"
+                      title="Your membership journey"
+                      description="Follow your application, review and certification progress with ASBESOC."
+                    />
+
+                    <div className="mt-7 space-y-6">
+                      <MembershipJourney
+                        application={membership.application}
+                        loading={membership.loading}
+                      />
+                      {applicationPanel}
+                    </div>
+                  </div>
                 }
               />
 
@@ -556,7 +564,7 @@ function Dashboard({ user }: { user: User }) {
                     <PageHeading
                       eyebrow="Profile"
                       title="Personal information"
-                      description="Keep your contact and account information up to date."
+                      description="Keep your basic member profile information up to date."
                     />
 
                     <div className="mt-7">
@@ -585,15 +593,7 @@ function Dashboard({ user }: { user: User }) {
 
               <Route
                 path="inbox"
-                element={
-                  <ComingSoon
-                    icon="inbox"
-                    eyebrow="Communication"
-                    title="Inbox"
-                    heading="Your member inbox"
-                    description="Official ASBESOC messages, opportunities and private member communication will appear here."
-                  />
-                }
+                element={<MemberChat user={user} />}
               />
 
               <Route
@@ -603,8 +603,17 @@ function Dashboard({ user }: { user: User }) {
                     icon="bell"
                     eyebrow="Updates"
                     title="Notifications"
-                    heading="Nothing new right now"
-                    description="Important account, membership and ASBESOC updates will appear here."
+                    heading="Your updates will appear here"
+                    description="For now, your current membership application status and review information are available in the Membership section."
+                    action={
+                      <Link
+                        className={primaryButton}
+                        to="/dashboard/membership"
+                      >
+                        View membership
+                        <Icon name="arrow" className="h-4 w-4" />
+                      </Link>
+                    }
                   />
                 }
               />
@@ -640,33 +649,32 @@ function SidebarContent({
 }) {
   return (
     <>
-      <div className="px-5 pb-5 pt-6">
+      <div className="px-6 pb-5 pt-7">
         <Link
           to="/"
           onClick={onNavigate}
           className="inline-flex items-center gap-3"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-sm font-black text-[#063b25] shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-base font-black text-[#063b25] shadow-sm">
             A
           </div>
 
           <div>
-            <p className="text-[15px] font-black tracking-wide">ASBESOC</p>
-
-            <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-emerald-100/50">
+            <p className="text-base font-black tracking-wide">ASBESOC</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.17em] text-emerald-200/70">
               Member Portal
             </p>
           </div>
         </Link>
       </div>
 
-      <div className="mx-5 h-px bg-white/10" />
+      <div className="mx-6 h-px bg-white/10" />
 
       <nav
         aria-label="Member dashboard"
-        className="flex-1 space-y-1 overflow-y-auto px-3 py-5"
+        className="flex-1 space-y-1.5 overflow-y-auto px-4 py-6"
       >
-        <p className="mb-3 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
+        <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
           Workspace
         </p>
 
@@ -677,32 +685,32 @@ function SidebarContent({
             end={item.end}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `group flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-[13px] font-semibold transition ${
+              `group flex min-h-12 items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition ${
                 isActive
                   ? "bg-white text-[#063b25] shadow-sm"
-                  : "text-white/65 hover:bg-white/[0.08] hover:text-white"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
               }`
             }
           >
-            <Icon name={item.icon} className="h-[18px] w-[18px]" />
+            <Icon name={item.icon} className="h-[19px] w-[19px]" />
+
             <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
+      <div className="p-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-[#063b25]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-[#063b25]">
               {initials(user.displayName || "", user.email)}
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-white">
+              <p className="truncate text-sm font-bold text-white">
                 {user.displayName?.trim() || "ASBESOC Member"}
               </p>
-
-              <p className="mt-0.5 truncate text-[10px] text-white/40">
+              <p className="truncate text-xs text-white/45">
                 {user.email}
               </p>
             </div>
@@ -712,10 +720,10 @@ function SidebarContent({
             type="button"
             disabled={busy}
             onClick={onLogout}
-            className="mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 text-[11px] font-bold text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+            className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 text-xs font-bold text-white/75 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon name="logout" className="h-4 w-4" />
-            {busy ? "Logging out…" : "Sign out"}
+            {busy ? "Logging out…" : "Logout"}
           </button>
 
           {error && (
@@ -736,236 +744,211 @@ function SidebarContent({
 function Overview({
   user,
   application,
-  loading,
+  membershipLoading,
 }: {
   user: User;
   application: Application | null;
-  loading: boolean;
+  membershipLoading: boolean;
 }) {
-  const certified = isCertifiedMember(application);
+  const membershipStatus = membershipLoading
+    ? "Checking status"
+    : application
+      ? isCertifiedMember(application)
+        ? "Certified member"
+        : applicationLabel(application.status)
+      : "Application required";
 
-  const membershipStatus = loading
-    ? "Checking"
-    : certified
-      ? "Certified member"
-      : application
-        ? applicationLabel(application.status)
-        : "Not started";
-
-  const certificateStatus = loading
-    ? "Checking"
+  const certificateStatus = membershipLoading
+    ? "Checking status"
     : certificateLabel(getCertificateStatus(application));
+
+  const profileStatus = user.displayName?.trim()
+    ? "Profile started"
+    : "Complete profile";
 
   return (
     <div className="mx-auto max-w-[1180px]">
-      {/* HERO */}
-
-      <section className="relative overflow-hidden rounded-[28px] bg-[#063b25] px-6 py-7 text-white shadow-[0_18px_50px_rgba(6,59,37,0.12)] sm:px-8 sm:py-9">
-        <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full border-[42px] border-white/[0.035]" />
-        <div className="absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-emerald-400/[0.04]" />
-
-        <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
+      <section className="relative overflow-hidden rounded-[30px] border border-[#0b5b39]/20 bg-[#052f1e] px-6 py-7 text-white shadow-[0_24px_70px_rgba(6,59,37,0.16)] sm:px-8 sm:py-9">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full border-[42px] border-white/[0.035]" />
+        <div className="absolute -bottom-28 right-20 h-64 w-64 rounded-full bg-[#f59e0b]/[0.06]" />
+        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-100">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-100">
               <span className="h-2 w-2 rounded-full bg-[#f59e0b]" />
               Member workspace
             </div>
-
-            <h1 className="mt-5 text-2xl font-black tracking-tight sm:text-4xl">
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">
               {greeting()}, {firstName(user)}.
             </h1>
-
-            <p className="mt-3 max-w-xl text-sm leading-7 text-white/60">
-              Manage your ASBESOC account, membership progress and member
-              services from one secure place.
+            <p className="mt-3 max-w-xl text-sm leading-7 text-white/60 sm:text-base">
+              Your ASBESOC member home. Follow organization updates, member opportunities and announcements while keeping your membership journey close at hand.
             </p>
           </div>
-
           <Link
-            to="/dashboard/profile"
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-3 text-xs font-bold text-white transition hover:bg-white/[0.13]"
+            to="/dashboard/membership"
+            className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#063b25] shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
           >
-            Manage profile
+            Open membership
             <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
       </section>
 
-      {/* FINTECH STATUS CARDS */}
+      <MemberFeedPlaceholder />
 
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <DashboardStatusCard
-          icon="shield"
-          label="Account status"
-          value={user.emailVerified ? "Verified" : "Action required"}
-          detail={
-            user.emailVerified
-              ? "Your account is secure and verified."
-              : "Email verification is required."
-          }
-        />
-
-        <DashboardStatusCard
+      <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatusCard
           icon="membership"
           label="Membership status"
           value={membershipStatus}
-          detail="Current ASBESOC membership stage."
+          description="Current ASBESOC membership stage"
         />
-
-        <DashboardStatusCard
-          icon="certificate"
+        <StatusCard
+          icon="shield"
+          label="Account status"
+          value={user.emailVerified ? "Verified" : "Action required"}
+          description="Sign-in and email verification"
+        />
+        <StatusCard
+          icon="document"
           label="Certificate status"
           value={certificateStatus}
-          detail="Your membership certificate progress."
+          description="Certificate and payment progress"
         />
       </div>
 
-      {/* NEXT ACTION + QUICK ACCESS */}
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_1fr]">
-        <NextAction application={application} loading={loading} />
-
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <NextAction application={application} loading={membershipLoading} />
         <Card className="p-6 sm:p-7">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#d97706]">
-                Quick access
-              </p>
-
-              <h2 className="mt-2 text-xl font-black text-[#063b25]">
-                Your workspace
-              </h2>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Account</p>
+              <h2 className="mt-2 text-xl font-black text-[#063b25]">Profile readiness</h2>
             </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
-              <Icon name="spark" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
+              <Icon name="user" />
             </div>
           </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <MiniAction
-              icon="membership"
-              title="Membership"
-              to="/dashboard/membership"
-            />
-
-            <MiniAction
-              icon="user"
-              title="My profile"
-              to="/dashboard/profile"
-            />
-
-            <MiniAction
-              icon="inbox"
-              title="Inbox"
-              to="/dashboard/inbox"
-            />
-
-            <MiniAction
-              icon="settings"
-              title="Security"
-              to="/dashboard/settings"
-            />
+          <div className="mt-6 rounded-2xl bg-[#f7faf8] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-semibold text-slate-500">Profile</span>
+              <span className="text-sm font-black text-[#063b25]">{profileStatus}</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <span className="text-sm font-semibold text-slate-500">Email</span>
+              <span className="text-sm font-black text-[#063b25]">{user.emailVerified ? "Verified" : "Unverified"}</span>
+            </div>
           </div>
+          <Link className={`${secondaryButton} mt-5 w-full`} to="/dashboard/profile">
+            Manage profile
+          </Link>
         </Card>
       </div>
 
-      {/* MEMBER COMMUNICATION */}
-
-      <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Card className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
-              <Icon name="inbox" />
-            </div>
-
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-                Inbox
-              </p>
-
-              <h3 className="mt-2 font-black text-[#063b25]">
-                Member communication
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Official messages and eligible member opportunities will be
-                delivered through your private inbox.
-              </p>
-
-              <Link
-                to="/dashboard/inbox"
-                className="mt-4 inline-flex items-center gap-2 text-xs font-black text-[#087247]"
-              >
-                Open inbox
-                <Icon name="arrow" className="h-4 w-4" />
-              </Link>
-            </div>
+      <div className="mt-7">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-black text-[#063b25]">Quick actions</h2>
+            <p className="mt-1 text-sm text-slate-500">Your most-used member services.</p>
           </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff7e8] text-[#d97706]">
-              <Icon name="bell" />
-            </div>
-
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-                Updates
-              </p>
-
-              <h3 className="mt-2 font-black text-[#063b25]">
-                Stay informed
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Account and membership updates will appear in your notification
-                centre.
-              </p>
-
-              <Link
-                to="/dashboard/notifications"
-                className="mt-4 inline-flex items-center gap-2 text-xs font-black text-[#087247]"
-              >
-                View notifications
-                <Icon name="arrow" className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </Card>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <QuickAction icon="membership" title="Membership" description="View your status, certificate and payment stage." to="/dashboard/membership" />
+          <QuickAction icon="user" title="Update profile" description="Keep your contact and member information current." to="/dashboard/profile" />
+          <QuickAction icon="inbox" title="Chat with ASBESOC" description="Open your private one-to-one admin communication space." to="/dashboard/inbox" />
+        </div>
       </div>
     </div>
   );
 }
 
-function DashboardStatusCard({
+function MemberFeedPlaceholder() {
+  return (
+    <section className="mt-7 overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.04)]">
+      <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#d97706]" />
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Member feed</p>
+          </div>
+          <h2 className="mt-2 text-xl font-black text-[#063b25] sm:text-2xl">ASBESOC updates</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Announcements, photos, opportunities, events and eligible-member training updates will appear here when published by ASBESOC.
+          </p>
+        </div>
+        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[11px] font-black text-[#087247]">
+          <Icon name="community" className="h-4 w-4" />
+          Member updates
+        </div>
+      </div>
+
+      <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="relative min-h-[260px] overflow-hidden rounded-[22px] border border-dashed border-emerald-900/15 bg-[#f7faf8] p-6 sm:p-8">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-900/[0.035]" />
+          <div className="relative flex h-full max-w-xl flex-col justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#087247] shadow-sm">
+              <Icon name="document" />
+            </div>
+            <h3 className="mt-5 text-lg font-black text-[#063b25]">Your member feed is ready for updates</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              There are no published member posts yet. Once the admin publishing system is connected, new ASBESOC messages and media will flow into this space automatically.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          {[
+            ["Announcements", "Official member news and important notices.", "bell"],
+            ["Photos & updates", "Pictures, project moments and community updates.", "community"],
+            ["Opportunities", "Events and eligible-member training announcements.", "membership"],
+          ].map(([title, description, icon]) => (
+            <div key={title} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#087247]">
+                  <Icon name={icon as IconName} className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-[#063b25]">{title}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatusCard({
   icon,
   label,
   value,
-  detail,
+  description,
 }: {
   icon: IconName;
   label: string;
   value: string;
-  detail: string;
+  description: string;
 }) {
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
             {label}
           </p>
 
-          <p className="mt-3 truncate text-lg font-black text-[#063b25]">
+          <p className="mt-2 text-lg font-black text-[#063b25]">
             {value}
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-slate-400">{detail}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">
+            {description}
+          </p>
         </div>
 
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
           <Icon name={icon} />
         </div>
       </div>
@@ -973,196 +956,44 @@ function DashboardStatusCard({
   );
 }
 
-function MiniAction({
+function QuickAction({
   icon,
   title,
+  description,
   to,
 }: {
   icon: IconName;
   title: string;
+  description: string;
   to: string;
 }) {
   return (
     <Link
       to={to}
-      className="group flex items-center justify-between rounded-2xl border border-slate-200/80 bg-[#fafcfb] p-4 transition hover:border-[#063b25]/15 hover:bg-[#f4f9f6]"
+      className="group rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-900/15 hover:shadow-[0_14px_40px_rgba(15,23,42,0.07)]"
     >
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#087247] shadow-sm">
-          <Icon name={icon} className="h-[17px] w-[17px]" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
+          <Icon name={icon} />
         </div>
 
-        <span className="text-xs font-black text-[#063b25]">{title}</span>
+        <Icon
+          name="arrow"
+          className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#063b25]"
+        />
       </div>
 
-      <Icon
-        name="arrow"
-        className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#063b25]"
-      />
+      <h3 className="mt-5 font-black text-[#063b25]">{title}</h3>
+
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {description}
+      </p>
     </Link>
   );
 }
 
-function NextAction({
-  application,
-  loading,
-}: {
-  application: Application | null;
-  loading: boolean;
-}) {
-  let title = "Complete your membership application";
-  let description =
-    "Start your application to begin your ASBESOC membership journey.";
-  let action: ReactNode = (
-    <Link to="/membership" className={primaryButton}>
-      Start application
-      <Icon name="arrow" className="h-4 w-4" />
-    </Link>
-  );
-
-  if (loading) {
-    title = "Checking your account";
-    description = "We're loading your latest membership information.";
-    action = null;
-  } else if (application?.status === "pending") {
-    title = "Your application has been received";
-    description =
-      "No action is required right now. ASBESOC will update your status after review.";
-    action = (
-      <Link to="/dashboard/membership" className={secondaryButton}>
-        View status
-      </Link>
-    );
-  } else if (application?.status === "under_review") {
-    title = "Review in progress";
-    description =
-      "Your application is currently being reviewed by ASBESOC.";
-    action = (
-      <Link to="/dashboard/membership" className={secondaryButton}>
-        View progress
-      </Link>
-    );
-  } else if (application?.status === "approved") {
-    const paymentStatus = getPaymentStatus(application);
-    const certificateStatus = getCertificateStatus(application);
-
-    if (certificateStatus === "issued") {
-      title = "Membership certificate issued";
-      description =
-        "Your certificate has been issued. Open Membership to view your certification information.";
-    } else if (paymentStatus === "paid") {
-      title = "Certificate is being prepared";
-      description =
-        "Your payment has been confirmed. ASBESOC will complete certificate issuance.";
-    } else if (paymentStatus === "pending") {
-      title = "Payment confirmation in progress";
-      description =
-        "Your certificate payment is being processed. Check Membership for the latest status.";
-    } else {
-      title = "You're approved";
-      description =
-        "The next stage is payment for your ASBESOC membership certificate.";
-    }
-
-    action = (
-      <Link to="/dashboard/membership" className={primaryButton}>
-        Continue
-        <Icon name="arrow" className="h-4 w-4" />
-      </Link>
-    );
-  } else if (application?.status === "rejected") {
-    title = "Review your decision";
-    description =
-      "Open your Membership section to read the review information provided by ASBESOC.";
-    action = (
-      <Link to="/dashboard/membership" className={secondaryButton}>
-        Review decision
-      </Link>
-    );
-  }
-
-  return (
-    <Card className="relative overflow-hidden p-6 sm:p-7">
-      <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[100px] bg-[#f4f9f6]" />
-
-      <div className="relative">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#063b25] text-white shadow-sm">
-          <Icon name="arrow" />
-        </div>
-
-        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.17em] text-[#d97706]">
-          Next action
-        </p>
-
-        <h2 className="mt-2 text-xl font-black text-[#063b25]">{title}</h2>
-
-        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
-          {description}
-        </p>
-
-        {action && <div className="mt-6">{action}</div>}
-      </div>
-    </Card>
-  );
-}
-
 /* -------------------------------------------------------------------------- */
-/*                              MEMBERSHIP PAGE                               */
-/* -------------------------------------------------------------------------- */
-
-function MembershipPage({
-  application,
-  loading,
-  error,
-  retry,
-}: {
-  application: Application | null;
-  loading: boolean;
-  error: string;
-  retry: () => void;
-}) {
-  return (
-    <div className="mx-auto max-w-[1120px]">
-      <PageHeading
-        eyebrow="Membership"
-        title="Your membership"
-        description="Track your application, approval, certificate payment and certification from one place."
-      />
-
-      <div className="mt-7">
-        <MembershipJourney application={application} loading={loading} />
-      </div>
-
-      {loading ? (
-        <div className="mt-6">
-          <MembershipLoading />
-        </div>
-      ) : error ? (
-        <div className="mt-6">
-          <MembershipError message={error} retry={retry} />
-        </div>
-      ) : !application ? (
-        <div className="mt-6">
-          <MembershipPanel application={null} />
-        </div>
-      ) : (
-        <>
-          <div className="mt-6 grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-            <MembershipPanel application={application} />
-            <CertificatePaymentCard application={application} />
-          </div>
-
-          <div className="mt-6">
-            <ApplicationDetails application={application} />
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           MEMBERSHIP JOURNEY                               */
+/*                          MEMBERSHIP JOURNEY                                */
 /* -------------------------------------------------------------------------- */
 
 function MembershipJourney({
@@ -1172,107 +1003,41 @@ function MembershipJourney({
   application: Application | null;
   loading: boolean;
 }) {
-  const paymentStatus = getPaymentStatus(application);
-  const certificateStatus = getCertificateStatus(application);
+  const payment = getPaymentStatus(application);
+  const certificate = getCertificateStatus(application);
+  const certified = isCertifiedMember(application);
 
   let activeStep = 0;
+  if (application) activeStep = 1;
+  if (application?.status === "under_review") activeStep = 1;
+  if (application?.status === "approved") activeStep = 2;
+  if (application?.status === "approved" && ["unpaid", "pending", "failed"].includes(payment)) activeStep = 3;
+  if (payment === "paid") activeStep = 4;
+  if (certificate === "issued") activeStep = 5;
+  if (certified) activeStep = 6;
 
-  if (application) {
-    if (
-      application.status === "pending" ||
-      application.status === "under_review"
-    ) {
-      activeStep = 1;
-    }
-
-    if (application.status === "approved") {
-      activeStep = 3;
-    }
-
-    if (application.status === "rejected") {
-      activeStep = 1;
-    }
-
-    if (paymentStatus === "paid") {
-      activeStep = 4;
-    }
-
-    if (certificateStatus === "issued") {
-      activeStep = 5;
-    }
-  }
-
-  const steps = [
-    "Application",
-    "Review",
-    "Approved",
-    "Payment",
-    "Certificate",
-    "Certified",
-  ];
+  const steps = ["Application", "Review", "Approved", "Payment", "Certificate", "Certified"];
 
   return (
     <Card className="p-5 sm:p-7">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#d97706]">
-            Progress
-          </p>
-
-          <h2 className="mt-2 text-xl font-black text-[#063b25]">
-            Membership journey
-          </h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Membership journey</p>
+          <h2 className="mt-1 text-xl font-black text-[#063b25]">Your progress</h2>
         </div>
-
-        <span className="w-fit rounded-full bg-[#f4f9f6] px-3 py-2 text-[11px] font-bold text-[#087247]">
-          {loading ? "Checking progress…" : "Current status"}
-        </span>
+        <p className="text-xs font-semibold text-slate-400">{loading ? "Checking progress…" : "Live status"}</p>
       </div>
-
       <div className="mt-8 overflow-x-auto pb-2">
-        <div className="flex min-w-[720px] items-start">
+        <div className="flex min-w-[760px] items-start">
           {steps.map((step, index) => {
             const completed = index < activeStep;
             const current = index === activeStep;
-
             return (
-              <div
-                key={step}
-                className={`relative flex flex-1 flex-col items-center ${
-                  index === 0
-                    ? ""
-                    : "before:absolute before:right-1/2 before:top-[17px] before:h-[2px] before:w-full"
-                } ${
-                  index <= activeStep
-                    ? "before:bg-[#0b7046]"
-                    : "before:bg-slate-200"
-                }`}
-              >
-                <div
-                  className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-xs font-black shadow-sm ${
-                    completed
-                      ? "bg-[#0b7046] text-white"
-                      : current
-                        ? "bg-[#f59e0b] text-white"
-                        : "bg-slate-100 text-slate-400"
-                  }`}
-                >
-                  {completed ? (
-                    <Icon name="check" className="h-4 w-4" />
-                  ) : (
-                    index + 1
-                  )}
+              <div key={step} className={`relative flex flex-1 flex-col items-center ${index === 0 ? "" : "before:absolute before:right-1/2 before:top-[17px] before:h-[2px] before:w-full"} ${index <= activeStep ? "before:bg-[#0b7046]" : "before:bg-slate-200"}`}>
+                <div className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-xs font-black shadow-sm ${completed ? "bg-[#0b7046] text-white" : current ? "bg-[#f59e0b] text-white" : "bg-slate-100 text-slate-400"}`}>
+                  {completed ? <Icon name="check" className="h-4 w-4" /> : index + 1}
                 </div>
-
-                <p
-                  className={`mt-3 text-center text-[11px] font-bold ${
-                    current || completed
-                      ? "text-[#063b25]"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {step}
-                </p>
+                <p className={`mt-3 text-center text-xs font-bold ${current || completed ? "text-[#063b25]" : "text-slate-400"}`}>{step}</p>
               </div>
             );
           })}
@@ -1283,7 +1048,7 @@ function MembershipJourney({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             MEMBERSHIP PANEL                               */
+/*                              MEMBERSHIP PANEL                              */
 /* -------------------------------------------------------------------------- */
 
 function MembershipLoading() {
@@ -1296,7 +1061,7 @@ function MembershipLoading() {
       </div>
 
       <p role="status" className="sr-only">
-        Loading membership…
+        Loading your application…
       </p>
     </Card>
   );
@@ -1311,7 +1076,7 @@ function MembershipError({
 }) {
   return (
     <Card className="p-6 sm:p-7">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-600">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
         Membership
       </p>
 
@@ -1323,7 +1088,7 @@ function MembershipError({
         {message}
       </p>
 
-      <button type="button" className={`${primaryButton} mt-5`} onClick={retry}>
+      <button className={`${primaryButton} mt-5`} onClick={retry}>
         Try again
       </button>
     </Card>
@@ -1335,79 +1100,204 @@ function MembershipPanel({
 }: {
   application: Application | null;
 }) {
-  if (!application) {
-    return (
-      <Card className="p-6 sm:p-7">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
-          <Icon name="document" />
-        </div>
-
-        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.17em] text-[#d97706]">
-          Get started
-        </p>
-
-        <h2 className="mt-2 text-xl font-black text-[#063b25]">
-          Apply for membership
-        </h2>
-
-        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
-          Complete the ASBESOC membership application to begin the review
-          process.
-        </p>
-
-        <Link className={`${primaryButton} mt-6`} to="/membership">
-          Start application
-          <Icon name="arrow" className="h-4 w-4" />
-        </Link>
-      </Card>
-    );
-  }
+  const statusText = application
+    ? applicationLabel(application.status)
+    : "Application required";
 
   return (
     <Card className="overflow-hidden">
       <div className="border-b border-slate-100 px-6 py-5 sm:px-7">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.17em] text-[#d97706]">
-              Application
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">
+              Membership
             </p>
 
-            <h2 className="mt-2 text-xl font-black text-[#063b25]">
-              Review status
+            <h2 className="mt-1 text-xl font-black text-[#063b25]">
+              Your membership
             </h2>
           </div>
 
-          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#edf7f1] px-3.5 py-2 text-[11px] font-black text-[#087247]">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3.5 py-2 text-xs font-black text-[#087247]">
             <span className="h-2 w-2 rounded-full bg-[#f59e0b]" />
-            {applicationLabel(application.status)}
+            {statusText}
           </span>
         </div>
       </div>
 
       <div className="p-6 sm:p-7">
-        <ApplicationMessage application={application} />
-
-        {application.reviewNote && (
-          <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#087247] shadow-sm">
-                <Icon name="document" className="h-5 w-5" />
-              </div>
-
-              <div>
-                <h3 className="font-black text-[#063b25]">
-                  ASBESOC review note
-                </h3>
-
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-600">
-                  {application.reviewNote}
-                </p>
-              </div>
+        {!application ? (
+          <div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
+              <Icon name="document" />
             </div>
+
+            <h3 className="mt-5 text-lg font-black text-[#063b25]">
+              Start your membership application
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+              Complete your membership application so ASBESOC can
+              review your request and begin your membership journey.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link className={primaryButton} to="/membership">
+                Start application
+                <Icon name="arrow" className="h-4 w-4" />
+              </Link>
+
+              <Link className={secondaryButton} to="/contact">
+                Contact ASBESOC
+              </Link>
+            </div>
+
+          </div>
+        ) : (
+          <div>
+            <ApplicationMessage application={application} />
+
+            <CertificatePaymentCard application={application} />
+
+            {application.reviewNote && (
+              <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#087247] shadow-sm">
+                    <Icon name="document" className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <h3 className="font-black text-[#063b25]">
+                      ASBESOC review note
+                    </h3>
+
+                    <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-600">
+                      {application.reviewNote}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <details className="group mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-[#fafcfb]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-black text-[#063b25]">
+                View submitted application
+
+                <span className="text-slate-400 transition group-open:rotate-90">
+                  →
+                </span>
+              </summary>
+
+              <div className="border-t border-slate-200 bg-white p-5">
+                <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                  {Object.entries(application)
+                    .filter(
+                      ([key]) =>
+                        ![
+                          "userId",
+                          "status",
+                          "createdAt",
+                          "submissionType",
+                          "reviewedAt",
+                          "reviewedBy",
+                          "reviewNote",
+                          "paymentStatus",
+                          "paymentReference",
+                          "paidAt",
+                          "certificateStatus",
+                          "certificateNumber",
+                          "certificateUrl",
+                          "certificateIssuedAt",
+                        ].includes(key),
+                    )
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <dt className="text-xs font-black capitalize tracking-wide text-[#063b25]">
+                          {key.replace(/([A-Z])/g, " $1")}
+                        </dt>
+
+                        <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-500">
+                          {Array.isArray(value)
+                            ? value.join(", ")
+                            : String(value || "Not provided")}
+                        </dd>
+                      </div>
+                    ))}
+                </dl>
+              </div>
+            </details>
           </div>
         )}
       </div>
     </Card>
+  );
+}
+
+function CertificatePaymentCard({ application }: { application: Application }) {
+  const payment = getPaymentStatus(application);
+  const certificate = getCertificateStatus(application);
+  const approved = application.status === "approved";
+  const certified = isCertifiedMember(application);
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-[22px] border border-[#063b25]/10 bg-[#f8fbf9]">
+      <div className="flex flex-col gap-4 border-b border-[#063b25]/10 bg-[#063b25] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/70">Certificate & payment</p>
+          <h3 className="mt-1 text-lg font-black">Membership certificate</h3>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-bold text-white/80">Fee: To be configured</div>
+      </div>
+
+      <div className="grid gap-px bg-slate-200/70 sm:grid-cols-2">
+        <div className="bg-white p-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Payment status</p>
+          <p className="mt-2 font-black text-[#063b25]">{paymentLabel(payment)}</p>
+        </div>
+        <div className="bg-white p-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Certificate status</p>
+          <p className="mt-2 font-black text-[#063b25]">{certificateLabel(certificate)}</p>
+        </div>
+      </div>
+
+      <div className="p-5">
+        {certified ? (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-black text-[#063b25]">Certified membership active</p>
+              <p className="mt-1 text-sm text-slate-500">Your payment and certificate stages are complete.</p>
+            </div>
+            {application.certificateUrl && (
+              <a className={primaryButton} href={application.certificateUrl} target="_blank" rel="noreferrer">View certificate</a>
+            )}
+          </div>
+        ) : payment === "paid" ? (
+          <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-800">
+            Payment confirmed. ASBESOC is processing your membership certificate.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl">
+              <p className="font-black text-[#063b25]">{approved ? "Certificate payment" : "Available after approval"}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {approved
+                  ? "Your certificate payment stage is ready. The secure checkout will activate when the payment provider and certificate fee are configured."
+                  : "Certificate payment unlocks after ASBESOC approves your membership application."}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled
+              className={`${primaryButton} shrink-0`}
+              title={approved ? "Payment gateway setup is pending" : "Available after application approval"}
+            >
+              <Icon name="shield" className="h-4 w-4" />
+              Pay for certificate
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1424,12 +1314,13 @@ function ApplicationMessage({
         </div>
 
         <h3 className="mt-5 text-lg font-black text-[#063b25]">
-          Application approved
+          Your application has been approved
         </h3>
 
         <p className="mt-2 text-sm leading-7 text-slate-500">
-          Your membership application has been approved. Continue with the
-          certificate stage shown beside this section.
+          Your application has passed review. Your certificate and payment
+          stage is shown below. Certified membership is completed after
+          payment confirmation and certificate issuance.
         </p>
       </div>
     );
@@ -1443,31 +1334,13 @@ function ApplicationMessage({
         </div>
 
         <h3 className="mt-5 text-lg font-black text-[#063b25]">
-          Application reviewed
+          Your application has been reviewed
         </h3>
 
         <p className="mt-2 text-sm leading-7 text-slate-500">
-          Your application was not approved. Review the information provided
-          by ASBESOC and contact the organization if you need clarification.
-        </p>
-      </div>
-    );
-  }
-
-  if (application.status === "under_review") {
-    return (
-      <div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
-          <Icon name="clock" />
-        </div>
-
-        <h3 className="mt-5 text-lg font-black text-[#063b25]">
-          Review in progress
-        </h3>
-
-        <p className="mt-2 text-sm leading-7 text-slate-500">
-          ASBESOC is currently reviewing your application. Your status will
-          update here when a decision is made.
+          Your application was not approved. Please review the note
+          provided by ASBESOC below and contact the organization if you
+          need clarification.
         </p>
       </div>
     );
@@ -1480,287 +1353,71 @@ function ApplicationMessage({
       </div>
 
       <h3 className="mt-5 text-lg font-black text-[#063b25]">
-        Application received
+        Your application is under review
       </h3>
 
       <p className="mt-2 text-sm leading-7 text-slate-500">
-        Your application has been received and is waiting for review.
+        ASBESOC has received your membership application. You do not
+        need to submit another application while your current
+        application is being reviewed.
       </p>
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*                        CERTIFICATE + PAYMENT                               */
+/*                                NEXT STEPS                                  */
 /* -------------------------------------------------------------------------- */
 
-function CertificatePaymentCard({
+function NextAction({
   application,
+  loading,
 }: {
-  application: Application;
+  application: Application | null;
+  loading: boolean;
 }) {
-  const paymentStatus = getPaymentStatus(application);
-  const certificateStatus = getCertificateStatus(application);
-  const approved = application.status === "approved";
-  const certified = isCertifiedMember(application);
+  let title = "Complete your membership application";
+  let description = "Submit your application to begin the ASBESOC membership process.";
+  let action: ReactNode = <Link className={primaryButton} to="/membership">Start application</Link>;
 
-  const [notice, setNotice] = useState("");
-
-  function beginPayment() {
-    /*
-     * IMPORTANT:
-     * This is intentionally not marking the user as paid.
-     *
-     * The real payment provider will be connected here.
-     * Payment confirmation must be verified securely before
-     * Firestore is updated to "paid".
-     */
-
-    setNotice(
-      "The secure certificate payment checkout is being configured. Your approval is saved and you will not need to reapply.",
-    );
+  if (loading) {
+    title = "Checking your account";
+    description = "We are loading your latest membership information.";
+    action = null;
+  } else if (application?.status === "pending" || application?.status === "under_review") {
+    title = "Review in progress";
+    description = "Your application is with ASBESOC for review. No further action is required right now.";
+    action = <Link className={secondaryButton} to="/dashboard/membership">View status</Link>;
+  } else if (application?.status === "approved" && getPaymentStatus(application) !== "paid") {
+    title = "Certificate payment is next";
+    description = "Your application is approved. Open Membership to continue to the certificate payment stage.";
+    action = <Link className={primaryButton} to="/dashboard/membership">Continue to payment <Icon name="arrow" className="h-4 w-4" /></Link>;
+  } else if (application && getPaymentStatus(application) === "paid" && getCertificateStatus(application) !== "issued") {
+    title = "Certificate processing";
+    description = "Your payment is confirmed. Your membership certificate is awaiting issuance.";
+    action = <Link className={secondaryButton} to="/dashboard/membership">View certificate status</Link>;
+  } else if (isCertifiedMember(application)) {
+    title = "Membership complete";
+    description = "Your certificate has been issued and your certified membership is active.";
+    action = <Link className={secondaryButton} to="/dashboard/membership">View membership</Link>;
+  } else if (application?.status === "rejected") {
+    title = "Review the decision";
+    description = "Open Membership to read the ASBESOC review note and available next steps.";
+    action = <Link className={secondaryButton} to="/dashboard/membership">Review decision</Link>;
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-[#063b25] px-6 py-6 text-white sm:px-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.17em] text-emerald-100/60">
-              Certificate & payment
-            </p>
-
-            <h2 className="mt-2 text-xl font-black">
-              Membership certificate
-            </h2>
-          </div>
-
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
-            <Icon name="certificate" />
-          </div>
+    <Card className="relative overflow-hidden p-6 sm:p-7">
+      <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-full bg-emerald-50/70" />
+      <div className="relative">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff7e6] text-[#d97706]">
+          <Icon name="arrow" />
         </div>
+        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Next action</p>
+        <h2 className="mt-2 text-xl font-black text-[#063b25]">{title}</h2>
+        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">{description}</p>
+        {action && <div className="mt-6">{action}</div>}
       </div>
-
-      <div className="p-6 sm:p-7">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-[#f7faf8] p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Certificate fee
-            </p>
-
-            <p className="mt-2 text-base font-black text-[#063b25]">
-              To be configured
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-[#f7faf8] p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Payment
-            </p>
-
-            <p className="mt-2 text-sm font-black text-[#063b25]">
-              {paymentLabel(paymentStatus)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-[#f7faf8] p-4 sm:col-span-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Certificate status
-            </p>
-
-            <p className="mt-2 text-sm font-black text-[#063b25]">
-              {certificateLabel(certificateStatus)}
-            </p>
-          </div>
-        </div>
-
-        {!approved && (
-          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <Icon name="lock" className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
-
-            <div>
-              <p className="text-sm font-black text-slate-700">
-                Payment locked
-              </p>
-
-              <p className="mt-1 text-xs leading-6 text-slate-500">
-                Certificate payment becomes available after your application
-                is approved.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {approved &&
-          paymentStatus !== "paid" &&
-          paymentStatus !== "pending" && (
-            <button
-              type="button"
-              onClick={beginPayment}
-              className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#063b25] px-5 py-3.5 text-sm font-black text-white shadow-sm transition hover:bg-[#0a5133]"
-            >
-              <Icon name="wallet" className="h-5 w-5" />
-              Pay for Membership Certificate
-            </button>
-          )}
-
-        {paymentStatus === "pending" && (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-black text-amber-900">
-              Payment confirmation pending
-            </p>
-
-            <p className="mt-1 text-xs leading-6 text-amber-800">
-              Your payment is being processed. Please wait for confirmation.
-            </p>
-          </div>
-        )}
-
-        {paymentStatus === "paid" && certificateStatus !== "issued" && (
-          <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-            <p className="text-sm font-black text-emerald-900">
-              Payment confirmed
-            </p>
-
-            <p className="mt-1 text-xs leading-6 text-emerald-800">
-              Your certificate is now awaiting issuance.
-            </p>
-          </div>
-        )}
-
-        {certified && (
-          <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#087247]">
-                <Icon name="check" />
-              </div>
-
-              <div>
-                <p className="font-black text-[#063b25]">
-                  Certified member
-                </p>
-
-                <p className="mt-1 text-xs text-emerald-800">
-                  Your membership certificate has been issued.
-                </p>
-              </div>
-            </div>
-
-            {application.certificateNumber && (
-              <div className="mt-4 border-t border-emerald-100 pt-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
-                  Certificate number
-                </p>
-
-                <p className="mt-1 text-sm font-black text-[#063b25]">
-                  {application.certificateNumber}
-                </p>
-              </div>
-            )}
-
-            {application.certificateUrl && (
-              <a
-                href={application.certificateUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={`${primaryButton} mt-5 w-full`}
-              >
-                View certificate
-                <Icon name="arrow" className="h-4 w-4" />
-              </a>
-            )}
-          </div>
-        )}
-
-        {notice && (
-          <p
-            role="status"
-            className="mt-4 rounded-xl bg-[#fff7e8] px-4 py-3 text-xs font-semibold leading-6 text-amber-900"
-          >
-            {notice}
-          </p>
-        )}
-
-        <div className="mt-5 flex items-start gap-2 border-t border-slate-100 pt-5">
-          <Icon
-            name="shield"
-            className="mt-0.5 h-4 w-4 shrink-0 text-[#087247]"
-          />
-
-          <p className="text-[11px] leading-5 text-slate-400">
-            Payment will only be marked as confirmed after secure verification.
-          </p>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           APPLICATION DETAILS                              */
-/* -------------------------------------------------------------------------- */
-
-function ApplicationDetails({
-  application,
-}: {
-  application: Application;
-}) {
-  const hiddenFields = [
-    "userId",
-    "status",
-    "createdAt",
-    "submissionType",
-    "reviewedAt",
-    "reviewedBy",
-    "reviewNote",
-    "paymentStatus",
-    "paymentReference",
-    "paidAt",
-    "certificateStatus",
-    "certificateNumber",
-    "certificateUrl",
-    "certificateIssuedAt",
-  ];
-
-  return (
-    <Card className="overflow-hidden">
-      <details className="group">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 sm:px-7">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
-              Records
-            </p>
-
-            <p className="mt-1 text-sm font-black text-[#063b25]">
-              View submitted application
-            </p>
-          </div>
-
-          <span className="text-slate-400 transition group-open:rotate-90">
-            →
-          </span>
-        </summary>
-
-        <div className="border-t border-slate-100 bg-[#fafcfb] p-6 sm:p-7">
-          <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-            {Object.entries(application)
-              .filter(([key]) => !hiddenFields.includes(key))
-              .map(([key, value]) => (
-                <div key={key}>
-                  <dt className="text-xs font-black capitalize tracking-wide text-[#063b25]">
-                    {key.replace(/([A-Z])/g, " $1")}
-                  </dt>
-
-                  <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-500">
-                    {Array.isArray(value)
-                      ? value.join(", ")
-                      : String(value || "Not provided")}
-                  </dd>
-                </div>
-              ))}
-          </dl>
-        </div>
-      </details>
     </Card>
   );
 }
@@ -1857,7 +1514,9 @@ function Profile({ user }: { user: User }) {
               {user.displayName?.trim() || "ASBESOC Member"}
             </h2>
 
-            <p className="truncate text-sm text-slate-400">{user.email}</p>
+            <p className="truncate text-sm text-slate-400">
+              {user.email}
+            </p>
           </div>
         </div>
       </div>
@@ -1874,7 +1533,6 @@ function Profile({ user }: { user: User }) {
             </p>
 
             <button
-              type="button"
               className={`${primaryButton} mt-5`}
               onClick={() => {
                 setLoading(true);
@@ -1890,11 +1548,12 @@ function Profile({ user }: { user: User }) {
               disabled={busy}
               className="max-w-2xl space-y-6"
             >
-              <legend className="sr-only">Edit your profile</legend>
+              <legend className="sr-only">
+                Edit your profile
+              </legend>
 
               <label className="block text-sm font-bold text-[#063b25]">
                 Full name
-
                 <input
                   className={input}
                   value={name}
@@ -1908,7 +1567,6 @@ function Profile({ user }: { user: User }) {
 
               <label className="block text-sm font-bold text-[#063b25]">
                 Phone number
-
                 <span className="ml-1 font-normal text-slate-400">
                   (optional)
                 </span>
@@ -1923,6 +1581,12 @@ function Profile({ user }: { user: User }) {
                   placeholder="+234..."
                 />
               </label>
+
+              <div className="rounded-2xl bg-[#f7faf8] p-4 text-xs leading-6 text-slate-500">
+                Changing your profile information does not change a
+                membership application that has already been submitted
+                for review.
+              </div>
 
               <button className={primaryButton} type="submit">
                 {busy ? "Saving…" : "Save changes"}
@@ -1956,109 +1620,322 @@ function Profile({ user }: { user: User }) {
 
 function AccountSettings({ user }: { user: User }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
-      <Card className="overflow-hidden">
-        <div className="border-b border-slate-100 px-6 py-5 sm:px-7">
-          <h2 className="text-lg font-black text-[#063b25]">
-            Sign-in & security
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Review your account access information.
-          </p>
-        </div>
-
-        <div className="divide-y divide-slate-100">
-          <div className="flex flex-col justify-between gap-3 px-6 py-5 sm:flex-row sm:items-center sm:px-7">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                Sign-in email
-              </p>
-
-              <p className="mt-2 break-all text-sm font-bold text-slate-700">
-                {user.email}
-              </p>
-            </div>
-
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-500">
-              Primary
-            </span>
-          </div>
-
-          <div className="flex flex-col justify-between gap-3 px-6 py-5 sm:flex-row sm:items-center sm:px-7">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                Verification
-              </p>
-
-              <p className="mt-2 text-sm font-bold text-slate-700">
-                {user.emailVerified
-                  ? "Your email address is verified."
-                  : "Email verification is required."}
-              </p>
-            </div>
-
-            <span
-              className={`w-fit rounded-full px-3 py-1.5 text-[11px] font-bold ${
-                user.emailVerified
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-amber-50 text-amber-700"
-              }`}
-            >
-              {user.emailVerified ? "Verified" : "Action required"}
-            </span>
-          </div>
-
-          <div className="px-6 py-5 sm:px-7">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Password
-            </p>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Request a secure password-reset email if you need to change your
-              password.
-            </p>
-
-            <Link
-              className={`${secondaryButton} mt-4`}
-              to="/forgot-password"
-            >
-              Reset password
-            </Link>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6 sm:p-7">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
-          <Icon name="shield" />
-        </div>
-
-        <h2 className="mt-5 text-lg font-black text-[#063b25]">
-          Secure account
+    <Card className="overflow-hidden">
+      <div className="border-b border-slate-100 px-6 py-5 sm:px-7">
+        <h2 className="text-lg font-black text-[#063b25]">
+          Sign-in & security
         </h2>
 
-        <p className="mt-2 text-sm leading-7 text-slate-500">
-          Your account uses Firebase Authentication to protect access to your
-          private ASBESOC member area.
+        <p className="mt-1 text-sm text-slate-500">
+          Review your account access information.
         </p>
+      </div>
 
-        <div className="mt-6 rounded-2xl bg-[#f7faf8] p-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-            Account status
-          </p>
+      <div className="divide-y divide-slate-100">
+        <div className="flex flex-col justify-between gap-3 px-6 py-5 sm:flex-row sm:items-center sm:px-7">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">
+              Sign-in email
+            </p>
 
-          <p className="mt-2 text-sm font-black text-[#063b25]">
-            {user.emailVerified ? "Verified account" : "Verification required"}
-          </p>
+            <p className="mt-1 break-all text-sm font-bold text-slate-700">
+              {user.email}
+            </p>
+          </div>
+
+          <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-500">
+            Primary
+          </span>
         </div>
-      </Card>
-    </div>
+
+        <div className="flex flex-col justify-between gap-3 px-6 py-5 sm:flex-row sm:items-center sm:px-7">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">
+              Email verification
+            </p>
+
+            <p className="mt-1 text-sm font-bold text-slate-700">
+              {user.emailVerified
+                ? "Your email address is verified."
+                : "Email verification is required."}
+            </p>
+          </div>
+
+          <span
+            className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${
+              user.emailVerified
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700"
+            }`}
+          >
+            {user.emailVerified ? "Verified" : "Action required"}
+          </span>
+        </div>
+
+        <div className="px-6 py-5 sm:px-7">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">
+            Password
+          </p>
+
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Request a secure password-reset email if you need to change
+            your password.
+          </p>
+
+          <Link
+            className={`${secondaryButton} mt-4`}
+            to="/forgot-password"
+          >
+            Reset password
+          </Link>
+        </div>
+      </div>
+    </Card>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                COMING SOON                                 */
+/*                            CHAT WITH ASBESOC                               */
+/* -------------------------------------------------------------------------- */
+
+function formatChatTime(message: ChatMessage) {
+  const date = message.createdAt?.toDate?.();
+  if (!date) return "Sending…";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function MemberChat({ user }: { user: User }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const sendLock = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    async function connect() {
+      setLoading(true);
+      setError("");
+
+      try {
+        await ensureMemberChat(user);
+        if (!active) return;
+
+        unsubscribe = watchMemberMessages(
+          user,
+          (nextMessages) => {
+            if (!active) return;
+            setMessages(nextMessages);
+            setLoading(false);
+          },
+          (caught) => {
+            if (!active) return;
+            setError(chatError(caught));
+            setLoading(false);
+          },
+        );
+      } catch (caught) {
+        if (!active) return;
+        setError(chatError(caught));
+        setLoading(false);
+      }
+    }
+
+    void connect();
+
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: messages.length > 1 ? "smooth" : "auto",
+      block: "end",
+    });
+  }, [messages]);
+
+  async function send(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (sendLock.current) return;
+
+    const cleanMessage = message.trim();
+    if (!cleanMessage) return;
+
+    sendLock.current = true;
+    setSending(true);
+    setError("");
+
+    try {
+      await sendMemberMessage(user, cleanMessage);
+      setMessage("");
+    } catch (caught) {
+      setError(chatError(caught));
+    } finally {
+      sendLock.current = false;
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <PageHeading
+        eyebrow="Private communication"
+        title="Chat with ASBESOC"
+        description="Send a private message directly to the ASBESOC admin team. This conversation is visible only to your account and authorized administrators."
+      />
+
+      <Card className="mt-7 overflow-hidden">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#063b25] text-sm font-black text-white">
+              A
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-black text-[#063b25] sm:text-base">
+                ASBESOC Admin
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-400">Private member support</p>
+            </div>
+          </div>
+
+          <div className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-black text-emerald-700 sm:inline-flex">
+            <Icon name="shield" className="h-3.5 w-3.5" />
+            Secure conversation
+          </div>
+        </div>
+
+        <div className="bg-[#f5f8f6]">
+          <div className="h-[52vh] min-h-[420px] max-h-[650px] overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+            {loading ? (
+              <div className="flex h-full items-center justify-center">
+                <p role="status" className="text-sm font-semibold text-slate-500">
+                  Opening your private conversation…
+                </p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="max-w-md text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#087247] shadow-sm">
+                    <Icon name="inbox" className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-black text-[#063b25]">
+                    Start a conversation
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-500">
+                    Send a message about your membership, application, certificate or another member-related question.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((item) => {
+                  const mine = item.senderRole === "member";
+
+                  return (
+                    <div key={item.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                      <div className={`flex max-w-[86%] flex-col sm:max-w-[72%] ${mine ? "items-end" : "items-start"}`}>
+                        {!mine && (
+                          <p className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#087247]">
+                            ASBESOC Admin
+                          </p>
+                        )}
+                        <div
+                          className={`rounded-2xl px-4 py-3 shadow-sm ${
+                            mine
+                              ? "rounded-br-md bg-[#063b25] text-white"
+                              : "rounded-bl-md border border-slate-200/80 bg-white text-slate-700"
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words text-sm leading-6">{item.text}</p>
+                        </div>
+                        <p className="mt-1.5 px-1 text-[10px] font-semibold text-slate-400">
+                          {formatChatTime(item)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={bottomRef} />
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <div className="border-t border-rose-100 bg-rose-50 px-4 py-3 sm:px-6">
+              <p role="alert" className="text-xs font-semibold leading-5 text-rose-700">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={send} className="border-t border-slate-200 bg-white p-3 sm:p-4">
+            <div className="flex items-end gap-2 sm:gap-3">
+              <label className="min-w-0 flex-1">
+                <span className="sr-only">Message ASBESOC</span>
+                <textarea
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                      event.preventDefault();
+                      event.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  disabled={sending || loading}
+                  maxLength={4000}
+                  rows={1}
+                  placeholder="Write a message…"
+                  className="max-h-36 min-h-12 w-full resize-none rounded-2xl border border-slate-200 bg-[#f8faf9] px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:bg-white focus:ring-4 focus:ring-emerald-700/10 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={sending || loading || !message.trim()}
+                aria-label="Send message"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#063b25] text-white shadow-sm transition hover:bg-[#0a5133] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0d6b43] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {sending ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <Icon name="arrow" className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between gap-3 px-1">
+              <p className="text-[10px] leading-4 text-slate-400">
+                Enter to send · Shift + Enter for a new line
+              </p>
+              <p className="shrink-0 text-[10px] font-semibold text-slate-400">
+                {message.length}/4000
+              </p>
+            </div>
+          </form>
+        </div>
+      </Card>
+
+      <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-900/10 bg-emerald-50/50 px-4 py-3.5">
+        <Icon name="shield" className="mt-0.5 h-4 w-4 shrink-0 text-[#087247]" />
+        <p className="text-xs leading-5 text-slate-500">
+          Your messages are private between your member account and authorized ASBESOC administrators. Other members cannot access this conversation.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+/*                               COMING SOON                                  */
 /* -------------------------------------------------------------------------- */
 
 function ComingSoon({
@@ -2084,28 +1961,20 @@ function ComingSoon({
         description="Your private ASBESOC member space."
       />
 
-      <Card className="mt-7 overflow-hidden">
-        <div className="p-7 sm:p-10">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#087247]">
-            <Icon name={icon} className="h-6 w-6" />
-          </div>
-
-          <h2 className="mt-6 text-xl font-black text-[#063b25] sm:text-2xl">
-            {heading}
-          </h2>
-
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-            {description}
-          </p>
-
-          {action && <div className="mt-6">{action}</div>}
+      <Card className="mt-7 p-7 sm:p-10">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
+          <Icon name={icon} className="h-6 w-6" />
         </div>
 
-        <div className="border-t border-slate-100 bg-[#fafcfb] px-7 py-4 sm:px-10">
-          <p className="text-[11px] font-semibold text-slate-400">
-            This area is ready for the next stage of the member portal.
-          </p>
-        </div>
+        <h2 className="mt-6 text-xl font-black text-[#063b25] sm:text-2xl">
+          {heading}
+        </h2>
+
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+          {description}
+        </p>
+
+        {action && <div className="mt-6">{action}</div>}
       </Card>
     </div>
   );

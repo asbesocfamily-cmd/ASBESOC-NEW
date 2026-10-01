@@ -14,13 +14,18 @@ import {
   type User,
 } from "firebase/auth";
 import {
+  addDoc,
   collection,
+  doc,
   getDocsFromServer,
   limit,
+  onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
   startAfter,
   Timestamp,
+  updateDoc,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
@@ -28,6 +33,21 @@ import { auth, db } from "../firebase/firebaseConfig";
 
 import { ADMIN_UID } from "../firebase/membership";
 import ApplicationReview from "./ApplicationReview";
+import {
+  saveSitePage,
+  siteContentDefaults,
+  watchSitePage,
+  type SitePageContent,
+  type SitePageId,
+} from "../firebase/siteContent";
+import {
+  createMemberPost,
+  deleteMemberPost,
+  updateMemberPost,
+  watchMemberPosts,
+  type MemberPost,
+  type MemberPostType,
+} from "../firebase/memberContent";
 const PAGE_SIZE = 20;
 
 const sections = [
@@ -55,6 +75,47 @@ type Submission = {
   id: string;
   data: Record<string, unknown>;
 };
+
+type AdminView =
+  | "overview"
+  | "website"
+  | "membershipApplications"
+  | "memberChats"
+  | "memberFeed"
+  | "trainings"
+  | "supportRequests"
+  | "partnershipRequests"
+  | "gallery"
+  | "settings";
+
+type ChatConversation = {
+  id: string;
+  memberId: string;
+  memberEmail: string;
+  memberName: string;
+  updatedAt?: Timestamp | null;
+};
+
+type ChatMessage = {
+  id: string;
+  senderId: string;
+  senderRole: "member" | "admin";
+  text: string;
+  createdAt?: Timestamp | null;
+};
+
+const adminViews: { id: AdminView; label: string; description: string }[] = [
+  { id: "overview", label: "Overview", description: "Admin control centre" },
+  { id: "website", label: "Website Content", description: "Public website content" },
+  { id: "membershipApplications", label: "Membership", description: "Applications and reviews" },
+  { id: "memberChats", label: "Member Chats", description: "Private member conversations" },
+  { id: "memberFeed", label: "Member Feed", description: "Announcements and updates" },
+  { id: "trainings", label: "Trainings & Opportunities", description: "Private member opportunities" },
+  { id: "supportRequests", label: "Support", description: "Offers of support" },
+  { id: "partnershipRequests", label: "Partnerships", description: "Partnership enquiries" },
+  { id: "gallery", label: "Gallery / Media", description: "Website media management" },
+  { id: "settings", label: "Site Settings", description: "Website configuration" },
+];
 
 const focusStyle =
   "focus-visible:outline-none focus-visible:ring-2 " +
@@ -183,8 +244,7 @@ function Admin() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [sessionError, setSessionError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
-  const [activeSection, setActiveSection] =
-    useState<Section>(sections[0]);
+  const [activeView, setActiveView] = useState<AdminView>("overview");
 
   useEffect(() => {
     return onAuthStateChanged(
@@ -271,103 +331,93 @@ function Admin() {
     return <main className="min-h-[70vh] bg-[#f3f7f3] px-4 py-12"><section className="mx-auto max-w-lg space-y-5 rounded-3xl bg-white p-8 text-[#063b25]"><h1 className="text-2xl font-bold">Verify your administrator email</h1><p>Verify your account email before accessing membership records or making review decisions.</p><NavLink to="/verify-email" className={buttonStyle}>Verify email</NavLink><p className="text-sm">After verification, return to the admin page. If needed, sign out and sign in again.</p><button className={buttonStyle} disabled={signingOut} onClick={logout}>Sign out</button>{sessionError && <p role="alert">{sessionError}</p>}</section></main>;
   }
 
+  const submissionSection = sections.find((section) => section.id === activeView);
+
   return (
     <main className="min-h-screen bg-[#f3f7f3] text-slate-800">
       <header className="border-b border-emerald-900/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">
-              ASBESOC Nigeria
-            </p>
-
-            <h1 className="mt-1 text-xl font-black text-[#063b25] sm:text-2xl">
-              Admin dashboard
-            </h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">ASBESOC Nigeria</p>
+            <h1 className="mt-1 text-xl font-black text-[#063b25] sm:text-2xl">Admin Control Centre</h1>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
-            <NavLink to="/" className={buttonStyle}>
-              View website
-            </NavLink>
-
-            <button
-              type="button"
-              onClick={logout}
-              disabled={signingOut}
-              className={buttonStyle}
-            >
+            <NavLink to="/" className={buttonStyle}>View website</NavLink>
+            <button type="button" onClick={logout} disabled={signingOut} className={buttonStyle}>
               {signingOut ? "Signing out…" : "Sign out"}
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8 lg:py-10">
-        <section className="rounded-3xl bg-[#063b25] px-6 py-7 text-white sm:px-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-            Submission inbox
-          </p>
+      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 lg:py-8">
+        <aside className="h-fit rounded-3xl border border-emerald-900/10 bg-white p-3 shadow-sm lg:sticky lg:top-6">
+          <div className="rounded-2xl bg-[#063b25] p-5 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">Administration</p>
+            <p className="mt-2 text-lg font-black">Website Control Centre</p>
+            <p className="mt-2 break-all text-xs leading-5 text-white/65">{user.email || "ASBESOC administrator"}</p>
+          </div>
+          <nav aria-label="Admin control centre" className="mt-3 space-y-1">
+            {adminViews.map((item) => {
+              const selected = activeView === item.id;
+              return (
+                <button key={item.id} type="button" onClick={() => setActiveView(item.id)} aria-pressed={selected}
+                  className={`w-full rounded-xl px-4 py-3 text-left transition ${focusStyle} ${selected ? "bg-emerald-50 text-[#063b25]" : "text-slate-600 hover:bg-slate-50"}`}>
+                  <span className="block text-sm font-bold">{item.label}</span>
+                  <span className="mt-0.5 block text-[11px] leading-5 text-slate-500">{item.description}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">
-            Welcome back.
-          </h2>
+        <div className="min-w-0">
+          {sessionError && <p role="alert" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{sessionError}</p>}
 
-          <p className="mt-3 text-sm leading-7 text-white/80">
-            Review membership applications, support offers and
-            partnership enquiries.
-          </p>
-
-          <p className="mt-4 break-all text-xs text-white/65">
-            Signed in as {user.email || "ASBESOC administrator"}
-          </p>
-        </section>
-
-        {sessionError && (
-          <p
-            role="alert"
-            className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
-          >
-            {sessionError}
-          </p>
-        )}
-
-        <nav
-          aria-label="Submission categories"
-          className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3"
-        >
-          {sections.map((section) => {
-            const selected = activeSection.id === section.id;
-
-            return (
-              <button
-                key={section.id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setActiveSection(section)}
-                className={`rounded-2xl border px-5 py-4 text-left transition ${focusStyle} ${
-                  selected
-                    ? "border-emerald-800 bg-emerald-50"
-                    : "border-emerald-900/10 bg-white hover:border-emerald-400"
-                }`}
-              >
-                <span className="block text-sm font-bold text-[#063b25]">
-                  {section.label}
-                </span>
-
-                <span className="mt-1 block text-xs text-slate-500">
-                  {section.description}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <SubmissionList
-          key={`${user.uid}-${activeSection.id}`}
-          section={activeSection}
-        />
+          {activeView === "overview" && <AdminOverview onOpen={setActiveView} />}
+          {activeView === "memberChats" && <AdminMemberChats adminUser={user} />}
+          {submissionSection && (
+            <SubmissionList key={`${user.uid}-${submissionSection.id}`} section={submissionSection} />
+          )}
+          {activeView === "website" && <WebsiteContentManager />}
+          {activeView === "memberFeed" && <MemberContentManager defaultType="announcement" />}
+          {activeView === "trainings" && <MemberContentManager defaultType="training" />}
+          {activeView === "gallery" && <WebsiteContentManager initialPage="gallery" />}
+          {activeView === "settings" && <WebsiteContentManager initialPage="footer" />}
+        </div>
       </div>
     </main>
+  );
+}
+
+function AdminOverview({ onOpen }: { onOpen: (view: AdminView) => void }) {
+  const cards: { id: AdminView; title: string; text: string; ready: boolean }[] = [
+    { id: "membershipApplications", title: "Membership", text: "Review membership applications and decisions.", ready: true },
+    { id: "memberChats", title: "Member Chats", text: "Reply privately to members in real time.", ready: true },
+    { id: "supportRequests", title: "Support", text: "Review support offers submitted from the website.", ready: true },
+    { id: "partnershipRequests", title: "Partnerships", text: "Review partnership enquiries.", ready: true },
+    { id: "website", title: "Website Content", text: "Public website content controls are the next stage.", ready: false },
+    { id: "memberFeed", title: "Member Feed", text: "Private announcements will be connected next.", ready: false },
+  ];
+  return (
+    <section>
+      <div className="rounded-3xl bg-[#063b25] px-6 py-7 text-white sm:px-8">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">Admin overview</p>
+        <h2 className="mt-2 text-2xl font-black sm:text-3xl">Welcome back.</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-white/80">Manage ASBESOC membership, member communication and website operations from one control centre.</p>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {cards.map((card) => (
+          <button key={card.id} type="button" onClick={() => onOpen(card.id)} className={`rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${focusStyle}`}>
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-black text-[#063b25]">{card.title}</h3>
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${card.ready ? "bg-emerald-100 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>{card.ready ? "Active" : "Next stage"}</span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{card.text}</p>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -727,6 +777,291 @@ function SubmissionList({ section }: { section: Section }) {
             Next →
           </button>
         </div>
+      </div>
+    </section>
+  );
+}
+
+
+function AdminMemberChats({ adminUser }: { adminUser: User }) {
+  type ChatRow = {
+    id: string;
+    memberName: string;
+    memberEmail: string;
+    updatedAt?: Timestamp | null;
+  };
+  type MessageRow = {
+    id: string;
+    senderRole: "member" | "admin";
+    text: string;
+    createdAt?: Timestamp | null;
+  };
+
+  const [chats, setChats] = useState<ChatRow[]>([]);
+  const [selectedUid, setSelectedUid] = useState("");
+  const [messages, setMessages] = useState<MessageRow[]>([]);
+  const [reply, setReply] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const chatsQuery = query(collection(db, "memberChats"), orderBy("updatedAt", "desc"));
+    return onSnapshot(chatsQuery, (snapshot) => {
+      const next = snapshot.docs.map((item) => {
+        const data = item.data();
+        return {
+          id: item.id,
+          memberName: typeof data.memberName === "string" ? data.memberName : "ASBESOC Member",
+          memberEmail: typeof data.memberEmail === "string" ? data.memberEmail : "",
+          updatedAt: data.updatedAt ?? null,
+        };
+      });
+      setChats(next);
+      setSelectedUid((current) => current || next[0]?.id || "");
+    }, () => setError("Could not load member conversations."));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedUid) {
+      setMessages([]);
+      return;
+    }
+    const messagesQuery = query(
+      collection(db, "memberChats", selectedUid, "messages"),
+      orderBy("createdAt", "asc"),
+    );
+    return onSnapshot(messagesQuery, (snapshot) => {
+      setMessages(snapshot.docs.map((item) => {
+        const data = item.data();
+        return {
+          id: item.id,
+          senderRole: data.senderRole === "admin" ? "admin" : "member",
+          text: typeof data.text === "string" ? data.text : "",
+          createdAt: data.createdAt ?? null,
+        };
+      }));
+    }, () => setError("Could not load this conversation."));
+  }, [selectedUid]);
+
+  async function sendReply(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = reply.trim();
+    if (!selectedUid || !text || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await addDoc(collection(db, "memberChats", selectedUid, "messages"), {
+        senderId: adminUser.uid,
+        senderRole: "admin",
+        text: text.slice(0, 4000),
+        createdAt: serverTimestamp(),
+      });
+      await updateDoc(doc(db, "memberChats", selectedUid), {
+        updatedAt: serverTimestamp(),
+      });
+      setReply("");
+    } catch {
+      setError("Reply could not be sent. Check Firestore rules and your connection.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const selected = chats.find((chat) => chat.id === selectedUid);
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">Private support</p>
+        <h2 className="mt-2 text-2xl font-black text-[#063b25]">Member Chats</h2>
+      </div>
+      <div className="grid min-h-[560px] lg:grid-cols-[300px_1fr]">
+        <aside className="border-b border-slate-200 p-3 lg:border-b-0 lg:border-r">
+          {chats.length ? chats.map((chat) => (
+            <button key={chat.id} type="button" onClick={() => setSelectedUid(chat.id)}
+              className={`mb-2 w-full rounded-xl p-3 text-left ${selectedUid === chat.id ? "bg-emerald-50" : "hover:bg-slate-50"}`}>
+              <span className="block text-sm font-bold text-[#063b25]">{chat.memberName}</span>
+              <span className="mt-1 block break-all text-xs text-slate-500">{chat.memberEmail}</span>
+            </button>
+          )) : <p className="p-4 text-sm text-slate-500">No member conversations yet.</p>}
+        </aside>
+        <div className="flex min-h-[500px] flex-col">
+          <div className="border-b border-slate-100 p-5">
+            <h3 className="font-black text-[#063b25]">{selected?.memberName || "Select a conversation"}</h3>
+            {selected?.memberEmail && <p className="mt-1 text-xs text-slate-500">{selected.memberEmail}</p>}
+          </div>
+          <div className="flex-1 space-y-3 overflow-y-auto p-5">
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.senderRole === "admin" ? "justify-end" : "justify-start"}`}>
+                <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.senderRole === "admin" ? "bg-[#063b25] text-white" : "bg-slate-100 text-slate-700"}`}>
+                  {message.text}
+                </p>
+              </div>
+            ))}
+          </div>
+          {error && <p role="alert" className="mx-5 mb-3 text-sm text-rose-700">{error}</p>}
+          <form onSubmit={sendReply} className="flex gap-3 border-t border-slate-100 p-4">
+            <input value={reply} onChange={(e) => setReply(e.target.value)} disabled={!selectedUid || busy}
+              placeholder={selectedUid ? "Reply to member…" : "Select a conversation"}
+              maxLength={4000} className={inputStyle} />
+            <button type="submit" disabled={!selectedUid || !reply.trim() || busy}
+              className="rounded-xl bg-[#063b25] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
+              {busy ? "Sending…" : "Send"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WebsiteContentManager({ initialPage = "home" }: { initialPage?: SitePageId }) {
+  const pages: { id: SitePageId; label: string }[] = [
+    { id: "home", label: "Home" },
+    { id: "about", label: "About" },
+    { id: "programs", label: "Programs" },
+    { id: "projects", label: "Projects" },
+    { id: "gallery", label: "Gallery" },
+    { id: "contact", label: "Contact" },
+    { id: "footer", label: "Footer & Contact" },
+  ];
+  const [page, setPage] = useState<SitePageId>(initialPage);
+  const [content, setContent] = useState<SitePageContent>(siteContentDefaults[initialPage]);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    setNotice("");
+    setLoadError("");
+    return watchSitePage(page, setContent, () => setLoadError("Could not load saved content. The website fallback content is still safe."));
+  }, [page]);
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      await saveSitePage(page, content);
+      setNotice("Saved. The public website will update automatically.");
+    } catch {
+      setNotice("Could not save. Check your Firestore rules and internet connection.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">Website CMS</p>
+        <h2 className="mt-2 text-2xl font-black text-[#063b25]">Website Content</h2>
+        <p className="mt-2 text-sm leading-7 text-slate-500">Edit the main public website copy. Existing website content remains the fallback if Firestore is unavailable.</p>
+      </div>
+      <div className="p-5 sm:p-7">
+        <div className="flex flex-wrap gap-2">
+          {pages.map((item) => (
+            <button key={item.id} type="button" onClick={() => setPage(item.id)}
+              className={`rounded-xl px-4 py-2 text-sm font-bold ${page === item.id ? "bg-[#063b25] text-white" : "border border-slate-200 bg-white text-[#063b25]"}`}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        {loadError && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{loadError}</p>}
+        <form onSubmit={save} className="mt-6 space-y-5">
+          {(Object.entries(content) as [string, string][]).map(([key, value]) => (
+            <label key={key} className="block">
+              <span className="mb-2 block text-sm font-bold capitalize text-[#063b25]">{key.replace(/([A-Z])/g, " $1")}</span>
+              <textarea value={value} rows={value.length > 100 ? 4 : 2}
+                onChange={(e) => setContent((current) => ({ ...current, [key]: e.target.value }))}
+                className={`${inputStyle} min-h-[80px] resize-y`} />
+            </label>
+          ))}
+          {notice && <p role="status" className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">{notice}</p>}
+          <button type="submit" disabled={busy} className="rounded-xl bg-[#063b25] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
+            {busy ? "Saving…" : "Save website changes"}
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function MemberContentManager({ defaultType }: { defaultType: MemberPostType }) {
+  const [posts, setPosts] = useState<MemberPost[]>([]);
+  const [type, setType] = useState<MemberPostType>(defaultType);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [published, setPublished] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => watchMemberPosts(setPosts, () => setError("Could not load member posts.")), []);
+
+  async function publish(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim() || !body.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await createMemberPost({ type, title, body, published });
+      setTitle("");
+      setBody("");
+    } catch {
+      setError("Could not publish this item. Check Firestore rules and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const visible = defaultType === "training"
+    ? posts.filter((post) => post.type === "training" || post.type === "opportunity")
+    : posts;
+
+  return (
+    <section className="space-y-6">
+      <div className="rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-7">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">Private member publishing</p>
+        <h2 className="mt-2 text-2xl font-black text-[#063b25]">{defaultType === "training" ? "Trainings & Opportunities" : "Member Feed"}</h2>
+        <p className="mt-2 text-sm leading-7 text-slate-500">Only verified signed-in members can read published items. These are not public website posts.</p>
+        <form onSubmit={publish} className="mt-6 grid gap-4">
+          <select value={type} onChange={(e) => setType(e.target.value as MemberPostType)} className={inputStyle}>
+            <option value="announcement">Announcement</option>
+            <option value="training">Training</option>
+            <option value="opportunity">Opportunity</option>
+          </select>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" maxLength={180} className={inputStyle} />
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Message" maxLength={6000} rows={5} className={`${inputStyle} resize-y`} />
+          <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
+            Publish immediately
+          </label>
+          {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
+          <button disabled={busy} className="w-fit rounded-xl bg-[#063b25] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
+            {busy ? "Publishing…" : "Publish"}
+          </button>
+        </form>
+      </div>
+      <div className="space-y-3">
+        {visible.map((post) => (
+          <article key={post.id} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase text-emerald-800">{post.type}</span>
+                <h3 className="mt-3 text-lg font-black text-[#063b25]">{post.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">{post.body}</p>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => void updateMemberPost(post.id, { published: !post.published })}
+                  className={buttonStyle}>{post.published ? "Unpublish" : "Publish"}</button>
+                <button type="button" onClick={() => void deleteMemberPost(post.id)}
+                  className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-700">Delete</button>
+              </div>
+            </div>
+          </article>
+        ))}
+        {!visible.length && <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No items yet.</p>}
       </div>
     </section>
   );

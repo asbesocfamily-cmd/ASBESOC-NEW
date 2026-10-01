@@ -348,7 +348,7 @@ function Programs() {
                 </h2>
 
                 <p className="mt-5 text-lg font-bold leading-8 text-[#476458]">
-                  Creating pathways towards affordable and sustainable home
+                  Creating pathways towards affordable and sustainable home & land
                   ownership.
                 </p>
 
@@ -674,7 +674,7 @@ function Programs() {
           <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div>
               <p className="text-xl font-bold leading-9 text-emerald-800">
-                Creating pathways towards affordable and sustainable home
+                Creating pathways towards affordable and sustainable home & land
                 ownership.
               </p>
 
