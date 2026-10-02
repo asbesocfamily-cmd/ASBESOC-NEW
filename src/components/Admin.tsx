@@ -88,22 +88,6 @@ type AdminView =
   | "gallery"
   | "settings";
 
-type ChatConversation = {
-  id: string;
-  memberId: string;
-  memberEmail: string;
-  memberName: string;
-  updatedAt?: Timestamp | null;
-};
-
-type ChatMessage = {
-  id: string;
-  senderId: string;
-  senderRole: "member" | "admin";
-  text: string;
-  createdAt?: Timestamp | null;
-};
-
 const adminViews: { id: AdminView; label: string; description: string }[] = [
   { id: "overview", label: "Overview", description: "Admin control centre" },
   { id: "website", label: "Website Content", description: "Public website content" },
