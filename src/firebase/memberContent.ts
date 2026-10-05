@@ -8,6 +8,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  where,
   type Timestamp,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -32,8 +33,9 @@ function clean(value: string, max: number) {
 export function watchMemberPosts(
   onValue: (posts: MemberPost[]) => void,
   onError?: (error: Error) => void,
+  publishedOnly = false,
 ): Unsubscribe {
-  const q = query(collection(db, "memberFeed"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, "memberFeed"), ...(publishedOnly ? [where("published", "==", true)] : [orderBy("createdAt", "desc")]));
   return onSnapshot(q, (snapshot) => {
     onValue(snapshot.docs.map((item) => {
       const data = item.data();

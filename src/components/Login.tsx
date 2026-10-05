@@ -15,6 +15,7 @@ import {
 
 import { auth } from "../firebase/firebaseConfig";
 import { useAuth } from "../contexts/useAuth";
+import { ADMIN_UID } from "../firebase/membership";
 
 const inputClass =
   "mt-2 block min-h-12 w-full rounded-xl border border-slate-200 " +
@@ -127,16 +128,14 @@ function Login() {
   }
 
   if (user && !busy) {
-    return (
-      <Navigate
-        to={
-          emailVerified
-            ? "/dashboard"
-            : "/verify-email"
-        }
-        replace
-      />
-    );
+    const destination =
+      user.uid === ADMIN_UID
+        ? "/admin"
+        : emailVerified
+          ? "/dashboard"
+          : "/verify-email";
+
+    return <Navigate to={destination} replace />;
   }
 
   return (

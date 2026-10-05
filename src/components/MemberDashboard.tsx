@@ -1,3 +1,4 @@
+import MemberPublishedUpdates from "./MemberPublishedUpdates";
 import {
   useEffect,
   useRef,
@@ -794,7 +795,7 @@ function Overview({
         </div>
       </section>
 
-      <MemberFeedPlaceholder />
+      {!membershipLoading && <MemberPublishedUpdates key={application?.status === "approved" ? "approved" : "all"} approved={application?.status === "approved"} />}
 
       <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatusCard
@@ -859,64 +860,6 @@ function Overview({
         </div>
       </div>
     </div>
-  );
-}
-
-function MemberFeedPlaceholder() {
-  return (
-    <section className="mt-7 overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.04)]">
-      <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#d97706]" />
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Member feed</p>
-          </div>
-          <h2 className="mt-2 text-xl font-black text-[#063b25] sm:text-2xl">ASBESOC updates</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Announcements, photos, opportunities, events and eligible-member training updates will appear here when published by ASBESOC.
-          </p>
-        </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[11px] font-black text-[#087247]">
-          <Icon name="community" className="h-4 w-4" />
-          Member updates
-        </div>
-      </div>
-
-      <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="relative min-h-[260px] overflow-hidden rounded-[22px] border border-dashed border-emerald-900/15 bg-[#f7faf8] p-6 sm:p-8">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-900/[0.035]" />
-          <div className="relative flex h-full max-w-xl flex-col justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#087247] shadow-sm">
-              <Icon name="document" />
-            </div>
-            <h3 className="mt-5 text-lg font-black text-[#063b25]">Your member feed is ready for updates</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              There are no published member posts yet. Once the admin publishing system is connected, new ASBESOC messages and media will flow into this space automatically.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          {[
-            ["Announcements", "Official member news and important notices.", "bell"],
-            ["Photos & updates", "Pictures, project moments and community updates.", "community"],
-            ["Opportunities", "Events and eligible-member training announcements.", "membership"],
-          ].map(([title, description, icon]) => (
-            <div key={title} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#087247]">
-                  <Icon name={icon as IconName} className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-[#063b25]">{title}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
