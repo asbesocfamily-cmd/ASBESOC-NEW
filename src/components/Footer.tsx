@@ -1,3 +1,4 @@
+import { useSiteContent } from "../contexts/useSiteContent";
 import { Link } from "react-router-dom";
 
 const footerLinks = [
@@ -16,6 +17,7 @@ const focusClass =
   "focus-visible:ring-offset-[#063b25]";
 
 function Footer() {
+  const cms = useSiteContent("footer");
   function scrollToTop() {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -48,15 +50,15 @@ function Footer() {
                 <span className="text-amber-300">.</span>
               </span>
 
-              <span className="mt-1 block text-xs text-white/80">
+              <span className="mt-1 block text-xs text-white/80">{cms.organization || <>
                 Association for a Better Society
-              </span>
+              </>}</span>
             </Link>
 
-            <p className="mt-3 max-w-sm text-[13px] leading-6 text-white/75">
+            <p className="mt-3 max-w-sm text-[13px] leading-6 text-white/75">{cms.summary || <>
               Promoting peace, empowerment and sustainable community
               development in Nigeria.
-            </p>
+            </>}</p>
 
             <p className="mt-3 text-xs text-white/65">
               Since 1999
@@ -108,7 +110,7 @@ function Footer() {
             <address className="mt-2 text-[13px] not-italic leading-6 text-white/80">
               <div className="flex flex-wrap gap-x-5">
                 <a
-                  href="mailto:asbesocng@gmail.com"
+                  href={`mailto:${cms.email1 || "asbesocng@gmail.com"}`}
                   className={`inline-flex min-h-11 min-w-0 items-center gap-2 rounded transition-colors hover:text-amber-300 ${focusClass}`}
                 >
                   <svg
@@ -133,13 +135,11 @@ function Footer() {
                     <path d="m3 7 9 6 9-6" />
                   </svg>
 
-                  <span className="break-all">
-                    asbesocng@gmail.com
-                  </span>
+                  <span className="break-all">{cms.email1 || "asbesocng@gmail.com"}</span>
                 </a>
 
                 <a
-                  href="tel:+2349023916067"
+                  href={`tel:${cms.phone1 || "+2349023916067"}`}
                   className={`inline-flex min-h-11 items-center gap-2 rounded transition-colors hover:text-amber-300 ${focusClass}`}
                 >
                   <svg
@@ -155,13 +155,10 @@ function Footer() {
                     aria-hidden="true"
                   >
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.79a2 2 0 0 1-.45 2.11L8.08 9.89a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.89.33 1.83.56 2.79.69A2 2 0 0 1 22 16.92Z" />
-                  </svg>
-
-                  09023916067
-                </a>
+                  </svg>{cms.phone1 || "09023916067"}</a>
 
                 <a
-                  href="mailto:infoasbesoc@gmail.com"
+                  href={`mailto:${cms.email2 || "infoasbesoc@gmail.com"}`}
                   className={`inline-flex min-h-11 min-w-0 items-center gap-2 rounded transition-colors hover:text-amber-300 ${focusClass}`}
                 >
                   <svg
@@ -186,13 +183,11 @@ function Footer() {
                     <path d="m3 7 9 6 9-6" />
                   </svg>
 
-                  <span className="break-all">
-                    infoasbesoc@gmail.com
-                  </span>
+                  <span className="break-all">{cms.email2 || "infoasbesoc@gmail.com"}</span>
                 </a>
 
                 <a
-                  href="tel:+2347081486898"
+                  href={`tel:${cms.phone2 || "+2347081486898"}`}
                   className={`inline-flex min-h-11 items-center gap-2 rounded transition-colors hover:text-amber-300 ${focusClass}`}
                 >
                   <svg
@@ -208,26 +203,21 @@ function Footer() {
                     aria-hidden="true"
                   >
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.79a2 2 0 0 1-.45 2.11L8.08 9.89a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.89.33 1.83.56 2.79.69A2 2 0 0 1 22 16.92Z" />
-                  </svg>
-
-                  07081486898
-                </a>
+                  </svg>{cms.phone2 || "07081486898"}</a>
               </div>
 
               <p className="mt-2">
                 <span className="font-semibold text-white">
                   Head Office:
                 </span>{" "}
-                Plot 359, Mmiri N'ezere Ora Avenue, New G.R.A,
-                Trans Ekulu, Enugu State.
+                {cms.headOffice || "Plot 359, Mmiri N'ezere Ora Avenue, New G.R.A, Trans Ekulu, Enugu State."}
               </p>
 
               <p className="mt-2">
                 <span className="font-semibold text-white">
                   Branch Office:
                 </span>{" "}
-                1st Floor, Kessington Plaza, Ugbowa Junction,
-                Phase Six, Trans Ekulu, Enugu State.
+                {cms.branchOffice || "1st Floor, Kessington Plaza, Ugbowa Junction, Phase Six, Trans Ekulu, Enugu State."}
               </p>
             </address>
           </section>

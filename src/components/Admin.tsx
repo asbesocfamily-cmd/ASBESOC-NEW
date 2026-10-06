@@ -1,6 +1,5 @@
 ﻿import {
   useEffect,
-  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -29,6 +28,7 @@ import AdminShell from "./AdminShell";
 import { type AdminView } from "./adminNavigation";
 import { MemberDirectory, BroadcastCentre, ActivityPanel, RequestWorkflow } from "./AdminOperations";
 import AdminMedia from "./AdminMedia";
+import WebsiteMediaManager from "./WebsiteMediaManager";
 import ApplicationReview from "./ApplicationReview";
 import {
   saveSitePage,
@@ -37,14 +37,7 @@ import {
   type SitePageContent,
   type SitePageId,
 } from "../firebase/siteContent";
-import {
-  createMemberPost,
-  deleteMemberPost,
-  updateMemberPost,
-  watchMemberPosts,
-  type MemberPost,
-  type MemberPostType,
-} from "../firebase/memberContent";
+import MemberContentManager from "./MemberPostManager";
 const PAGE_SIZE = 20;
 
 const sections = [
@@ -268,10 +261,10 @@ function Admin() {
       {activeView === "activity" && <ActivityPanel />}
       {activeView === "memberChats" && <AdminMemberChats adminUser={user} />}
       {submissionSection && <SubmissionList key={submissionSection.id} section={submissionSection} />}
-      {activeView === "website" && <WebsiteContentManager key="website" />}
+      {activeView === "website" && <div className="control-stack"><WebsiteMediaManager /><WebsiteContentManager key="website" /></div>}
       {activeView === "memberFeed" && <MemberContentManager key="announcements" defaultType="announcement" />}
       {activeView === "trainings" && <MemberContentManager key="trainings" defaultType="training" />}
-      {activeView === "gallery" && <div className="control-stack"><AdminMedia /><WebsiteContentManager key="gallery" initialPage="gallery" /></div>}
+      {activeView === "gallery" && <AdminMedia />}
       {activeView === "settings" && <div className="control-stack"><section className="control-panel"><h2 className="font-bold">Administrator account</h2><p className="mt-3 break-all text-sm">{user.email}</p><p className="mt-2 text-sm text-slate-500">Verified administrator access. Manage public organization and contact details below.</p><button className="control-button mt-4" disabled={signingOut} onClick={() => void logout()}>{signingOut ? "Signing out…" : "Sign out"}</button></section><WebsiteContentManager key="settings" initialPage="footer" /></div>}
     </AdminShell>
   );
@@ -527,8 +520,8 @@ function WebsiteContentManager({ initialPage = "home" }: { initialPage?: SitePag
     try {
       await saveSitePage(page, content);
       setNotice("Saved. The public website will update automatically.");
-    } catch {
-      setNotice("Could not save. Check your Firestore rules and internet connection.");
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : "Could not save. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -566,94 +559,6 @@ function WebsiteContentManager({ initialPage = "home" }: { initialPage?: SitePag
             {busy ? "Saving…" : "Save website changes"}
           </button>
         </form>
-      </div>
-    </section>
-  );
-}
-
-function MemberContentManager({ defaultType }: { defaultType: MemberPostType }) {
-  const [posts, setPosts] = useState<MemberPost[]>([]);
-  const [type, setType] = useState<MemberPostType>(defaultType);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [published, setPublished] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const actionLock = useRef(false);
-
-  useEffect(() => watchMemberPosts(values => { setPosts(values); setLoading(false); }, () => { setError("Could not load member posts."); setLoading(false); }), []);
-
-  async function changePost(post: MemberPost, remove: boolean) {
-    if (actionLock.current || (remove && !window.confirm(`Delete “${post.title}”? This cannot be undone.`))) return;
-    actionLock.current = true; setBusy(true); setError("");
-    try { if (remove) await deleteMemberPost(post.id); else await updateMemberPost(post.id, { published: !post.published }); }
-    catch { setError("The item could not be updated. Please try again."); }
-    finally { actionLock.current = false; setBusy(false); }
-  }
-
-  async function publish(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim() || !body.trim() || busy) return;
-    setBusy(true);
-    setError("");
-    try {
-      await createMemberPost({ type, title, body, published });
-      setTitle("");
-      setBody("");
-    } catch {
-      setError("Could not publish this item. Check Firestore rules and try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const visible = defaultType === "training"
-    ? posts.filter((post) => post.type === "training" || post.type === "opportunity")
-    : posts.filter(post => post.type === "announcement");
-
-  return (
-    <section className="space-y-6">
-      <div className="rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-7">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">Private member publishing</p>
-        <h2 className="mt-2 text-2xl font-black text-[#063b25]">{defaultType === "training" ? "Trainings & Opportunities" : "Announcements"}</h2>
-        <p className="mt-2 text-sm leading-7 text-slate-500">Only verified signed-in members can read published items. These are not public website posts.</p>
-        <form onSubmit={publish} className="mt-6 grid gap-4">
-          <select aria-label="Post type" value={type} onChange={(e) => setType(e.target.value as MemberPostType)} className={inputStyle}>
-            {defaultType === "announcement" ? <option value="announcement">Announcement</option> : <><option value="training">Training</option><option value="opportunity">Opportunity</option></>}
-          </select>
-          <input required aria-label="Post title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" maxLength={180} className={inputStyle} />
-          <textarea required aria-label="Post message" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Message" maxLength={6000} rows={5} className={`${inputStyle} resize-y`} />
-          <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-            <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-            Publish immediately
-          </label>
-          {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
-          <button disabled={busy} className="w-fit rounded-xl bg-[#063b25] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
-            {busy ? "Saving…" : published ? "Publish" : "Save draft"}
-          </button>
-        </form>
-      </div>
-      <div className="space-y-3">
-        {loading && <p role="status" className="control-empty">Loading posts…</p>}
-        {visible.map((post) => (
-          <article key={post.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase text-emerald-800">{post.type}</span>
-                <h3 className="mt-3 text-lg font-black text-[#063b25]">{post.title}</h3>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">{post.body}</p>
-              </div>
-              <div className="flex gap-2">
-                <button type="button" disabled={busy} onClick={() => void changePost(post, false)}
-                  className={buttonStyle}>{post.published ? "Unpublish" : "Publish"}</button>
-                <button type="button" disabled={busy} onClick={() => void changePost(post, true)}
-                  className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-700">Delete</button>
-              </div>
-            </div>
-          </article>
-        ))}
-        {!loading && !error && !visible.length && <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No items yet.</p>}
       </div>
     </section>
   );

@@ -1,3 +1,4 @@
+import { useSiteContent } from "../contexts/useSiteContent";
 import { useEffect, useState } from "react";
 
 import bookImage from "../assets/book.jpeg";
@@ -14,6 +15,7 @@ type Project = {
 };
 
 function Projects() {
+  const cms = useSiteContent("projects");
   /*
    * Root-level gallery images.
    *
@@ -225,18 +227,18 @@ function Projects() {
                   </span>
                 </div>
 
-                <h1 className="max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">{cms.title && cms.title !== "Projects That Turn Purpose Into Action." ? cms.title : <>
                   Projects That Turn
                   <span className="block text-amber-300">
                     Purpose Into Action.
                   </span>
-                </h1>
+                </>}</h1>
 
-                <p className="mt-6 max-w-2xl text-sm leading-8 text-emerald-50/90 sm:text-base">
+                <p className="mt-6 max-w-2xl text-sm leading-8 text-emerald-50/90 sm:text-base">{cms.intro || <>
                   Discover initiatives through which ASBESOC promotes peace,
                   behavioural change, empowerment, community participation,
                   advocacy and sustainable development.
-                </p>
+                </>}</p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <div className="rounded-full bg-white px-5 py-3 text-sm font-bold text-[#1B4332] shadow-lg">

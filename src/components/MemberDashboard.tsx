@@ -22,6 +22,9 @@ import { useMembership } from "../contexts/useMembership";
 import { db } from "../firebase/firebaseConfig";
 import {
   chatError,
+  watchMemberChat,
+  markChatRead,
+  type ChatConversation,
   ensureMemberChat,
   sendMemberMessage,
   watchMemberMessages,
@@ -1651,12 +1654,15 @@ function formatChatTime(message: ChatMessage) {
 }
 
 function MemberChat({ user }: { user: User }) {
+  const [conversation, setConversation] = useState<ChatConversation|null>(null);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => watchMemberChat(user, setConversation, caught => setError(chatError(caught))), [user]);
   const sendLock = useRef(false);
 
   useEffect(() => {
@@ -1706,6 +1712,11 @@ function MemberChat({ user }: { user: User }) {
     });
   }, [messages]);
 
+  useEffect(() => {
+    const unread = (conversation?.lastAdminMessageAt?.toMillis() || 0) > (conversation?.memberReadAt?.toMillis() || 0);
+    const mark = () => { if (!loading && unread && document.visibilityState === 'visible') void markChatRead(user, user.uid).catch(caught => setError(chatError(caught))); };
+    mark(); document.addEventListener('visibilitychange', mark); return () => document.removeEventListener('visibilitychange', mark);
+  }, [conversation, loading, user]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sendLock.current) return;
@@ -1741,13 +1752,13 @@ function MemberChat({ user }: { user: User }) {
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#063b25] text-sm font-black text-white">
               A
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-400" />
             </div>
             <div className="min-w-0">
               <h2 className="truncate text-sm font-black text-[#063b25] sm:text-base">
                 ASBESOC Admin
               </h2>
-              <p className="mt-0.5 text-xs text-slate-400">Private member support</p>
+              <p className="mt-0.5 text-xs text-slate-400">{conversation?.status === "waiting" ? "Waiting for an agent" : conversation?.status === "resolved" ? "Resolved · Send a message to reopen" : "Private member support"}</p>
             </div>
           </div>
 
@@ -1789,7 +1800,7 @@ function MemberChat({ user }: { user: User }) {
                       <div className={`flex max-w-[86%] flex-col sm:max-w-[72%] ${mine ? "items-end" : "items-start"}`}>
                         {!mine && (
                           <p className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#087247]">
-                            ASBESOC Admin
+                            {item.senderRole === "system" ? "Automatic acknowledgement" : "ASBESOC Admin"}
                           </p>
                         )}
                         <div

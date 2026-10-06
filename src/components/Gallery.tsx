@@ -1,3 +1,4 @@
+import { useSiteContent, useSiteMedia } from "../contexts/useSiteContent";
 import {
   useCallback,
   useEffect,
@@ -13,6 +14,8 @@ import executiveImage1 from "../assets/executives/image1.jpg";
 import executiveImage2 from "../assets/executives/image2.jpg";
 
 type GalleryItem = {
+  kind?: "image" | "video";
+  alt?: string;
   thumbnail: string;
   image: string;
   title: string;
@@ -134,7 +137,7 @@ const galleryFiles = [
   "IMGL1164.jpg",
 ];
 
-const galleryItems: GalleryItem[] = [
+const bundledGalleryItems: GalleryItem[] = [
   createGalleryItem(
     "hero",
     heroImage,
@@ -168,6 +171,9 @@ const galleryItems: GalleryItem[] = [
 ];
 
 function Gallery() {
+  const cms = useSiteContent("gallery");
+  const media = useSiteMedia("gallery");
+  const galleryItems: GalleryItem[] = media ? [...media.items.map(item => ({ kind: item.kind, alt: item.alt, thumbnail: item.url, image: item.url, title: item.title, description: item.caption })), ...(media.includeBundled ? bundledGalleryItems : [])] : bundledGalleryItems;
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const closeViewer = useCallback(() => {
@@ -183,7 +189,7 @@ function Gallery() {
         galleryItems.length
       );
     });
-  }, []);
+  }, [galleryItems.length]);
 
   return (
     <>
@@ -201,15 +207,15 @@ function Gallery() {
               ASBESOC Nigeria
             </span>
 
-            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">{cms.title || <>
               Our Gallery
-            </h1>
+            </>}</h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base sm:leading-8">
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base sm:leading-8">{cms.intro || <>
               A glimpse into the people, projects, activities,
               partnerships, and moments that represent the work
               and impact of ASBESOC Nigeria.
-            </p>
+            </>}</p>
 
             <div className="mx-auto mt-8 h-1 w-16 rounded-full bg-amber-400" />
           </div>
@@ -224,20 +230,20 @@ function Gallery() {
                   Our Moments
                 </span>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-[#1B4332] sm:text-4xl">
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-[#1B4332] sm:text-4xl">{cms.sectionTitle || <>
                   See ASBESOC in Action
-                </h2>
+                </>}</h2>
 
-                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{cms.sectionText || <>
                   Explore moments that reflect our commitment
                   to community development, leadership,
                   collaboration and positive social impact.
-                </p>
+                </>}</p>
               </div>
 
               <div className="shrink-0 rounded-full border border-emerald-900/10 bg-emerald-50 px-5 py-3">
                 <span className="text-sm font-bold text-[#1B4332]">
-                  {galleryItems.length} Photos
+                  {galleryItems.length} {galleryItems.some(item => item.kind === "video") ? "Photos & videos" : "Photos"}
                 </span>
               </div>
             </div>
@@ -247,6 +253,7 @@ function Gallery() {
         {/* GALLERY GRID */}
         <section className="px-4 pb-20 pt-8 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
+            {!galleryItems.length && <p className="py-12 text-center text-slate-500">No gallery media has been published yet.</p>}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {galleryItems.map((item, index) => (
                 <button
@@ -343,7 +350,7 @@ function Gallery() {
         </section>
       </main>
 
-      {selectedIndex !== null &&
+      {selectedIndex !== null && galleryItems[selectedIndex] &&
         createPortal(
           <GalleryViewer
             item={galleryItems[selectedIndex]}
@@ -367,6 +374,8 @@ function GalleryThumbnail({
 }) {
   const [failed, setFailed] = useState(false);
 
+  if (item.kind === "video") return <span className="p-10 text-center text-[#063b25]">▶<br/>{item.title || "Play video"}</span>;
+
   if (failed) {
     return (
       <span className="px-6 py-16 text-center text-sm text-slate-500">
@@ -378,7 +387,7 @@ function GalleryThumbnail({
   return (
     <img
       src={item.thumbnail}
-      alt={item.title || `ASBESOC Gallery ${index + 1}`}
+      alt={item.alt || item.title || `ASBESOC Gallery ${index + 1}`}
       loading={index < 4 ? "eager" : "lazy"}
       decoding="async"
       onError={() => setFailed(true)}
@@ -560,11 +569,11 @@ function GalleryViewer({
           touchStart.current = null;
         }}
       >
-        <ViewerPhoto
+        {item.kind === "video" ? <video key={item.image} src={item.image} controls playsInline preload="metadata" aria-label={item.title || "Gallery video"} className="max-h-[75vh] max-w-full"/> : <ViewerPhoto
           key={item.image}
           item={item}
           index={index}
-        />
+        />}
       </div>
 
       {/* TOP CONTROLS */}

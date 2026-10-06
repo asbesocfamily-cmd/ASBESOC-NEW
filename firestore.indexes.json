@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"broadcasts","queryScope":"COLLECTION","fields":[{"fieldPath":"published","order":"ASCENDING"},{"fieldPath":"audience","order":"ASCENDING"}]}],"fieldOverrides":[]}

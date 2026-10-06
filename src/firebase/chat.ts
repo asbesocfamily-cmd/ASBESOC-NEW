@@ -7,23 +7,31 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  addDoc,
+  updateDoc,
+  writeBatch,
   type Timestamp,
   type Unsubscribe,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 
 import { db } from "./firebaseConfig";
+import { ADMIN_UID } from "./membership";
 
-export type ChatSenderRole = "member" | "admin";
+export type ChatSenderRole = "member" | "admin" | "system";
+export type ChatStatus = "waiting" | "active" | "resolved";
 
 export type ChatConversation = {
   id: string;
   memberId: string;
   memberEmail: string;
   memberName: string;
+  status: ChatStatus;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
+  lastMemberMessageAt?: Timestamp | null;
+  lastAdminMessageAt?: Timestamp | null;
+  adminReadAt?: Timestamp | null;
+  memberReadAt?: Timestamp | null;
 };
 
 export type ChatMessage = {
@@ -34,276 +42,304 @@ export type ChatMessage = {
   createdAt?: Timestamp | null;
 };
 
-function cleanText(value: string) {
-  return value.trim();
-}
-
-function memberName(user: User) {
-  const name = cleanText(user.displayName || "");
-
-  if (name) {
-    return name.slice(0, 150);
-  }
-
-  const emailName = cleanText(
-    user.email?.split("@")[0] || ""
+export function compareChatMessages(
+  a: { createdAt?: Timestamp | null; senderRole: ChatSenderRole },
+  b: { createdAt?: Timestamp | null; senderRole: ChatSenderRole },
+) {
+  return (
+    (a.createdAt?.toMillis() || Number.MAX_SAFE_INTEGER) -
+      (b.createdAt?.toMillis() || Number.MAX_SAFE_INTEGER) ||
+    Number(a.senderRole === "system") - Number(b.senderRole === "system")
   );
-
-  if (emailName) {
-    return emailName.slice(0, 150);
-  }
-
-  return "ASBESOC Member";
 }
 
-function requireVerifiedUser(user: User | null) {
-  if (!user) {
-    throw new Error(
-      "You must be signed in to use member chat."
-    );
-  }
+export const SUPPORT_ACK =
+  "Thank you for contacting ASBESOC. Your message has been received. An agent will be with you as soon as one is available.";
 
-  if (!user.emailVerified) {
+function verified(user: User | null) {
+  if (!user?.emailVerified || !user.email) {
     throw new Error(
-      "Please verify your email before using member chat."
-    );
-  }
-
-  if (!user.email) {
-    throw new Error(
-      "Your account does not have an email address."
+      "Please sign in and verify your email to use member chat.",
     );
   }
 
   return user;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         ENSURE MEMBER CONVERSATION                          */
-/* -------------------------------------------------------------------------- */
+function messageText(message: string) {
+  const text = message.trim();
 
-export async function ensureMemberChat(
-  currentUser: User | null
-) {
-  const user = requireVerifiedUser(currentUser);
-
-  const chatRef = doc(
-    db,
-    "memberChats",
-    user.uid
-  );
-
-  const existing = await getDoc(chatRef);
-
-  if (existing.exists()) {
-    return chatRef;
+  if (!text || text.length > 4000) {
+    throw new Error("Enter a message between 1 and 4,000 characters.");
   }
 
-  await setDoc(chatRef, {
-    memberId: user.uid,
-    memberEmail: user.email,
-    memberName: memberName(user),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-
-  return chatRef;
+  return text;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              SEND MEMBER MESSAGE                            */
-/* -------------------------------------------------------------------------- */
+export async function ensureMemberChat(currentUser: User | null) {
+  const user = verified(currentUser);
+  const target = doc(db, "memberChats", user.uid);
+
+  const snapshot = await getDoc(target);
+
+  if (!snapshot.exists()) {
+    try {
+      await setDoc(target, {
+        memberId: user.uid,
+        memberEmail: user.email,
+        memberName: (
+          user.displayName ||
+          user.email?.split("@")[0]
+         ||
+          "ASBESOC Member"
+        ).slice(0, 150),
+        status: "waiting",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      // Another tab/session may have created the conversation between
+      // our read and write. Confirm the chat now exists before failing.
+      const retrySnapshot = await getDoc(target);
+
+      if (!retrySnapshot.exists()) {
+        throw error;
+      }
+    }
+  }
+
+  return target;
+}
 
 export async function sendMemberMessage(
   currentUser: User | null,
-  message: string
+  message: string,
 ) {
-  const user = requireVerifiedUser(currentUser);
+  const user = verified(currentUser);
+  const text = messageText(message);
 
-  const text = cleanText(message);
+  const target = await ensureMemberChat(user);
+  const snapshot = await getDoc(target);
+  const data = snapshot.data();
 
-  if (!text) {
-    throw new Error(
-      "Enter a message before sending."
-    );
+  if (!data) {
+    throw new Error("Conversation unavailable.");
   }
 
-  if (text.length > 4000) {
-    throw new Error(
-      "Your message is too long. Please keep it under 4,000 characters."
-    );
-  }
+  const acknowledgement =
+    data.status === "waiting" &&
+    !data.lastMemberMessageAt &&
+    !data.acknowledgedAt;
 
-  await ensureMemberChat(user);
+  const batch = writeBatch(db);
 
-  const messagesRef = collection(
-    db,
-    "memberChats",
-    user.uid,
-    "messages"
+  const messageRef = doc(
+    collection(db, "memberChats", user.uid, "messages"),
   );
 
-  await addDoc(messagesRef, {
+  batch.set(messageRef, {
     senderId: user.uid,
     senderRole: "member",
     text,
     createdAt: serverTimestamp(),
   });
+
+  batch.update(target, {
+    updatedAt: serverTimestamp(),
+    lastMemberMessageAt: serverTimestamp(),
+    status:
+      data.status === "resolved"
+        ? "waiting"
+        : data.status || "active",
+    ...(acknowledgement
+      ? { acknowledgedAt: serverTimestamp() }
+      : {}),
+  });
+
+  if (acknowledgement) {
+    batch.set(
+      doc(
+        db,
+        "memberChats",
+        user.uid,
+        "messages",
+        "support-ack",
+      ),
+      {
+        senderId: "system",
+        senderRole: "system",
+        text: SUPPORT_ACK,
+        createdAt: serverTimestamp(),
+      },
+    );
+  }
+
+  await batch.commit();
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         LISTEN TO MEMBER MESSAGES                           */
-/* -------------------------------------------------------------------------- */
+export async function sendAdminMessage(
+  user: User,
+  uid: string,
+  message: string,
+) {
+  verified(user);
+
+  if (user.uid !== ADMIN_UID) {
+    throw new Error("Administrator access required.");
+  }
+
+  const text = messageText(message);
+  const batch = writeBatch(db);
+
+  batch.set(
+    doc(collection(db, "memberChats", uid, "messages")),
+    {
+      senderId: user.uid,
+      senderRole: "admin",
+      text,
+      createdAt: serverTimestamp(),
+    },
+  );
+
+  batch.update(doc(db, "memberChats", uid), {
+    status: "active",
+    updatedAt: serverTimestamp(),
+    lastAdminMessageAt: serverTimestamp(),
+    adminReadAt: serverTimestamp(),
+  });
+
+  await batch.commit();
+}
+
+export async function setChatStatus(
+  user: User,
+  uid: string,
+  status: ChatStatus,
+) {
+  verified(user);
+
+  if (user.uid !== ADMIN_UID) {
+    throw new Error("Administrator access required.");
+  }
+
+  await updateDoc(doc(db, "memberChats", uid), {
+    status,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function markChatRead(
+  user: User,
+  uid: string,
+) {
+  verified(user);
+
+  if (user.uid !== ADMIN_UID && user.uid !== uid) {
+    throw new Error(
+      "This conversation belongs to another member.",
+    );
+  }
+
+  await updateDoc(doc(db, "memberChats", uid), {
+    [user.uid === ADMIN_UID
+      ? "adminReadAt"
+      : "memberReadAt"]: serverTimestamp(),
+  });
+}
+
+export function chatStatus(value: unknown): ChatStatus {
+  return value === "waiting" || value === "resolved"
+    ? value
+    : "active";
+}
 
 export function watchMemberMessages(
   currentUser: User | null,
   onMessages: (messages: ChatMessage[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): Unsubscribe {
-  const user = requireVerifiedUser(currentUser);
-
-  const messagesRef = collection(
-    db,
-    "memberChats",
-    user.uid,
-    "messages"
-  );
-
-  const messagesQuery = query(
-    messagesRef,
-    orderBy("createdAt", "asc")
-  );
+  const user = verified(currentUser);
 
   return onSnapshot(
-    messagesQuery,
+    query(
+      collection(
+        db,
+        "memberChats",
+        user.uid,
+        "messages",
+      ),
+      orderBy("createdAt", "asc"),
+    ),
+    (snapshot) =>
+      onMessages(
+        snapshot.docs
+          .map((item) => {
+            const d = item.data();
 
-    (snapshot) => {
-      const messages: ChatMessage[] =
-        snapshot.docs.map((messageDoc) => {
-          const data = messageDoc.data();
-
-          return {
-            id: messageDoc.id,
-
-            senderId:
-              typeof data.senderId === "string"
-                ? data.senderId
-                : "",
-
-            senderRole:
-              data.senderRole === "admin"
-                ? "admin"
-                : "member",
-
-            text:
-              typeof data.text === "string"
-                ? data.text
-                : "",
-
-            createdAt:
-              data.createdAt ?? null,
-          };
-        });
-
-      onMessages(messages);
-    },
-
-    (error) => {
-      if (onError) {
-        onError(error);
-      }
-    }
+            return {
+              id: item.id,
+              senderId: String(d.senderId || ""),
+              senderRole:
+                d.senderRole === "admin"
+                  ? "admin"
+                  : d.senderRole === "system"
+                    ? "system"
+                    : "member",
+              text: String(d.text || ""),
+              createdAt: d.createdAt || null,
+            } as ChatMessage;
+          })
+          .sort(compareChatMessages),
+      ),
+    onError,
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*                         LISTEN TO CHAT INFORMATION                          */
-/* -------------------------------------------------------------------------- */
 
 export function watchMemberChat(
   currentUser: User | null,
   onChat: (
-    chat: ChatConversation | null
+    chat: ChatConversation | null,
   ) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): Unsubscribe {
-  const user = requireVerifiedUser(currentUser);
-
-  const chatRef = doc(
-    db,
-    "memberChats",
-    user.uid
-  );
+  const user = verified(currentUser);
 
   return onSnapshot(
-    chatRef,
-
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onChat(null);
-        return;
-      }
-
-      const data = snapshot.data();
-
-      onChat({
-        id: snapshot.id,
-
-        memberId:
-          typeof data.memberId === "string"
-            ? data.memberId
-            : "",
-
-        memberEmail:
-          typeof data.memberEmail === "string"
-            ? data.memberEmail
-            : "",
-
-        memberName:
-          typeof data.memberName === "string"
-            ? data.memberName
-            : "ASBESOC Member",
-
-        createdAt:
-          data.createdAt ?? null,
-
-        updatedAt:
-          data.updatedAt ?? null,
-      });
-    },
-
-    (error) => {
-      if (onError) {
-        onError(error);
-      }
-    }
+    doc(db, "memberChats", user.uid),
+    (snapshot) =>
+      onChat(
+        snapshot.exists()
+          ? ({
+              ...snapshot.data(),
+              id: snapshot.id,
+              status: chatStatus(
+                snapshot.data().status,
+              ),
+            } as ChatConversation)
+          : null,
+      ),
+    onError,
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*                              CHAT ERROR TEXT                                */
-/* -------------------------------------------------------------------------- */
 
 export function chatError(error: unknown) {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
-    if (
-      message.includes("permission") ||
-      message.includes("permission-denied")
-    ) {
-      return "You do not have permission to access this conversation.";
+    if (message.includes("permission")) {
+      return "This conversation could not be accessed. Check your sign-in or ask the administrator to check chat permissions.";
     }
 
     if (
-      message.includes("network") ||
-      message.includes("unavailable")
+      message.includes("stored version") ||
+      message.includes("base version") ||
+      message.includes("aborted")
     ) {
-      return "The chat service is temporarily unavailable. Check your internet connection and try again.";
+      return "The conversation changed while your message was being sent. Please send the message again.";
     }
 
     return error.message;
   }
 
-  return "Something went wrong with the chat. Please try again.";
+  return "The chat action failed. Please try again.";
 }

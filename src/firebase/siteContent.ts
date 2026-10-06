@@ -5,6 +5,7 @@ import {
   setDoc,
   type Unsubscribe,
 } from "firebase/firestore";
+import { requireMediaAdmin } from "./media";
 import { db } from "./firebaseConfig";
 
 export type SitePageId =
@@ -91,6 +92,12 @@ export async function saveSitePage(
   pageId: SitePageId,
   content: SitePageContent,
 ) {
+  requireMediaAdmin();
+  for (const [key,value] of Object.entries(content)) {
+    if (!(key in siteContentDefaults[pageId]) || typeof value !== "string" || value.length > 6000) throw new Error("Invalid website text.");
+    if (key.startsWith("email") && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error("Enter a valid contact email.");
+    if (key.startsWith("phone") && !/^[+0-9 ()-]{7,30}$/.test(value)) throw new Error("Enter a valid contact phone number.");
+  }
   await setDoc(
     doc(db, "siteContent", pageId),
     { content, updatedAt: serverTimestamp() },

@@ -1,3 +1,4 @@
+import { useSiteContent, useSiteMedia } from "../contexts/useSiteContent";
 import { Link } from "react-router-dom";
 import heroImage from "../assets/hero.webp";
 import membershipImage from "../assets/membership.webp";
@@ -6,6 +7,8 @@ import executiveImage2 from "../assets/executives/image2.webp";
 import executiveImage3 from "../assets/executives/image3.webp";
 
 function Hero() {
+  const cms = useSiteContent("home");
+  const media = useSiteMedia("home");
   const statistics = [
     {
       number: "20+",
@@ -220,8 +223,8 @@ function Hero() {
       <section className="px-4 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[26px] bg-[#063b25] shadow-[0_20px_55px_rgba(6,59,37,0.16)] sm:rounded-[30px] lg:rounded-[34px]">
           <img
-            src={heroImage}
-            alt="ASBESOC community empowerment initiative"
+            src={media?.hero?.url || heroImage}
+            alt={media?.hero?.alt || "ASBESOC community empowerment initiative"}
             width="1600"
             height="900"
             loading="eager"
@@ -255,29 +258,29 @@ function Hero() {
                     className="h-2 w-2 rounded-full bg-[#D4AF37]"
                     aria-hidden="true"
                   />
-                  Empowering Communities Since 1999
+                  {cms.eyebrow || "Empowering Communities Since 1999"}
                 </div>
               </div>
 
-              <h1 className="max-w-2xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-[68px] xl:text-[76px]">
+              <h1 className="max-w-2xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-[68px] xl:text-[76px]">{cms.title && cms.title !== "Building A Better Society" ? cms.title : <>
                 Building A <span className="text-[#00a844]">Better</span>{" "}
                 Society
-              </h1>
+              </>}</h1>
 
               <div className="my-6 h-1 w-12 rounded-full bg-[#00b848] sm:my-7" />
 
-              <p className="max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">
+              <p className="max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">{cms.intro || <>
                 Together, we create positive change through community
                 development, empowerment, trust, and sustainable solutions that
                 transform lives and build a better tomorrow.
-              </p>
+              </>}</p>
 
-              <p className="mt-4 max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">
+              <p className="mt-4 max-w-xl text-base font-medium leading-7 text-white/90 sm:text-lg sm:leading-8">{cms.secondary || <>
                 However, our areas of intervention also include human rights
                 protection, awareness and education; conflict management,
                 resolution and mediation; security surveillance; and human
                 capital development.
-              </p>
+              </>}</p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
@@ -342,8 +345,8 @@ function Hero() {
       <section className="px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[26px] bg-[#031f14] shadow-[0_20px_55px_rgba(6,59,37,0.18)] sm:rounded-[30px]">
           <img
-            src={membershipImage}
-            alt="ASBESOC members working together"
+            src={media?.secondary?.url || membershipImage}
+            alt={media?.secondary?.alt || "ASBESOC members working together"}
             width="1400"
             height="800"
             loading="lazy"
@@ -368,14 +371,14 @@ function Hero() {
               JOIN ASBESOC
             </p>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">{cms.membershipTitle && cms.membershipTitle !== "Become Part Of ASBESOC" ? cms.membershipTitle : <>
               Become Part Of <span className="text-[#00c94f]">ASBESOC</span>
-            </h2>
+            </>}</h2>
 
-            <p className="mx-auto mt-5 max-w-3xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7 lg:text-lg">
+            <p className="mx-auto mt-5 max-w-3xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7 lg:text-lg">{cms.membershipText || <>
               Join a thriving community focused on leadership, innovation,
               transformation, and building a better society.
-            </p>
+            </>}</p>
 
             <Link
               to="/membership"

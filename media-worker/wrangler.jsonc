@@ -1,0 +1,12 @@
+{
+  "name": "asbesoc-media",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "vars": {
+    "FIREBASE_PROJECT_ID": "asbesoc-nigeria",
+    "FIREBASE_API_KEY": "AIzaSyCqiTZP3knWeCdJrNz-OmlXYqZ3HwltTno",
+    "ADMIN_UID": "RJJhn4WSoBhUQ5vMF7G9vxLB98E2",
+    "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:5174,https://asbesoc.org,https://www.asbesoc.org,https://asbesoc-nigeria.web.app"
+  }
+}

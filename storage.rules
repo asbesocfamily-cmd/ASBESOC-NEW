@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function verified() { return request.auth != null && request.auth.token.email_verified == true; }
+    function admin() { return verified() && request.auth.uid == 'RJJhn4WSoBhUQ5vMF7G9vxLB98E2'; }
+    function approved() { return verified() && firestore.get(/databases/(default)/documents/membershipApplications/$(request.auth.uid)).data.status == 'approved'; }
+    function record(id) { return firestore.get(/databases/(default)/documents/media/$(id)).data; }
+    match /media/{scope}/{id}/{filename} {
+      allow get: if admin() || scope == 'public' || (scope == 'members' && verified()) || (scope == 'approved_members' && approved());
+      allow create: if admin() && scope in ['public','members','approved_members']
+        && record(id).state == 'uploading' && record(id).path == 'media/' + scope + '/' + id + '/' + filename
+        && request.resource.size > 0 && request.resource.size == record(id).size
+        && request.resource.contentType == record(id).contentType
+        && ((request.resource.contentType.matches('image/(jpeg|png|webp|gif|avif)') && request.resource.size <= 10 * 1024 * 1024)
+          || (scope == 'public' && request.resource.contentType.matches('video/(mp4|webm)') && request.resource.size <= 100 * 1024 * 1024));
+      allow delete: if admin() && record(id).state == 'deleting' && record(id).uses == [];
+      allow update, list: if false;
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

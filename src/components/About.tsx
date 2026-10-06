@@ -1,3 +1,4 @@
+import { useSiteContent } from "../contexts/useSiteContent";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
@@ -98,6 +99,7 @@ const commitmentPoints = [
 ];
 
 function About() {
+ const cms = useSiteContent("about");
   const [openSection, setOpenSection] = useState<SectionKey>(null);
 
   useEffect(() => {
@@ -178,7 +180,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                   aria-hidden="true"
                 />
                 <span className="text-xs font-semibold tracking-[0.2em] text-white/80">
-                  ABOUT ASBESOC
+                  {cms.pageLabel || <>ABOUT ASBESOC</>}
                 </span>
               </div>
 
@@ -388,7 +390,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                   </p>
 
                   <h3 className="mt-3 text-2xl font-bold text-[#064e3b] sm:text-3xl">
-                    A peaceful, empowered and better society.
+                    {cms.vision || <>A peaceful, empowered and better society.</>}
                   </h3>
 
                   <p className="mt-5 max-w-xl leading-8 text-slate-600">
@@ -419,7 +421,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
                   </p>
 
                   <h3 className="mt-3 text-2xl font-bold sm:text-3xl">
-                    Turning challenges into practical solutions.
+                    {cms.mission || <>Turning challenges into practical solutions.</>}
                   </h3>
 
                   <p className="mt-5 max-w-xl leading-8 text-emerald-50/75">
@@ -515,7 +517,7 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
               </p>
 
               <h2 className="mt-4 text-3xl font-bold leading-tight text-[#064e3b] sm:text-5xl">
-                Building a better society is everyone&apos;s responsibility.
+                {cms.commitment || <>Building a better society is everyone&apos;s responsibility.</>}
               </h2>
 
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">

@@ -1,3 +1,4 @@
+import { useSiteContent, useSiteMedia } from "../contexts/useSiteContent";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import housingImage from "../assets/programs/housing-programme.webp";
@@ -164,6 +165,8 @@ const learnMoreClass =
   "group mt-9 inline-flex items-center gap-3 border-b-2 border-amber-400 pb-1 text-left text-sm font-black text-[#123C2D] transition hover:text-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700";
 
 function Programs() {
+  const cms = useSiteContent("programs");
+  const media = useSiteMedia("programs");
   const [selectedProgram, setSelectedProgram] =
     useState<ProgramId | null>(null);
 
@@ -176,8 +179,8 @@ function Programs() {
           className="relative isolate flex min-h-[500px] items-center overflow-hidden bg-[#082E22] sm:min-h-[570px] lg:min-h-[620px]"
         >
           <img
-            src={programsHero}
-            alt="ASBESOC programmes and community activities"
+            src={media?.hero?.url || programsHero}
+            alt={media?.hero?.alt || "ASBESOC programmes and community activities"}
             loading="eager"
             fetchPriority="high"
             decoding="async"
@@ -204,15 +207,15 @@ function Programs() {
                 </p>
               </div>
 
-              <h1 className="mt-6 text-4xl font-black leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
+              <h1 className="mt-6 text-4xl font-black leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">{cms.title && cms.title !== "Our Programs" ? cms.title : <>
                 Our<span className="text-amber-300"> Programs</span>
-              </h1>
+              </>}</h1>
 
-              <p className="mt-7 max-w-2xl text-base leading-8 text-white/85 sm:text-lg">
+              <p className="mt-7 max-w-2xl text-base leading-8 text-white/85 sm:text-lg">{cms.intro || <>
                 Turning our commitment to a peaceful, empowered and better
                 society into practical initiatives that respond to real
                 community needs.
-              </p>
+              </>}</p>
 
               <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm font-bold text-white/75">
                 <span>Community</span>
@@ -316,8 +319,8 @@ function Programs() {
 
                 <div className="relative overflow-hidden rounded-[1.7rem] bg-white shadow-[0_25px_65px_rgba(18,60,45,0.12)]">
                   <img
-                    src={housingImage}
-                    alt="The End of Housing Deficit Programme"
+                    src={media?.secondary?.url || housingImage}
+                    alt={media?.secondary?.alt || "The End of Housing Deficit Programme"}
                     loading="lazy"
                     decoding="async"
                     className="h-auto w-full object-cover"
@@ -347,10 +350,7 @@ function Programs() {
                   </span>
                 </h2>
 
-                <p className="mt-5 text-lg font-bold leading-8 text-[#476458]">
-                  Creating pathways towards affordable and sustainable home & land
-                  ownership.
-                </p>
+                <p className="mt-5 text-lg font-bold leading-8 text-[#476458]">{cms.housingTagline || "Creating pathways towards affordable and sustainable home & land ownership."}</p>
 
                 <p className="mt-6 text-base leading-8 text-slate-600">
                   An ASBESOC initiative aimed at promoting access to decent,
@@ -674,8 +674,7 @@ function Programs() {
           <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div>
               <p className="text-xl font-bold leading-9 text-emerald-800">
-                Creating pathways towards affordable and sustainable home & land
-                ownership.
+                {cms.housingTagline || "Creating pathways towards affordable and sustainable home & land ownership."}
               </p>
 
               <Paragraphs
@@ -689,8 +688,8 @@ function Programs() {
 
             <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-xl">
               <img
-                src={housingImage}
-                alt="The End of Housing Deficit Programme"
+                src={media?.secondary?.url || housingImage}
+                alt={media?.secondary?.alt || "The End of Housing Deficit Programme"}
                 decoding="async"
                 className="h-auto w-full"
               />
