@@ -1,14 +1,12 @@
 import {
   collection,
   doc,
-  getDoc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  setDoc,
+  runTransaction,
   updateDoc,
-  writeBatch,
   type Timestamp,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -40,6 +38,7 @@ export type ChatMessage = {
   senderRole: ChatSenderRole;
   text: string;
   createdAt?: Timestamp | null;
+  pending?: boolean;
 };
 
 export function compareChatMessages(
@@ -58,15 +57,17 @@ export const SUPPORT_ACK =
 
 function verified(user: User | null) {
   if (!user?.emailVerified || !user.email) {
-    throw new Error(
-      "Please sign in and verify your email to use member chat.",
-    );
+    throw new Error("Please sign in and verify your email to use member chat.");
   }
 
   return user;
 }
 
 function messageText(message: string) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false)
+    throw new Error(
+      "You are offline. Your message has not been sent; reconnect and try again.",
+    );
   const text = message.trim();
 
   if (!text || text.length > 4000) {
@@ -80,33 +81,22 @@ export async function ensureMemberChat(currentUser: User | null) {
   const user = verified(currentUser);
   const target = doc(db, "memberChats", user.uid);
 
-  const snapshot = await getDoc(target);
-
-  if (!snapshot.exists()) {
-    try {
-      await setDoc(target, {
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(target);
+    if (!snapshot.exists())
+      transaction.set(target, {
         memberId: user.uid,
         memberEmail: user.email,
         memberName: (
           user.displayName ||
-          user.email?.split("@")[0]
-         ||
+          user.email!.split("@")[0] ||
           "ASBESOC Member"
         ).slice(0, 150),
         status: "waiting",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-    } catch (error) {
-      // Another tab/session may have created the conversation between
-      // our read and write. Confirm the chat now exists before failing.
-      const retrySnapshot = await getDoc(target);
-
-      if (!retrySnapshot.exists()) {
-        throw error;
-      }
-    }
-  }
+  });
 
   return target;
 }
@@ -119,62 +109,37 @@ export async function sendMemberMessage(
   const text = messageText(message);
 
   const target = await ensureMemberChat(user);
-  const snapshot = await getDoc(target);
-  const data = snapshot.data();
-
-  if (!data) {
-    throw new Error("Conversation unavailable.");
-  }
-
-  const acknowledgement =
-    data.status === "waiting" &&
-    !data.lastMemberMessageAt &&
-    !data.acknowledgedAt;
-
-  const batch = writeBatch(db);
-
-  const messageRef = doc(
-    collection(db, "memberChats", user.uid, "messages"),
-  );
-
-  batch.set(messageRef, {
-    senderId: user.uid,
-    senderRole: "member",
-    text,
-    createdAt: serverTimestamp(),
-  });
-
-  batch.update(target, {
-    updatedAt: serverTimestamp(),
-    lastMemberMessageAt: serverTimestamp(),
-    status:
-      data.status === "resolved"
-        ? "waiting"
-        : data.status || "active",
-    ...(acknowledgement
-      ? { acknowledgedAt: serverTimestamp() }
-      : {}),
-  });
-
-  if (acknowledgement) {
-    batch.set(
-      doc(
-        db,
-        "memberChats",
-        user.uid,
-        "messages",
-        "support-ack",
-      ),
-      {
+  // Read status and first-message acknowledgement in the same transaction as
+  // the message. Firestore retries when another tab or an admin changes it.
+  const messageRef = doc(collection(target, "messages"));
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(target);
+    const data = snapshot.data();
+    if (!data) throw new Error("Conversation unavailable.");
+    const acknowledgement =
+      data.status === "waiting" &&
+      !data.lastMemberMessageAt &&
+      !data.acknowledgedAt;
+    transaction.set(messageRef, {
+      senderId: user.uid,
+      senderRole: "member",
+      text,
+      createdAt: serverTimestamp(),
+    });
+    transaction.update(target, {
+      updatedAt: serverTimestamp(),
+      lastMemberMessageAt: serverTimestamp(),
+      status: data.status === "resolved" ? "waiting" : data.status || "active",
+      ...(acknowledgement ? { acknowledgedAt: serverTimestamp() } : {}),
+    });
+    if (acknowledgement)
+      transaction.set(doc(target, "messages", "support-ack"), {
         senderId: "system",
         senderRole: "system",
         text: SUPPORT_ACK,
         createdAt: serverTimestamp(),
-      },
-    );
-  }
-
-  await batch.commit();
+      });
+  });
 }
 
 export async function sendAdminMessage(
@@ -189,26 +154,24 @@ export async function sendAdminMessage(
   }
 
   const text = messageText(message);
-  const batch = writeBatch(db);
-
-  batch.set(
-    doc(collection(db, "memberChats", uid, "messages")),
-    {
+  const target = doc(db, "memberChats", uid);
+  const messageRef = doc(collection(target, "messages"));
+  await runTransaction(db, async (transaction) => {
+    if (!(await transaction.get(target)).exists())
+      throw new Error("Conversation unavailable.");
+    transaction.set(messageRef, {
       senderId: user.uid,
       senderRole: "admin",
       text,
       createdAt: serverTimestamp(),
-    },
-  );
-
-  batch.update(doc(db, "memberChats", uid), {
-    status: "active",
-    updatedAt: serverTimestamp(),
-    lastAdminMessageAt: serverTimestamp(),
-    adminReadAt: serverTimestamp(),
+    });
+    transaction.update(target, {
+      status: "active",
+      updatedAt: serverTimestamp(),
+      lastAdminMessageAt: serverTimestamp(),
+      adminReadAt: serverTimestamp(),
+    });
   });
-
-  await batch.commit();
 }
 
 export async function setChatStatus(
@@ -228,29 +191,21 @@ export async function setChatStatus(
   });
 }
 
-export async function markChatRead(
-  user: User,
-  uid: string,
-) {
+export async function markChatRead(user: User, uid: string) {
   verified(user);
 
   if (user.uid !== ADMIN_UID && user.uid !== uid) {
-    throw new Error(
-      "This conversation belongs to another member.",
-    );
+    throw new Error("This conversation belongs to another member.");
   }
 
   await updateDoc(doc(db, "memberChats", uid), {
-    [user.uid === ADMIN_UID
-      ? "adminReadAt"
-      : "memberReadAt"]: serverTimestamp(),
+    [user.uid === ADMIN_UID ? "adminReadAt" : "memberReadAt"]:
+      serverTimestamp(),
   });
 }
 
 export function chatStatus(value: unknown): ChatStatus {
-  return value === "waiting" || value === "resolved"
-    ? value
-    : "active";
+  return value === "waiting" || value === "resolved" ? value : "active";
 }
 
 export function watchMemberMessages(
@@ -262,22 +217,19 @@ export function watchMemberMessages(
 
   return onSnapshot(
     query(
-      collection(
-        db,
-        "memberChats",
-        user.uid,
-        "messages",
-      ),
+      collection(db, "memberChats", user.uid, "messages"),
       orderBy("createdAt", "asc"),
     ),
+    { includeMetadataChanges: true },
     (snapshot) =>
       onMessages(
         snapshot.docs
           .map((item) => {
-            const d = item.data();
+            const d = item.data({ serverTimestamps: "estimate" });
 
             return {
               id: item.id,
+              pending: item.metadata.hasPendingWrites,
               senderId: String(d.senderId || ""),
               senderRole:
                 d.senderRole === "admin"
@@ -297,9 +249,7 @@ export function watchMemberMessages(
 
 export function watchMemberChat(
   currentUser: User | null,
-  onChat: (
-    chat: ChatConversation | null,
-  ) => void,
+  onChat: (chat: ChatConversation | null) => void,
   onError?: (error: Error) => void,
 ): Unsubscribe {
   const user = verified(currentUser);
@@ -310,11 +260,9 @@ export function watchMemberChat(
       onChat(
         snapshot.exists()
           ? ({
-              ...snapshot.data(),
+              ...snapshot.data({ serverTimestamps: "estimate" }),
               id: snapshot.id,
-              status: chatStatus(
-                snapshot.data().status,
-              ),
+              status: chatStatus(snapshot.data().status),
             } as ChatConversation)
           : null,
       ),
@@ -342,4 +290,14 @@ export function chatError(error: unknown) {
   }
 
   return "The chat action failed. Please try again.";
+}
+// Missing timestamps on older records are not evidence of an outstanding write.
+export function chatMessageTime(message: ChatMessage) {
+  if (message.pending) return "Sending…";
+  return (
+    message.createdAt
+      ?.toDate()
+      .toLocaleString("en-NG", { dateStyle: "short", timeStyle: "short" }) ||
+    "Sent"
+  );
 }

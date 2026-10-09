@@ -1,3 +1,4 @@
+import { watchPublicGallery, type GalleryRecord } from "../firebase/media";
 import { useSiteContent, useSiteMedia } from "../contexts/useSiteContent";
 import {
   useCallback,
@@ -14,6 +15,10 @@ import executiveImage1 from "../assets/executives/image1.jpg";
 import executiveImage2 from "../assets/executives/image2.jpg";
 
 type GalleryItem = {
+  id?: string;
+  category?: string;
+  album?: string;
+  caption?: string;
   kind?: "image" | "video";
   alt?: string;
   thumbnail: string;
@@ -40,17 +45,14 @@ const fullscreenModules = import.meta.glob(
   },
 ) as Record<string, string>;
 
-const imageBaseUrl = import.meta.env.DEV
-  ? "/"
-  : import.meta.env.BASE_URL;
+const imageBaseUrl = import.meta.env.DEV ? "/" : import.meta.env.BASE_URL;
 
 function getOptimizedImage(
   name: string,
   size: "thumbnails" | "fullscreen",
   fallback: string,
 ) {
-  const modules =
-    size === "thumbnails" ? thumbnailModules : fullscreenModules;
+  const modules = size === "thumbnails" ? thumbnailModules : fullscreenModules;
 
   return modules[`../assets/gallery/${size}/${name}.webp`] ?? fallback;
 }
@@ -173,23 +175,89 @@ const bundledGalleryItems: GalleryItem[] = [
 function Gallery() {
   const cms = useSiteContent("gallery");
   const media = useSiteMedia("gallery");
-  const galleryItems: GalleryItem[] = media ? [...media.items.map(item => ({ kind: item.kind, alt: item.alt, thumbnail: item.url, image: item.url, title: item.title, description: item.caption })), ...(media.includeBundled ? bundledGalleryItems : [])] : bundledGalleryItems;
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [liveItems, setLiveItems] = useState<GalleryRecord[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [galleryError, setGalleryError] = useState("");
+  const [category, setCategory] = useState("");
+  const [album, setAlbum] = useState("");
+  const [search, setSearch] = useState("");
+  const [kind, setKind] = useState("");
+  useEffect(
+    () =>
+      watchPublicGallery(
+        (items) => {
+          setLiveItems(items);
+          setGalleryLoading(false);
+          setGalleryError("");
+        },
+        () => {
+          setGalleryLoading(false);
+          setGalleryError(
+            "New gallery uploads could not be loaded. Please refresh to try again.",
+          );
+        },
+      ),
+    [],
+  );
+  const uploaded: GalleryItem[] = liveItems.map((item) => ({
+    ...item,
+    image: item.url,
+    thumbnail: item.url,
+  }));
+  const existing: GalleryItem[] = (media?.items || [])
+    .filter((item) => !liveItems.some((live) => live.id === item.id))
+    .map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      alt: item.alt,
+      thumbnail: item.url,
+      image: item.url,
+      title: item.title,
+      description: item.caption,
+    }));
+  const allItems = [
+    ...uploaded,
+    ...existing,
+    ...(!media || media.includeBundled
+      ? bundledGalleryItems.map((item, index) => ({
+          ...item,
+          id: `bundled-${index}`,
+          category: "ASBESOC moments",
+          album: "Our collection",
+        }))
+      : []),
+  ];
+  const galleryItems = allItems.filter(
+    (item) =>
+      (!category || item.category === category) &&
+      (!album || item.album === album) &&
+      (!kind || (item.kind || "image") === kind) &&
+      `${item.title} ${item.caption || ""} ${item.description} ${item.category || ""} ${item.album || ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIndex =
+    selectedId === null
+      ? null
+      : galleryItems.findIndex((item) => item.id === selectedId);
 
   const closeViewer = useCallback(() => {
-    setSelectedIndex(null);
-  }, []);
+    setSelectedId(null);
+  }, [setSelectedId]);
 
-  const changeImage = useCallback((direction: number) => {
-    setSelectedIndex((current) => {
-      if (current === null) return null;
-
-      return (
-        (current + direction + galleryItems.length) %
-        galleryItems.length
+  const itemIds = galleryItems.map((item) => item.id || item.image).join("\n");
+  const changeImage = useCallback(
+    (direction: number) => {
+      const ids = itemIds.split("\n");
+      setSelectedId((current) =>
+        current === null
+          ? null
+          : ids[(ids.indexOf(current) + direction + ids.length) % ids.length],
       );
-    });
-  }, [galleryItems.length]);
+    },
+    [itemIds, setSelectedId],
+  );
 
   return (
     <>
@@ -207,15 +275,19 @@ function Gallery() {
               ASBESOC Nigeria
             </span>
 
-            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">{cms.title || <>
-              Our Gallery
-            </>}</h1>
+            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+              {cms.title || <>Our Gallery</>}
+            </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base sm:leading-8">{cms.intro || <>
-              A glimpse into the people, projects, activities,
-              partnerships, and moments that represent the work
-              and impact of ASBESOC Nigeria.
-            </>}</p>
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base sm:leading-8">
+              {cms.intro || (
+                <>
+                  A glimpse into the people, projects, activities, partnerships,
+                  and moments that represent the work and impact of ASBESOC
+                  Nigeria.
+                </>
+              )}
+            </p>
 
             <div className="mx-auto mt-8 h-1 w-16 rounded-full bg-amber-400" />
           </div>
@@ -230,20 +302,27 @@ function Gallery() {
                   Our Moments
                 </span>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-[#1B4332] sm:text-4xl">{cms.sectionTitle || <>
-                  See ASBESOC in Action
-                </>}</h2>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-[#1B4332] sm:text-4xl">
+                  {cms.sectionTitle || <>See ASBESOC in Action</>}
+                </h2>
 
-                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{cms.sectionText || <>
-                  Explore moments that reflect our commitment
-                  to community development, leadership,
-                  collaboration and positive social impact.
-                </>}</p>
+                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+                  {cms.sectionText || (
+                    <>
+                      Explore moments that reflect our commitment to community
+                      development, leadership, collaboration and positive social
+                      impact.
+                    </>
+                  )}
+                </p>
               </div>
 
               <div className="shrink-0 rounded-full border border-emerald-900/10 bg-emerald-50 px-5 py-3">
                 <span className="text-sm font-bold text-[#1B4332]">
-                  {galleryItems.length} {galleryItems.some(item => item.kind === "video") ? "Photos & videos" : "Photos"}
+                  {galleryItems.length}{" "}
+                  {galleryItems.some((item) => item.kind === "video")
+                    ? "Photos & videos"
+                    : "Photos"}
                 </span>
               </div>
             </div>
@@ -253,13 +332,90 @@ function Gallery() {
         {/* GALLERY GRID */}
         <section className="px-4 pb-20 pt-8 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
-            {!galleryItems.length && <p className="py-12 text-center text-slate-500">No gallery media has been published yet.</p>}
+            <div className="mb-8 grid gap-3 rounded-2xl border border-emerald-900/10 bg-emerald-50/50 p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="text-sm font-semibold text-[#1B4332]">
+                Search
+                <input
+                  className="mt-2 w-full rounded-lg border bg-white p-3"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search our moments"
+                />
+              </label>
+              <label className="text-sm font-semibold text-[#1B4332]">
+                Category
+                <select
+                  className="mt-2 w-full rounded-lg border bg-white p-3"
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setAlbum("");
+                  }}
+                >
+                  <option value="">All categories</option>
+                  {[...new Set(allItems.map((i) => i.category).filter(Boolean))]
+                    .sort()
+                    .map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-[#1B4332]">
+                Album
+                <select
+                  className="mt-2 w-full rounded-lg border bg-white p-3"
+                  value={album}
+                  onChange={(e) => setAlbum(e.target.value)}
+                >
+                  <option value="">All albums</option>
+                  {[
+                    ...new Set(
+                      allItems
+                        .filter((i) => !category || i.category === category)
+                        .map((i) => i.album)
+                        .filter(Boolean),
+                    ),
+                  ]
+                    .sort()
+                    .map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-[#1B4332]">
+                Media
+                <select
+                  className="mt-2 w-full rounded-lg border bg-white p-3"
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value)}
+                >
+                  <option value="">Photos & videos</option>
+                  <option value="image">Photos</option>
+                  <option value="video">Videos</option>
+                </select>
+              </label>
+            </div>
+            {galleryLoading && (
+              <p role="status" className="mb-4 text-sm text-emerald-800">
+                Loading latest gallery uploads…
+              </p>
+            )}
+            {galleryError && (
+              <p role="alert" className="mb-4 text-sm text-amber-800">
+                {galleryError}
+              </p>
+            )}
+            {!galleryItems.length && (
+              <p className="py-12 text-center text-slate-500">
+                No gallery media has been published yet.
+              </p>
+            )}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {galleryItems.map((item, index) => (
                 <button
                   key={item.image}
                   type="button"
-                  onClick={() => setSelectedIndex(index)}
+                  onClick={() => setSelectedId(item.id || item.image)}
                   className="group relative overflow-hidden rounded-2xl border border-emerald-900/10 bg-[#f5f8f5] text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-900/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none"
                   aria-label={`Open ${
                     item.title || `gallery image ${index + 1}`
@@ -302,7 +458,7 @@ function Gallery() {
                       </h3>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {item.description}
+                        {item.caption || item.description}
                       </p>
 
                       <div className="mt-3 h-1 w-8 rounded-full bg-amber-400 transition-all duration-300 group-hover:w-14" />
@@ -341,16 +497,17 @@ function Gallery() {
               </h3>
 
               <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-600">
-                This gallery will continue to grow as we document
-                more of our community projects, outreach activities,
-                events, partnerships, and achievements across Nigeria.
+                This gallery will continue to grow as we document more of our
+                community projects, outreach activities, events, partnerships,
+                and achievements across Nigeria.
               </p>
             </div>
           </div>
         </section>
       </main>
 
-      {selectedIndex !== null && galleryItems[selectedIndex] &&
+      {selectedIndex !== null &&
+        galleryItems[selectedIndex] &&
         createPortal(
           <GalleryViewer
             item={galleryItems[selectedIndex]}
@@ -374,7 +531,24 @@ function GalleryThumbnail({
 }) {
   const [failed, setFailed] = useState(false);
 
-  if (item.kind === "video") return <span className="p-10 text-center text-[#063b25]">▶<br/>{item.title || "Play video"}</span>;
+  if (item.kind === "video")
+    return (
+      <div className="relative w-full">
+        <video
+          src={item.image}
+          muted
+          playsInline
+          preload="metadata"
+          className="h-60 w-full object-contain"
+        />
+        <span
+          className="absolute inset-0 flex items-center justify-center text-4xl text-white drop-shadow-lg"
+          aria-hidden="true"
+        >
+          ▶
+        </span>
+      </div>
+    );
 
   if (failed) {
     return (
@@ -427,8 +601,7 @@ function GalleryViewer({
         : null;
 
     const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow =
-      document.documentElement.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
@@ -456,9 +629,9 @@ function GalleryViewer({
 
       if (event.key !== "Tab") return;
 
-      const buttons = viewerRef.current?.querySelectorAll<
-        HTMLButtonElement
-      >("button:not([disabled])");
+      const buttons = viewerRef.current?.querySelectorAll<HTMLButtonElement>(
+        "button:not([disabled])",
+      );
 
       if (!buttons?.length) {
         event.preventDefault();
@@ -474,10 +647,7 @@ function GalleryViewer({
       if (event.shiftKey && (active === first || focusIsOutside)) {
         event.preventDefault();
         last.focus();
-      } else if (
-        !event.shiftKey &&
-        (active === last || focusIsOutside)
-      ) {
+      } else if (!event.shiftKey && (active === last || focusIsOutside)) {
         event.preventDefault();
         first.focus();
       }
@@ -487,8 +657,7 @@ function GalleryViewer({
 
     return () => {
       document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow =
-        previousHtmlOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
 
       window.removeEventListener("keydown", handleKeyDown);
 
@@ -569,11 +738,19 @@ function GalleryViewer({
           touchStart.current = null;
         }}
       >
-        {item.kind === "video" ? <video key={item.image} src={item.image} controls playsInline preload="metadata" aria-label={item.title || "Gallery video"} className="max-h-[75vh] max-w-full"/> : <ViewerPhoto
-          key={item.image}
-          item={item}
-          index={index}
-        />}
+        {item.kind === "video" ? (
+          <video
+            key={item.image}
+            src={item.image}
+            controls
+            playsInline
+            preload="metadata"
+            aria-label={item.title || "Gallery video"}
+            className="absolute inset-0 m-auto max-h-[75vh] max-w-full"
+          />
+        ) : (
+          <ViewerPhoto key={item.image} item={item} index={index} />
+        )}
       </div>
 
       {/* TOP CONTROLS */}
@@ -658,21 +835,25 @@ function GalleryViewer({
         </svg>
       </button>
 
+      {(item.title || item.caption || item.description) && (
+        <div className="absolute inset-x-16 bottom-16 z-30 max-h-[22vh] overflow-auto rounded-xl bg-black/75 p-3 text-center text-white">
+          <h2 className="font-bold">{item.title}</h2>
+          <p className="text-sm">{item.caption}</p>
+          <p className="mt-1 text-xs">{item.description}</p>
+        </div>
+      )}
       {/* VIEWER HELP */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4 pt-8"
         style={{
-          paddingBottom:
-            "max(1rem, env(safe-area-inset-bottom))",
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
         }}
       >
         <p
           id="gallery-viewer-help"
           className="rounded-full border border-white/10 bg-black/50 px-4 py-2 text-center text-[11px] text-white/80 backdrop-blur-sm"
         >
-          <span className="sm:hidden">
-            Swipe left or right · × Close
-          </span>
+          <span className="sm:hidden">Swipe left or right · × Close</span>
           <span className="hidden sm:inline">
             ← Previous · → Next · Swipe on touchscreens · ESC Close
           </span>
@@ -682,13 +863,7 @@ function GalleryViewer({
   );
 }
 
-function ViewerPhoto({
-  item,
-  index,
-}: {
-  item: GalleryItem;
-  index: number;
-}) {
+function ViewerPhoto({ item, index }: { item: GalleryItem; index: number }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
@@ -701,7 +876,7 @@ function ViewerPhoto({
           item.image.includes("?") ? "&" : "?"
         }galleryRetry=${attempt}`;
 
-  const alt = item.title || `ASBESOC Gallery ${index + 1}`;
+  const alt = item.alt || item.title || `ASBESOC Gallery ${index + 1}`;
 
   function retryImage() {
     setLoaded(false);

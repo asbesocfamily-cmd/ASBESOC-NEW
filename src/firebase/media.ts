@@ -9,7 +9,6 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
-  updateDoc,
   type DocumentReference,
   type DocumentData,
   type Timestamp,
@@ -36,7 +35,20 @@ export type MediaAttachment = {
   alt: string;
   caption: string;
 };
+export type MediaDetails = {
+  title: string;
+  alt: string;
+  caption: string;
+  description?: string;
+  category?: string;
+  album?: string;
+  published?: boolean;
+};
 export type MediaRecord = MediaAttachment & {
+  description?: string;
+  category?: string;
+  album?: string;
+  published?: boolean;
   fileName: string;
   contentType: string;
   size: number;
@@ -145,7 +157,7 @@ export function validateMediaFile(
 export async function uploadMedia(
   file: File,
   scope: MediaScope,
-  info: { title: string; alt: string; caption: string },
+  info: MediaDetails,
   progress: (value: number) => void,
   signal?: AbortSignal,
 ): Promise<MediaRecord> {
@@ -171,6 +183,10 @@ export async function uploadMedia(
     title: info.title.trim().slice(0, 180) || fileName,
     alt: info.alt.trim().slice(0, 500),
     caption: info.caption.trim().slice(0, 1000),
+    description: (info.description || "").trim().slice(0, 3000),
+    category: (info.category || "").trim().slice(0, 80),
+    album: (info.album || "").trim().slice(0, 120),
+    published: false,
     state: "uploading",
     uses: [],
     createdAt: serverTimestamp(),
@@ -181,24 +197,47 @@ export async function uploadMedia(
   try {
     const uploadedUrl = await uploadCloudinary(file, path, progress, signal);
     const url = scope === "public" ? uploadedUrl : "";
-    await updateDoc(mediaRef, {
-      url,
-      state: "ready",
-      updatedAt: serverTimestamp(),
+    await runTransaction(db, async (transaction) => {
+      const current = await transaction.get(mediaRef);
+      if (
+        !current.exists() ||
+        (current.data().state !== "uploading" &&
+          !(current.data().state === "ready" && current.data().url === url))
+      )
+        throw new Error(
+          "Upload was cancelled or removed. Refresh the library.",
+        );
+      const published = scope === "public" && info.published === true;
+      transaction.update(mediaRef, {
+        url,
+        state: "ready",
+        published,
+        updatedAt: serverTimestamp(),
+      });
+      if (published)
+        transaction.set(
+          doc(db, "galleryItems", mediaRef.id),
+          galleryProjection({ ...data, url, id: mediaRef.id }),
+        );
     });
     return {
       ...data,
       id: mediaRef.id,
       url,
       state: "ready",
+      published: scope === "public" && info.published === true,
       createdAt: null,
     } as MediaRecord;
   } catch (error) {
     // Keep the record for explicit cleanup if object removal or metadata writes fail.
     try {
-      await updateDoc(mediaRef, {
-        state: "failed",
-        updatedAt: serverTimestamp(),
+      await runTransaction(db, async (transaction) => {
+        const current = await transaction.get(mediaRef);
+        if (current.exists() && current.data().state === "uploading")
+          transaction.update(mediaRef, {
+            state: "failed",
+            updatedAt: serverTimestamp(),
+          });
       });
     } catch {
       /* The library exposes unfinished uploads. */
@@ -280,7 +319,9 @@ export async function removeMedia(item: MediaRecord) {
       );
     if (snapshot.data().path !== item.path)
       throw new Error("Media changed. Reload the library.");
+    transaction.delete(doc(db, "galleryItems", item.id));
     transaction.update(mediaRef, {
+      published: false,
       state: "deleting",
       updatedAt: serverTimestamp(),
     });
@@ -298,4 +339,84 @@ export async function refreshAttachment(id: string) {
   const snapshot = await getDoc(doc(db, "media", id));
   if (!snapshot.exists()) throw new Error("Media not found.");
   return attachmentOf({ ...snapshot.data(), id } as MediaRecord);
+}
+
+export async function updateMediaDetails(id: string, info: MediaDetails) {
+  requireMediaAdmin();
+  const target = doc(db, "media", id);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(target);
+    if (!snapshot.exists() || snapshot.data().state !== "ready")
+      throw new Error("Only ready media can be edited.");
+    if (
+      !info.title.trim() ||
+      (snapshot.data().kind === "image" && !info.alt.trim())
+    )
+      throw new Error("Add a title and image alt text.");
+    const details = {
+      title: info.title.trim().slice(0, 180),
+      alt: info.alt.trim().slice(0, 500),
+      caption: info.caption.trim().slice(0, 1000),
+      description: (info.description ?? snapshot.data().description ?? "")
+        .trim()
+        .slice(0, 3000),
+      category: (info.category ?? snapshot.data().category ?? "")
+        .trim()
+        .slice(0, 80),
+      album: (info.album ?? snapshot.data().album ?? "").trim().slice(0, 120),
+      published:
+        snapshot.data().scope === "public" &&
+        (info.published ?? snapshot.data().published ?? false),
+    };
+    transaction.update(target, { ...details, updatedAt: serverTimestamp() });
+    const galleryRef = doc(db, "galleryItems", id);
+    if (details.published)
+      transaction.set(
+        galleryRef,
+        galleryProjection({ ...snapshot.data(), ...details, id }),
+      );
+    else transaction.delete(galleryRef);
+  });
+}
+// A public projection excludes upload ownership, private paths and saved references.
+function galleryProjection(item: DocumentData) {
+  return {
+    id: item.id,
+    kind: item.kind,
+    url: item.url,
+    title: item.title,
+    alt: item.alt,
+    caption: item.caption || "",
+    description: item.description || "",
+    category: item.category || "",
+    album: item.album || "",
+    createdAt: item.createdAt || serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+}
+export type GalleryRecord = {
+  id: string;
+  kind: "image" | "video";
+  url: string;
+  title: string;
+  alt: string;
+  caption: string;
+  description: string;
+  category: string;
+  album: string;
+};
+export function watchPublicGallery(
+  next: (items: GalleryRecord[]) => void,
+  error: (error: Error) => void,
+) {
+  return onSnapshot(
+    query(collection(db, "galleryItems"), orderBy("createdAt", "desc")),
+    (snapshot) =>
+      next(
+        snapshot.docs.map(
+          (item) => ({ ...item.data(), id: item.id }) as GalleryRecord,
+        ),
+      ),
+    error,
+  );
 }

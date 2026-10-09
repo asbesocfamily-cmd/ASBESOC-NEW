@@ -529,7 +529,10 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if (admin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastAdminMessageAt','adminReadAt'])
-        && request.resource.data.status in ['waiting','active','resolved'])
+        && request.resource.data.status in ['waiting','active','resolved']
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt']) || request.resource.data.updatedAt == request.time)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastAdminMessageAt']) || request.resource.data.lastAdminMessageAt == request.time)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['adminReadAt']) || request.resource.data.adminReadAt == request.time))
         || (ownChat(uid) && (
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberReadAt']) && request.resource.data.memberReadAt == request.time)
           || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastMemberMessageAt','acknowledgedAt'])
@@ -552,6 +555,9 @@ service cloud.firestore {
             || (ownChat(uid) && id == 'support-ack' && request.resource.data.senderId == 'system' && request.resource.data.senderRole == 'system'
               && request.resource.data.text == 'Thank you for contacting ASBESOC. Your message has been received. An agent will be with you as soon as one is available.'
               && get(/databases/$(database)/documents/memberChats/$(uid)).data.get('acknowledgedAt',null) == null
+              && get(/databases/$(database)/documents/memberChats/$(uid)).data.get('lastMemberMessageAt',null) == null
+              && get(/databases/$(database)/documents/memberChats/$(uid)).data.status == 'waiting'
+              && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.lastMemberMessageAt == request.time
               && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.acknowledgedAt == request.time));
         allow update, delete: if false;
       }
@@ -583,6 +589,20 @@ service cloud.firestore {
       allow write: if admin();
     }
     match /siteDrafts/{id} { allow read, write: if admin(); }
+    match /galleryItems/{id} {
+      allow read: if true;
+      allow create, update: if admin()
+        && request.resource.data.keys().hasOnly(['id','kind','url','title','alt','caption','description','category','album','createdAt','updatedAt'])
+        && request.resource.data.id == id
+        && request.resource.data.kind in ['image','video']
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://(res[.]cloudinary[.]com|firebasestorage[.]googleapis[.]com)/.*')
+        && getAfter(/databases/$(database)/documents/media/$(id)).data.scope == 'public'
+        && getAfter(/databases/$(database)/documents/media/$(id)).data.state == 'ready'
+        && getAfter(/databases/$(database)/documents/media/$(id)).data.published == true
+        && request.resource.data.url == getAfter(/databases/$(database)/documents/media/$(id)).data.url;
+      allow delete: if admin();
+    }
     match /media/{id} {
       allow read: if admin();
       allow create: if admin() && request.resource.data.scope in ['public','members','approved_members']

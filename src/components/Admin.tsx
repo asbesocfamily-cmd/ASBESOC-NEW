@@ -1,14 +1,6 @@
-﻿import {
-  useEffect,
-  useState,
-  type FormEvent,
-} from "react";
+﻿import { useEffect, useState } from "react";
 import { Navigate, NavLink } from "react-router-dom";
-import {
-  onAuthStateChanged,
-  signOut,
-  type User,
-} from "firebase/auth";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import {
   collection,
   getDocsFromServer,
@@ -26,17 +18,15 @@ import { ADMIN_UID } from "../firebase/membership";
 import AdminMemberChats from "./AdminChats";
 import AdminShell from "./AdminShell";
 import { type AdminView } from "./adminNavigation";
-import { MemberDirectory, BroadcastCentre, ActivityPanel, RequestWorkflow } from "./AdminOperations";
-import AdminMedia from "./AdminMedia";
-import WebsiteMediaManager from "./WebsiteMediaManager";
-import ApplicationReview from "./ApplicationReview";
 import {
-  saveSitePage,
-  siteContentDefaults,
-  watchSitePage,
-  type SitePageContent,
-  type SitePageId,
-} from "../firebase/siteContent";
+  MemberDirectory,
+  BroadcastCentre,
+  ActivityPanel,
+  RequestWorkflow,
+} from "./AdminOperations";
+import AdminMedia from "./AdminMedia";
+import PublicGalleryPublisher from "./PublicGalleryPublisher";
+import ApplicationReview from "./ApplicationReview";
 import MemberContentManager from "./MemberPostManager";
 const PAGE_SIZE = 20;
 
@@ -76,11 +66,6 @@ const buttonStyle =
   "font-semibold text-[#063b25] transition hover:bg-emerald-50 " +
   "disabled:cursor-not-allowed disabled:opacity-50 " +
   focusStyle;
-
-const inputStyle =
-  "block min-h-12 w-full rounded-xl border border-slate-300 " +
-  "bg-white px-4 py-3 text-base text-slate-800 outline-none " +
-  "focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100";
 
 const fieldLabels: Record<string, string> = {
   fullName: "Full name",
@@ -140,9 +125,7 @@ function displayValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    return value.length
-      ? value.map(displayValue).join(", ")
-      : "Not provided";
+    return value.length ? value.map(displayValue).join(", ") : "Not provided";
   }
 
   if (typeof value === "boolean") {
@@ -165,10 +148,7 @@ function displayValue(value: unknown): string {
 }
 
 function submissionName(data: Record<string, unknown>) {
-  if (
-    data.submissionType === "support" &&
-    data.anonymous === true
-  ) {
+  if (data.submissionType === "support" && data.anonymous === true) {
     return "Anonymous supporter";
   }
 
@@ -240,7 +220,14 @@ function Admin() {
   }
 
   if (!user) {
-    return sessionError ? <main className="p-8"><p role="alert">{sessionError}</p><button onClick={() => window.location.reload()}>Reload</button></main> : <Navigate to="/login" replace />;
+    return sessionError ? (
+      <main className="p-8">
+        <p role="alert">{sessionError}</p>
+        <button onClick={() => window.location.reload()}>Reload</button>
+      </main>
+    ) : (
+      <Navigate to="/login" replace />
+    );
   }
 
   if (user.uid !== ADMIN_UID) {
@@ -248,24 +235,94 @@ function Admin() {
   }
 
   if (!user.emailVerified) {
-    return <main className="min-h-[70vh] bg-[#f3f7f3] px-4 py-12"><section className="mx-auto max-w-lg space-y-5 rounded-3xl bg-white p-8 text-[#063b25]"><h1 className="text-2xl font-bold">Verify your administrator email</h1><p>Verify your account email before accessing membership records or making review decisions.</p><NavLink to="/verify-email" className={buttonStyle}>Verify email</NavLink><p className="text-sm">After verification, return to the admin page. If needed, sign out and sign in again.</p><button className={buttonStyle} disabled={signingOut} onClick={logout}>Sign out</button>{sessionError && <p role="alert">{sessionError}</p>}</section></main>;
+    return (
+      <main className="min-h-[70vh] bg-[#f3f7f3] px-4 py-12">
+        <section className="mx-auto max-w-lg space-y-5 rounded-3xl bg-white p-8 text-[#063b25]">
+          <h1 className="text-2xl font-bold">
+            Verify your administrator email
+          </h1>
+          <p>
+            Verify your account email before accessing membership records or
+            making review decisions.
+          </p>
+          <NavLink to="/verify-email" className={buttonStyle}>
+            Verify email
+          </NavLink>
+          <p className="text-sm">
+            After verification, return to the admin page. If needed, sign out
+            and sign in again.
+          </p>
+          <button
+            className={buttonStyle}
+            disabled={signingOut}
+            onClick={logout}
+          >
+            Sign out
+          </button>
+          {sessionError && <p role="alert">{sessionError}</p>}
+        </section>
+      </main>
+    );
   }
 
-  const submissionSection = sections.find((section) => section.id === activeView);
+  const submissionSection = sections.find(
+    (section) => section.id === activeView,
+  );
 
   return (
-    <AdminShell user={user} activeView={activeView} onOpen={setActiveView} logout={() => void logout()} signingOut={signingOut}>
-      {sessionError && <p role="alert" className="control-error">{sessionError}</p>}
+    <AdminShell
+      user={user}
+      activeView={activeView}
+      onOpen={setActiveView}
+      logout={() => void logout()}
+      signingOut={signingOut}
+    >
+      {sessionError && (
+        <p role="alert" className="control-error">
+          {sessionError}
+        </p>
+      )}
       {activeView === "members" && <MemberDirectory />}
       {activeView === "broadcasts" && <BroadcastCentre />}
       {activeView === "activity" && <ActivityPanel />}
       {activeView === "memberChats" && <AdminMemberChats adminUser={user} />}
-      {submissionSection && <SubmissionList key={submissionSection.id} section={submissionSection} />}
-      {activeView === "website" && <div className="control-stack"><WebsiteMediaManager /><WebsiteContentManager key="website" /></div>}
-      {activeView === "memberFeed" && <MemberContentManager key="announcements" defaultType="announcement" />}
-      {activeView === "trainings" && <MemberContentManager key="trainings" defaultType="training" />}
-      {activeView === "gallery" && <AdminMedia />}
-      {activeView === "settings" && <div className="control-stack"><section className="control-panel"><h2 className="font-bold">Administrator account</h2><p className="mt-3 break-all text-sm">{user.email}</p><p className="mt-2 text-sm text-slate-500">Verified administrator access. Manage public organization and contact details below.</p><button className="control-button mt-4" disabled={signingOut} onClick={() => void logout()}>{signingOut ? "Signing out…" : "Sign out"}</button></section><WebsiteContentManager key="settings" initialPage="footer" /></div>}
+      {submissionSection && (
+        <SubmissionList
+          key={submissionSection.id}
+          section={submissionSection}
+        />
+      )}
+      {activeView === "memberFeed" && (
+        <MemberContentManager key="announcements" defaultType="announcement" />
+      )}
+      {activeView === "trainings" && (
+        <MemberContentManager key="trainings" defaultType="training" />
+      )}
+      {activeView === "gallery" && (
+        <div className="control-stack">
+          <AdminMedia />
+          <PublicGalleryPublisher />
+        </div>
+      )}
+      {activeView === "settings" && (
+        <div className="control-stack">
+          <section className="control-panel">
+            <h2 className="font-bold">Administrator account</h2>
+            <p className="mt-3 break-all text-sm">{user.email}</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Verified administrator access. Use your shared login to manage
+              your account.
+            </p>
+            <button
+              className="control-button mt-4"
+              disabled={signingOut}
+              onClick={() => void logout()}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          </section>
+        </div>
+      )}
     </AdminShell>
   );
 }
@@ -304,11 +361,7 @@ function SubmissionList({ section }: { section: Section }) {
               startAfter(currentCursor),
               limit(PAGE_SIZE + 1),
             )
-          : query(
-              source,
-              orderBy("createdAt", "desc"),
-              limit(PAGE_SIZE + 1),
-            );
+          : query(source, orderBy("createdAt", "desc"), limit(PAGE_SIZE + 1));
 
         const snapshot = await getDocsFromServer(pageQuery);
 
@@ -352,7 +405,13 @@ function SubmissionList({ section }: { section: Section }) {
     setRevision((current) => current + 1);
   }
 
-  const visibleRows = rows.filter(row => (statusFilter === "all" || row.data.status === statusFilter) && `${submissionName(row.data)} ${String(row.data.email || "")}`.toLowerCase().includes(search.toLowerCase()));
+  const visibleRows = rows.filter(
+    (row) =>
+      (statusFilter === "all" || row.data.status === statusFilter) &&
+      `${submissionName(row.data)} ${String(row.data.email || "")}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
 
   return (
     <section
@@ -385,7 +444,33 @@ function SubmissionList({ section }: { section: Section }) {
       </div>
 
       <div className="p-5 sm:p-7">
-        <div className="control-toolbar"><label>Search this page<input value={search} onChange={event => setSearch(event.target.value)} placeholder="Name or email"/></label><label>Filter this page by status<select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="all">All statuses</option>{(section.id === "membershipApplications" ? ["new", "pending", "under_review", "approved", "rejected"] : ["new", "in_progress", "closed"]).map(status => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}</select></label></div>
+        <div className="control-toolbar">
+          <label>
+            Search this page
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Name or email"
+            />
+          </label>
+          <label>
+            Filter this page by status
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="all">All statuses</option>
+              {(section.id === "membershipApplications"
+                ? ["new", "pending", "under_review", "approved", "rejected"]
+                : ["new", "in_progress", "closed"]
+              ).map((status) => (
+                <option key={status} value={status}>
+                  {status.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         {loading ? (
           <p role="status" className="py-10 text-center text-sm text-slate-500">
             Loading submissions…
@@ -399,7 +484,9 @@ function SubmissionList({ section }: { section: Section }) {
           </p>
         ) : visibleRows.length === 0 ? (
           <p role="status" className="py-10 text-center text-sm text-slate-500">
-            {rows.length ? "No submissions match these page filters." : "No submissions on this page."}
+            {rows.length
+              ? "No submissions match these page filters."
+              : "No submissions on this page."}
           </p>
         ) : (
           <div className="v2-submission-list">
@@ -445,7 +532,22 @@ function SubmissionList({ section }: { section: Section }) {
                     ))}
                   </dl>
 
-                  {section.id === "membershipApplications" ? <ApplicationReview id={row.id} status={String(row.data.status)} linked={typeof row.data.userId === "string"} onSaved={refresh} /> : <RequestWorkflow key={`${row.id}-${row.data.status}`} id={row.id} collectionName={section.id} current={String(row.data.status || "new")} onSaved={refresh} />}
+                  {section.id === "membershipApplications" ? (
+                    <ApplicationReview
+                      id={row.id}
+                      status={String(row.data.status)}
+                      linked={typeof row.data.userId === "string"}
+                      onSaved={refresh}
+                    />
+                  ) : (
+                    <RequestWorkflow
+                      key={`${row.id}-${row.data.status}`}
+                      id={row.id}
+                      collectionName={section.id}
+                      current={String(row.data.status || "new")}
+                      onSaved={refresh}
+                    />
+                  )}
 
                   <p className="mt-6 break-all border-t border-slate-100 pt-4 text-xs text-slate-400">
                     Reference: {row.id}
@@ -468,9 +570,7 @@ function SubmissionList({ section }: { section: Section }) {
             ← Previous
           </button>
 
-          <p className="text-xs text-slate-500">
-            Page {cursors.length}
-          </p>
+          <p className="text-xs text-slate-500">Page {cursors.length}</p>
 
           <button
             type="button"
@@ -485,80 +585,6 @@ function SubmissionList({ section }: { section: Section }) {
             Next →
           </button>
         </div>
-      </div>
-    </section>
-  );
-}
-
-
-function WebsiteContentManager({ initialPage = "home" }: { initialPage?: SitePageId }) {
-  const pages: { id: SitePageId; label: string }[] = [
-    { id: "home", label: "Home" },
-    { id: "about", label: "About" },
-    { id: "programs", label: "Programs" },
-    { id: "projects", label: "Projects" },
-    { id: "gallery", label: "Gallery" },
-    { id: "contact", label: "Contact" },
-    { id: "footer", label: "Footer & Contact" },
-  ];
-  const [page, setPage] = useState<SitePageId>(initialPage);
-  const [content, setContent] = useState<SitePageContent>(siteContentDefaults[initialPage]);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [loadError, setLoadError] = useState("");
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    return watchSitePage(page, value => { setContent(value); setLoaded(true); setLoadError(""); }, () => { setLoaded(false); setLoadError("Could not load saved content. Reload before editing to avoid overwriting saved changes."); });
-  }, [page]);
-
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (busy || !loaded) return;
-    setBusy(true);
-    setNotice("");
-    try {
-      await saveSitePage(page, content);
-      setNotice("Saved. The public website will update automatically.");
-    } catch (caught) {
-      setNotice(caught instanceof Error ? caught.message : "Could not save. Check your connection and try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600">Website CMS</p>
-        <h2 className="mt-2 text-2xl font-black text-[#063b25]">Website Content</h2>
-        <p className="mt-2 text-sm leading-7 text-slate-500">Edit the main public website copy. Existing website content remains the fallback if Firestore is unavailable.</p>
-      </div>
-      <div className="p-5 sm:p-7">
-        <div className="flex flex-wrap gap-2">
-          {pages.map((item) => (
-            <button key={item.id} type="button" disabled={busy} onClick={() => { if (item.id === page) return; setLoaded(false); setNotice(""); setLoadError(""); setContent(siteContentDefaults[item.id]); setPage(item.id); }}
-              className={`rounded-xl px-4 py-2 text-sm font-bold ${page === item.id ? "bg-[#063b25] text-white" : "border border-slate-200 bg-white text-[#063b25]"}`}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-        {loadError && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{loadError}</p>}
-        {!loaded && !loadError && <p role="status" className="control-empty">Loading saved content…</p>}
-        <form onSubmit={save} className="mt-6 space-y-5">
-          {(Object.entries(content) as [string, string][]).map(([key, value]) => (
-            <label key={key} className="block">
-              <span className="mb-2 block text-sm font-bold capitalize text-[#063b25]">{key.replace(/([A-Z])/g, " $1")}</span>
-              <textarea aria-label={key.replace(/([A-Z])/g, " $1")} disabled={!loaded || busy} value={value} rows={value.length > 100 ? 4 : 2}
-                onChange={(e) => setContent((current) => ({ ...current, [key]: e.target.value }))}
-                className={`${inputStyle} min-h-[80px] resize-y`} />
-            </label>
-          ))}
-          {notice && <p role="status" className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">{notice}</p>}
-          <button type="submit" disabled={busy || !loaded} className="rounded-xl bg-[#063b25] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
-            {busy ? "Saving…" : "Save website changes"}
-          </button>
-        </form>
       </div>
     </section>
   );

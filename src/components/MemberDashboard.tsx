@@ -1,3 +1,8 @@
+import "./member-v2.css";
+import {
+  useMemberUpdates,
+  type MemberUpdates,
+} from "../contexts/useMemberUpdates";
 import MemberPublishedUpdates from "./MemberPublishedUpdates";
 import {
   useEffect,
@@ -13,6 +18,7 @@ import {
   Route,
   Routes,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { doc, getDocFromServer } from "firebase/firestore";
 import { updateProfile, type User } from "firebase/auth";
@@ -22,6 +28,7 @@ import { useMembership } from "../contexts/useMembership";
 import { db } from "../firebase/firebaseConfig";
 import {
   chatError,
+  chatMessageTime,
   watchMemberChat,
   markChatRead,
   type ChatConversation,
@@ -93,6 +100,11 @@ const navigation: {
     path: "/dashboard/inbox",
     label: "Chat with ASBESOC",
     icon: "inbox",
+  },
+  {
+    path: "/dashboard/updates",
+    label: "Updates & Opportunities",
+    icon: "community",
   },
   {
     path: "/dashboard/notifications",
@@ -353,12 +365,83 @@ function Dashboard({ user }: { user: User }) {
   const membership = useMembership(user.uid);
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const updates = useMemberUpdates(
+    membership.application?.status === "approved",
+  );
+  const [chat, setChat] = useState<ChatConversation | null>();
+  const [chatLoadError, setChatLoadError] = useState("");
+  useEffect(
+    () =>
+      watchMemberChat(user, setChat, (caught) =>
+        setChatLoadError(chatError(caught)),
+      ),
+    [user],
+  );
+  const unreadChat =
+    (chat?.lastAdminMessageAt?.toMillis() || 0) >
+    (chat?.memberReadAt?.toMillis() || 0);
+  const [seen, setSeen] = useState(() => {
+    try {
+      return (
+        Number(localStorage.getItem(`asbesoc-updates-seen-${user.uid}`)) || 0
+      );
+    } catch {
+      return 0;
+    }
+  });
+  const unreadUpdates = updates.items.filter((item) => item.time > seen).length;
+  function markUpdatesRead() {
+    const time = Math.max(
+      Date.now(),
+      ...updates.items.map((item) => item.time),
+    );
+    setSeen(time);
+    try {
+      localStorage.setItem(`asbesoc-updates-seen-${user.uid}`, String(time));
+    } catch {
+      /* Read state still works for this session. */
+    }
+  }
+  const [search, setSearch] = useState("");
+  const drawer = useRef<HTMLElement>(null);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const lock = useRef(false);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    drawer.current?.querySelector<HTMLElement>("button, a")?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+      if (event.key !== "Tab") return;
+      const elements = Array.from(
+        drawer.current?.querySelectorAll<HTMLElement>(
+          "a,button:not(:disabled)",
+        ) || [],
+      );
+      const first = elements[0],
+        last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", key);
+      previous?.focus();
+    };
+  }, [mobileMenuOpen]);
 
   async function leave() {
     if (lock.current) return;
@@ -381,16 +464,13 @@ function Dashboard({ user }: { user: User }) {
   const applicationPanel = membership.loading ? (
     <MembershipLoading />
   ) : membership.error ? (
-    <MembershipError
-      message={membership.error}
-      retry={membership.retry}
-    />
+    <MembershipError message={membership.error} retry={membership.retry} />
   ) : (
     <MembershipPanel application={membership.application} />
   );
 
   return (
-    <div className="min-h-screen bg-[#f6f8f6] text-slate-700">
+    <div className="member-v2 min-h-screen text-slate-700">
       {/* Mobile top bar */}
 
       <div className="sticky top-0 z-40 flex h-[72px] items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
@@ -435,7 +515,11 @@ function Dashboard({ user }: { user: User }) {
             className="h-4 w-4 text-slate-400 transition group-hover:text-[#063b25]"
             aria-hidden="true"
           >
-            <path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="m6 8 4 4 4-4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       </div>
@@ -443,7 +527,7 @@ function Dashboard({ user }: { user: User }) {
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         {/* Sidebar desktop */}
 
-        <aside className="sticky top-0 hidden h-screen w-[280px] shrink-0 flex-col bg-[#052f1e] text-white lg:flex">
+        <aside className="member-sidebar sticky top-0 hidden h-screen w-[280px] shrink-0 flex-col bg-[#052f1e] text-white lg:flex">
           <SidebarContent
             user={user}
             busy={busy}
@@ -462,7 +546,13 @@ function Dashboard({ user }: { user: User }) {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            <aside className="relative flex h-full w-[86%] max-w-[320px] flex-col bg-[#052f1e] text-white shadow-2xl">
+            <aside
+              ref={drawer}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Member navigation"
+              className="member-sidebar relative flex h-full w-[86%] max-w-[320px] flex-col bg-[#052f1e] text-white shadow-2xl"
+            >
               <button
                 type="button"
                 aria-label="Close dashboard menu"
@@ -485,19 +575,41 @@ function Dashboard({ user }: { user: User }) {
 
         {/* Main dashboard */}
 
-        <main className="min-w-0 flex-1">
+        <main className="min-w-0 flex-1" key={location.pathname.split("/")[1]}>
           {/* Desktop top bar */}
 
-          <header className="hidden h-[82px] items-center justify-between border-b border-slate-200/80 bg-white px-8 xl:px-10 lg:flex">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
-                Association for a Better Society
-              </p>
-              <p className="mt-1 text-sm font-bold text-[#063b25]">
-                Member Portal
-              </p>
+          <header className="member-topbar hidden h-[82px] items-center justify-between border-b border-slate-200/80 bg-white px-8 xl:px-10 lg:flex">
+            <div className="member-search">
+              <label>
+                <Icon name="home" />
+                <input
+                  aria-label="Find a dashboard section"
+                  placeholder="Find a dashboard section…"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+              {search && (
+                <div className="member-search-results">
+                  {navigation
+                    .filter((item) =>
+                      item.label.toLowerCase().includes(search.toLowerCase()),
+                    )
+                    .map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setSearch("")}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  {!navigation.some((item) =>
+                    item.label.toLowerCase().includes(search.toLowerCase()),
+                  ) && <p>No matching sections.</p>}
+                </div>
+              )}
             </div>
-
             <div className="flex items-center gap-3">
               <NavLink
                 to="/dashboard/notifications"
@@ -505,6 +617,11 @@ function Dashboard({ user }: { user: User }) {
                 className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-[#063b25]"
               >
                 <Icon name="bell" />
+                {unreadUpdates + Number(unreadChat) > 0 && (
+                  <span className="member-count">
+                    {unreadUpdates + Number(unreadChat)}
+                  </span>
+                )}
               </NavLink>
 
               <NavLink
@@ -536,6 +653,11 @@ function Dashboard({ user }: { user: User }) {
                     user={user}
                     application={membership.application}
                     membershipLoading={membership.loading}
+                    membershipError={membership.error}
+                    updates={updates}
+                    unreadChat={unreadChat}
+                    chatErrorMessage={chatLoadError}
+                    chatLoading={chat === undefined}
                   />
                 }
               />
@@ -595,37 +717,63 @@ function Dashboard({ user }: { user: User }) {
                 }
               />
 
-              <Route
-                path="inbox"
-                element={<MemberChat user={user} />}
-              />
+              <Route path="inbox" element={<MemberChat user={user} />} />
 
               <Route
                 path="notifications"
                 element={
-                  <ComingSoon
-                    icon="bell"
-                    eyebrow="Updates"
-                    title="Notifications"
-                    heading="Your updates will appear here"
-                    description="For now, your current membership application status and review information are available in the Membership section."
-                    action={
-                      <Link
-                        className={primaryButton}
-                        to="/dashboard/membership"
+                  <section className="member-notifications">
+                    <PageHeading
+                      eyebrow="Your inbox"
+                      title="Notifications"
+                      description="Your membership status, private replies and community updates."
+                    />
+                    <div className="member-panel member-notification-summary">
+                      <h2>Stay in the loop</h2>
+                      <p>
+                        {updates.loading
+                          ? "Checking updates…"
+                          : `${unreadUpdates} unread updates on this device`}
+                      </p>
+                      <button
+                        className={secondaryButton}
+                        onClick={markUpdatesRead}
+                        disabled={
+                          updates.loading || !!updates.error || !unreadUpdates
+                        }
                       >
-                        View membership
-                        <Icon name="arrow" className="h-4 w-4" />
+                        Mark updates as read
+                      </button>
+                      <Link className={secondaryButton} to="/dashboard/inbox">
+                        {unreadChat
+                          ? "Unread reply from ASBESOC"
+                          : "Open private messages"}
                       </Link>
-                    }
-                  />
+                      {chatLoadError && <p role="alert">{chatLoadError}</p>}
+                      <Link
+                        to="/dashboard/membership"
+                        className="member-notification-status"
+                      >
+                        Membership ·{" "}
+                        {membership.loading
+                          ? "Loading…"
+                          : membership.error
+                            ? "Unavailable"
+                            : membership.application
+                              ? applicationLabel(membership.application.status)
+                              : "No application submitted"}
+                      </Link>
+                    </div>
+                    <MemberPublishedUpdates updates={updates} />
+                  </section>
                 }
               />
 
               <Route
-                path="*"
-                element={<Navigate to="/dashboard" replace />}
+                path="updates"
+                element={<MemberPublishedUpdates updates={updates} />}
               />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
         </main>
@@ -714,9 +862,7 @@ function SidebarContent({
               <p className="truncate text-sm font-bold text-white">
                 {user.displayName?.trim() || "ASBESOC Member"}
               </p>
-              <p className="truncate text-xs text-white/45">
-                {user.email}
-              </p>
+              <p className="truncate text-xs text-white/45">{user.email}</p>
             </div>
           </div>
 
@@ -749,119 +895,292 @@ function Overview({
   user,
   application,
   membershipLoading,
+  membershipError,
+  updates,
+  unreadChat,
+  chatErrorMessage,
+  chatLoading,
 }: {
   user: User;
   application: Application | null;
   membershipLoading: boolean;
+  membershipError: string;
+  updates: MemberUpdates;
+  unreadChat: boolean;
+  chatErrorMessage: string;
+  chatLoading: boolean;
 }) {
-  const membershipStatus = membershipLoading
-    ? "Checking status"
-    : application
-      ? isCertifiedMember(application)
-        ? "Certified member"
-        : applicationLabel(application.status)
-      : "Application required";
-
-  const certificateStatus = membershipLoading
-    ? "Checking status"
-    : certificateLabel(getCertificateStatus(application));
-
-  const profileStatus = user.displayName?.trim()
-    ? "Profile started"
-    : "Complete profile";
-
+  const status = membershipLoading
+    ? "Loading…"
+    : membershipError
+      ? "Unavailable"
+      : application
+        ? applicationLabel(application.status)
+        : "Not submitted";
+  const steps = [
+    {
+      label: "Email verified",
+      done: user.emailVerified,
+      to: "/dashboard/settings",
+    },
+    {
+      label: "Name added",
+      done: !!user.displayName?.trim(),
+      to: "/dashboard/profile",
+    },
+    {
+      label: "Application submitted",
+      done: !!application,
+      to: "/dashboard/membership",
+    },
+  ];
+  const completed = steps.filter((step) => step.done).length;
+  const percent = Math.round((completed / steps.length) * 100);
+  const groups = [
+    { type: "broadcast", label: "Broadcasts" },
+    { type: "announcement", label: "Announcements" },
+    { type: "training", label: "Trainings" },
+    { type: "opportunity", label: "Opportunities" },
+  ];
   return (
-    <div className="mx-auto max-w-[1180px]">
-      <section className="relative overflow-hidden rounded-[30px] border border-[#0b5b39]/20 bg-[#052f1e] px-6 py-7 text-white shadow-[0_24px_70px_rgba(6,59,37,0.16)] sm:px-8 sm:py-9">
-        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full border-[42px] border-white/[0.035]" />
-        <div className="absolute -bottom-28 right-20 h-64 w-64 rounded-full bg-[#f59e0b]/[0.06]" />
-        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-100">
-              <span className="h-2 w-2 rounded-full bg-[#f59e0b]" />
-              Member workspace
-            </div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl">
-              {greeting()}, {firstName(user)}.
-            </h1>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-white/60 sm:text-base">
-              Your ASBESOC member home. Follow organization updates, member opportunities and announcements while keeping your membership journey close at hand.
-            </p>
-          </div>
-          <Link
-            to="/dashboard/membership"
-            className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#063b25] shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
-          >
-            Open membership
-            <Icon name="arrow" className="h-4 w-4" />
+    <div className="member-overview">
+      <div className="member-page-intro">
+        <div>
+          <p className="member-eyebrow">Your member workspace</p>
+          <h1>
+            {greeting()}, {firstName(user)}.
+          </h1>
+          <p>A place to connect, contribute and grow.</p>
+        </div>
+        <span className="member-date">
+          {new Date().toLocaleDateString("en-NG", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </span>
+      </div>
+      <section className="member-welcome">
+        <div>
+          <span className="member-tag">
+            Building a better society, together
+          </span>
+          <h2>
+            Your next chapter
+            <br />
+            starts with community.
+          </h2>
+          <p>
+            Stay close to your membership journey and discover what’s happening
+            at ASBESOC.
+          </p>
+          <Link to="/dashboard/membership" className={primaryButton}>
+            View my membership <Icon name="arrow" />
           </Link>
         </div>
+        <div className="member-welcome-art" aria-hidden="true">
+          <Icon name="community" className="h-24 w-24" />
+          <span>Purpose. People. Progress.</span>
+        </div>
       </section>
-
-      {!membershipLoading && <MemberPublishedUpdates key={application?.status === "approved" ? "approved" : "all"} approved={application?.status === "approved"} />}
-
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="member-stats">
         <StatusCard
           icon="membership"
-          label="Membership status"
-          value={membershipStatus}
-          description="Current ASBESOC membership stage"
-        />
-        <StatusCard
-          icon="shield"
-          label="Account status"
-          value={user.emailVerified ? "Verified" : "Action required"}
-          description="Sign-in and email verification"
+          label="Membership"
+          value={status}
+          description="Your current application status"
         />
         <StatusCard
           icon="document"
-          label="Certificate status"
-          value={certificateStatus}
-          description="Certificate and payment progress"
+          label="Certificate"
+          value={
+            membershipLoading
+              ? "Loading…"
+              : membershipError
+                ? "Unavailable"
+                : certificateLabel(getCertificateStatus(application))
+          }
+          description="Based on your membership record"
+        />
+        <StatusCard
+          icon="bell"
+          label="Community updates"
+          value={
+            updates.loading
+              ? "…"
+              : updates.error
+                ? "—"
+                : String(updates.items.length)
+          }
+          description="Published updates available to you"
+        />
+        <StatusCard
+          icon="inbox"
+          label="Private messages"
+          value={
+            chatLoading && !chatErrorMessage
+              ? "Loading…"
+              : chatErrorMessage
+                ? "Unavailable"
+                : unreadChat
+                  ? "New reply"
+                  : "Up to date"
+          }
+          description="Messages from the ASBESOC team"
         />
       </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <NextAction application={application} loading={membershipLoading} />
-        <Card className="p-6 sm:p-7">
-          <div className="flex items-start justify-between gap-4">
+      {membershipError && (
+        <p role="alert" className="member-empty">
+          {membershipError} Open Membership to retry.
+        </p>
+      )}
+      <div className="member-insights">
+        <section className="member-panel">
+          <header className="member-panel-heading">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Account</p>
-              <h2 className="mt-2 text-xl font-black text-[#063b25]">Profile readiness</h2>
+              <p className="member-eyebrow">A strong foundation</p>
+              <h2>Your account checklist</h2>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
+            <Icon name="shield" />
+          </header>
+          <div className="member-readiness">
+            {membershipLoading || membershipError ? (
+              <p>Checklist {membershipError ? "unavailable" : "loading…"}</p>
+            ) : (
+              <div className="member-ring">
+                <svg
+                  viewBox="0 0 120 120"
+                  role="img"
+                  aria-label={`${completed} of 3 account steps completed`}
+                >
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="48"
+                    fill="none"
+                    stroke="#edf0e5"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="48"
+                    fill="none"
+                    stroke="#158060"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={`${percent * 3.016} 301.6`}
+                    transform="rotate(-90 60 60)"
+                  />
+                </svg>
+                <span>
+                  <b>{completed}/3</b>
+                  <small>steps complete</small>
+                </span>
+              </div>
+            )}
+            <ul>
+              {steps.map((step) => (
+                <li key={step.label}>
+                  <Link to={step.to}>
+                    <span className={step.done ? "done" : ""}>
+                      <Icon
+                        name={step.done ? "check" : "clock"}
+                        className="h-4 w-4"
+                      />
+                    </span>
+                    {step.label}
+                    <Icon name="arrow" className="h-4 w-4" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+        <section className="member-panel">
+          <header className="member-panel-heading">
+            <div>
+              <p className="member-eyebrow">Explore what’s available</p>
+              <h2>Community bulletin</h2>
+            </div>
+            <Icon name="community" />
+          </header>
+          {updates.loading || updates.error ? (
+            <p className="member-empty">
+              {updates.error || "Loading updates…"}
+            </p>
+          ) : (
+            <div className="member-bars">
+              {groups.map((group) => {
+                const count = updates.items.filter(
+                  (item) => item.type === group.type,
+                ).length;
+                return (
+                  <div key={group.type}>
+                    <span>
+                      {group.label}
+                      <b>{count}</b>
+                    </span>
+                    <div className="member-bar-track">
+                      <i
+                        style={{
+                          width: `${updates.items.length ? (count / updates.items.length) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <p>
+                {updates.items.length
+                  ? "Current published items for your membership audience."
+                  : "No published updates yet."}
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+      <div className="member-next-actions">
+        <NextAction
+          application={application}
+          loading={membershipLoading || !!membershipError}
+        />
+        <section className="member-panel">
+          <header className="member-panel-heading">
+            <h2>Make your next move</h2>
+          </header>
+          <div className="member-action-links">
+            <Link to="/dashboard/profile">
               <Icon name="user" />
-            </div>
+              <span>
+                Keep your profile current
+                <small>Update your name and contact details</small>
+              </span>
+              <Icon name="arrow" />
+            </Link>
+            <Link to="/dashboard/inbox">
+              <Icon name="inbox" />
+              <span>
+                Talk to ASBESOC
+                <small>Private support, directly from your workspace</small>
+              </span>
+              <Icon name="arrow" />
+            </Link>
+            <Link to="/dashboard/updates">
+              <Icon name="community" />
+              <span>
+                Find an opportunity
+                <small>Trainings, announcements and member updates</small>
+              </span>
+              <Icon name="arrow" />
+            </Link>
           </div>
-          <div className="mt-6 rounded-2xl bg-[#f7faf8] p-4">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-semibold text-slate-500">Profile</span>
-              <span className="text-sm font-black text-[#063b25]">{profileStatus}</span>
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-4">
-              <span className="text-sm font-semibold text-slate-500">Email</span>
-              <span className="text-sm font-black text-[#063b25]">{user.emailVerified ? "Verified" : "Unverified"}</span>
-            </div>
-          </div>
-          <Link className={`${secondaryButton} mt-5 w-full`} to="/dashboard/profile">
-            Manage profile
-          </Link>
-        </Card>
+        </section>
       </div>
-
-      <div className="mt-7">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-black text-[#063b25]">Quick actions</h2>
-            <p className="mt-1 text-sm text-slate-500">Your most-used member services.</p>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <QuickAction icon="membership" title="Membership" description="View your status, certificate and payment stage." to="/dashboard/membership" />
-          <QuickAction icon="user" title="Update profile" description="Keep your contact and member information current." to="/dashboard/profile" />
-          <QuickAction icon="inbox" title="Chat with ASBESOC" description="Open your private one-to-one admin communication space." to="/dashboard/inbox" />
-        </div>
-      </div>
+      <MemberPublishedUpdates updates={updates} compact />
+      <Link to="/dashboard/updates" className={`${secondaryButton} mt-4`}>
+        View all community updates <Icon name="arrow" />
+      </Link>
     </div>
   );
 }
@@ -885,13 +1204,9 @@ function StatusCard({
             {label}
           </p>
 
-          <p className="mt-2 text-lg font-black text-[#063b25]">
-            {value}
-          </p>
+          <p className="mt-2 text-lg font-black text-[#063b25]">{value}</p>
 
-          <p className="mt-1 text-xs leading-5 text-slate-400">
-            {description}
-          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>
         </div>
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
@@ -901,46 +1216,6 @@ function StatusCard({
     </Card>
   );
 }
-
-function QuickAction({
-  icon,
-  title,
-  description,
-  to,
-}: {
-  icon: IconName;
-  title: string;
-  description: string;
-  to: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-900/15 hover:shadow-[0_14px_40px_rgba(15,23,42,0.07)]"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
-          <Icon name={icon} />
-        </div>
-
-        <Icon
-          name="arrow"
-          className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#063b25]"
-        />
-      </div>
-
-      <h3 className="mt-5 font-black text-[#063b25]">{title}</h3>
-
-      <p className="mt-2 text-sm leading-6 text-slate-500">
-        {description}
-      </p>
-    </Link>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*                          MEMBERSHIP JOURNEY                                */
-/* -------------------------------------------------------------------------- */
 
 function MembershipJourney({
   application,
@@ -957,21 +1232,38 @@ function MembershipJourney({
   if (application) activeStep = 1;
   if (application?.status === "under_review") activeStep = 1;
   if (application?.status === "approved") activeStep = 2;
-  if (application?.status === "approved" && ["unpaid", "pending", "failed"].includes(payment)) activeStep = 3;
+  if (
+    application?.status === "approved" &&
+    ["unpaid", "pending", "failed"].includes(payment)
+  )
+    activeStep = 3;
   if (payment === "paid") activeStep = 4;
   if (certificate === "issued") activeStep = 5;
   if (certified) activeStep = 6;
 
-  const steps = ["Application", "Review", "Approved", "Payment", "Certificate", "Certified"];
+  const steps = [
+    "Application",
+    "Review",
+    "Approved",
+    "Payment",
+    "Certificate",
+    "Certified",
+  ];
 
   return (
     <Card className="p-5 sm:p-7">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">Membership journey</p>
-          <h2 className="mt-1 text-xl font-black text-[#063b25]">Your progress</h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d97706]">
+            Membership journey
+          </p>
+          <h2 className="mt-1 text-xl font-black text-[#063b25]">
+            Your progress
+          </h2>
         </div>
-        <p className="text-xs font-semibold text-slate-400">{loading ? "Checking progress…" : "Live status"}</p>
+        <p className="text-xs font-semibold text-slate-400">
+          {loading ? "Checking progress…" : "Live status"}
+        </p>
       </div>
       <div className="mt-8 overflow-x-auto pb-2">
         <div className="flex min-w-[760px] items-start">
@@ -979,11 +1271,24 @@ function MembershipJourney({
             const completed = index < activeStep;
             const current = index === activeStep;
             return (
-              <div key={step} className={`relative flex flex-1 flex-col items-center ${index === 0 ? "" : "before:absolute before:right-1/2 before:top-[17px] before:h-[2px] before:w-full"} ${index <= activeStep ? "before:bg-[#0b7046]" : "before:bg-slate-200"}`}>
-                <div className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-xs font-black shadow-sm ${completed ? "bg-[#0b7046] text-white" : current ? "bg-[#f59e0b] text-white" : "bg-slate-100 text-slate-400"}`}>
-                  {completed ? <Icon name="check" className="h-4 w-4" /> : index + 1}
+              <div
+                key={step}
+                className={`relative flex flex-1 flex-col items-center ${index === 0 ? "" : "before:absolute before:right-1/2 before:top-[17px] before:h-[2px] before:w-full"} ${index <= activeStep ? "before:bg-[#0b7046]" : "before:bg-slate-200"}`}
+              >
+                <div
+                  className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-xs font-black shadow-sm ${completed ? "bg-[#0b7046] text-white" : current ? "bg-[#f59e0b] text-white" : "bg-slate-100 text-slate-400"}`}
+                >
+                  {completed ? (
+                    <Icon name="check" className="h-4 w-4" />
+                  ) : (
+                    index + 1
+                  )}
                 </div>
-                <p className={`mt-3 text-center text-xs font-bold ${current || completed ? "text-[#063b25]" : "text-slate-400"}`}>{step}</p>
+                <p
+                  className={`mt-3 text-center text-xs font-bold ${current || completed ? "text-[#063b25]" : "text-slate-400"}`}
+                >
+                  {step}
+                </p>
               </div>
             );
           })}
@@ -1041,11 +1346,7 @@ function MembershipError({
   );
 }
 
-function MembershipPanel({
-  application,
-}: {
-  application: Application | null;
-}) {
+function MembershipPanel({ application }: { application: Application | null }) {
   const statusText = application
     ? applicationLabel(application.status)
     : "Application required";
@@ -1083,8 +1384,8 @@ function MembershipPanel({
             </h3>
 
             <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
-              Complete your membership application so ASBESOC can
-              review your request and begin your membership journey.
+              Complete your membership application so ASBESOC can review your
+              request and begin your membership journey.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -1097,7 +1398,6 @@ function MembershipPanel({
                 Contact ASBESOC
               </Link>
             </div>
-
           </div>
         ) : (
           <div>
@@ -1128,7 +1428,6 @@ function MembershipPanel({
             <details className="group mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-[#fafcfb]">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-black text-[#063b25]">
                 View submitted application
-
                 <span className="text-slate-400 transition group-open:rotate-90">
                   →
                 </span>
@@ -1189,20 +1488,32 @@ function CertificatePaymentCard({ application }: { application: Application }) {
     <div className="mt-6 overflow-hidden rounded-[22px] border border-[#063b25]/10 bg-[#f8fbf9]">
       <div className="flex flex-col gap-4 border-b border-[#063b25]/10 bg-[#063b25] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/70">Certificate & payment</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/70">
+            Certificate & payment
+          </p>
           <h3 className="mt-1 text-lg font-black">Membership certificate</h3>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-bold text-white/80">Fee: To be configured</div>
+        <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-bold text-white/80">
+          Fee: To be configured
+        </div>
       </div>
 
       <div className="grid gap-px bg-slate-200/70 sm:grid-cols-2">
         <div className="bg-white p-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Payment status</p>
-          <p className="mt-2 font-black text-[#063b25]">{paymentLabel(payment)}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Payment status
+          </p>
+          <p className="mt-2 font-black text-[#063b25]">
+            {paymentLabel(payment)}
+          </p>
         </div>
         <div className="bg-white p-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Certificate status</p>
-          <p className="mt-2 font-black text-[#063b25]">{certificateLabel(certificate)}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+            Certificate status
+          </p>
+          <p className="mt-2 font-black text-[#063b25]">
+            {certificateLabel(certificate)}
+          </p>
         </div>
       </div>
 
@@ -1210,21 +1521,35 @@ function CertificatePaymentCard({ application }: { application: Application }) {
         {certified ? (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-black text-[#063b25]">Certified membership active</p>
-              <p className="mt-1 text-sm text-slate-500">Your payment and certificate stages are complete.</p>
+              <p className="font-black text-[#063b25]">
+                Certified membership active
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Your payment and certificate stages are complete.
+              </p>
             </div>
             {application.certificateUrl && (
-              <a className={primaryButton} href={application.certificateUrl} target="_blank" rel="noreferrer">View certificate</a>
+              <a
+                className={primaryButton}
+                href={application.certificateUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View certificate
+              </a>
             )}
           </div>
         ) : payment === "paid" ? (
           <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-800">
-            Payment confirmed. ASBESOC is processing your membership certificate.
+            Payment confirmed. ASBESOC is processing your membership
+            certificate.
           </div>
         ) : (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl">
-              <p className="font-black text-[#063b25]">{approved ? "Certificate payment" : "Available after approval"}</p>
+              <p className="font-black text-[#063b25]">
+                {approved ? "Certificate payment" : "Available after approval"}
+              </p>
               <p className="mt-1 text-sm leading-6 text-slate-500">
                 {approved
                   ? "Your certificate payment stage is ready. The secure checkout will activate when the payment provider and certificate fee are configured."
@@ -1235,7 +1560,11 @@ function CertificatePaymentCard({ application }: { application: Application }) {
               type="button"
               disabled
               className={`${primaryButton} shrink-0`}
-              title={approved ? "Payment gateway setup is pending" : "Available after application approval"}
+              title={
+                approved
+                  ? "Payment gateway setup is pending"
+                  : "Available after application approval"
+              }
             >
               <Icon name="shield" className="h-4 w-4" />
               Pay for certificate
@@ -1247,11 +1576,7 @@ function CertificatePaymentCard({ application }: { application: Application }) {
   );
 }
 
-function ApplicationMessage({
-  application,
-}: {
-  application: Application;
-}) {
+function ApplicationMessage({ application }: { application: Application }) {
   if (application.status === "approved") {
     return (
       <div>
@@ -1264,9 +1589,9 @@ function ApplicationMessage({
         </h3>
 
         <p className="mt-2 text-sm leading-7 text-slate-500">
-          Your application has passed review. Your certificate and payment
-          stage is shown below. Certified membership is completed after
-          payment confirmation and certificate issuance.
+          Your application has passed review. Your certificate and payment stage
+          is shown below. Certified membership is completed after payment
+          confirmation and certificate issuance.
         </p>
       </div>
     );
@@ -1284,9 +1609,8 @@ function ApplicationMessage({
         </h3>
 
         <p className="mt-2 text-sm leading-7 text-slate-500">
-          Your application was not approved. Please review the note
-          provided by ASBESOC below and contact the organization if you
-          need clarification.
+          Your application was not approved. Please review the note provided by
+          ASBESOC below and contact the organization if you need clarification.
         </p>
       </div>
     );
@@ -1303,9 +1627,9 @@ function ApplicationMessage({
       </h3>
 
       <p className="mt-2 text-sm leading-7 text-slate-500">
-        ASBESOC has received your membership application. You do not
-        need to submit another application while your current
-        application is being reviewed.
+        ASBESOC has received your membership application. You do not need to
+        submit another application while your current application is being
+        reviewed.
       </p>
     </div>
   );
@@ -1323,33 +1647,73 @@ function NextAction({
   loading: boolean;
 }) {
   let title = "Complete your membership application";
-  let description = "Submit your application to begin the ASBESOC membership process.";
-  let action: ReactNode = <Link className={primaryButton} to="/membership">Start application</Link>;
+  let description =
+    "Submit your application to begin the ASBESOC membership process.";
+  let action: ReactNode = (
+    <Link className={primaryButton} to="/membership">
+      Start application
+    </Link>
+  );
 
   if (loading) {
     title = "Checking your account";
     description = "We are loading your latest membership information.";
     action = null;
-  } else if (application?.status === "pending" || application?.status === "under_review") {
+  } else if (
+    application?.status === "pending" ||
+    application?.status === "under_review"
+  ) {
     title = "Review in progress";
-    description = "Your application is with ASBESOC for review. No further action is required right now.";
-    action = <Link className={secondaryButton} to="/dashboard/membership">View status</Link>;
-  } else if (application?.status === "approved" && getPaymentStatus(application) !== "paid") {
+    description =
+      "Your application is with ASBESOC for review. No further action is required right now.";
+    action = (
+      <Link className={secondaryButton} to="/dashboard/membership">
+        View status
+      </Link>
+    );
+  } else if (
+    application?.status === "approved" &&
+    getPaymentStatus(application) !== "paid"
+  ) {
     title = "Certificate payment is next";
-    description = "Your application is approved. Open Membership to continue to the certificate payment stage.";
-    action = <Link className={primaryButton} to="/dashboard/membership">Continue to payment <Icon name="arrow" className="h-4 w-4" /></Link>;
-  } else if (application && getPaymentStatus(application) === "paid" && getCertificateStatus(application) !== "issued") {
+    description =
+      "Your application is approved. Open Membership to continue to the certificate payment stage.";
+    action = (
+      <Link className={primaryButton} to="/dashboard/membership">
+        Continue to payment <Icon name="arrow" className="h-4 w-4" />
+      </Link>
+    );
+  } else if (
+    application &&
+    getPaymentStatus(application) === "paid" &&
+    getCertificateStatus(application) !== "issued"
+  ) {
     title = "Certificate processing";
-    description = "Your payment is confirmed. Your membership certificate is awaiting issuance.";
-    action = <Link className={secondaryButton} to="/dashboard/membership">View certificate status</Link>;
+    description =
+      "Your payment is confirmed. Your membership certificate is awaiting issuance.";
+    action = (
+      <Link className={secondaryButton} to="/dashboard/membership">
+        View certificate status
+      </Link>
+    );
   } else if (isCertifiedMember(application)) {
     title = "Membership complete";
-    description = "Your certificate has been issued and your certified membership is active.";
-    action = <Link className={secondaryButton} to="/dashboard/membership">View membership</Link>;
+    description =
+      "Your certificate has been issued and your certified membership is active.";
+    action = (
+      <Link className={secondaryButton} to="/dashboard/membership">
+        View membership
+      </Link>
+    );
   } else if (application?.status === "rejected") {
     title = "Review the decision";
-    description = "Open Membership to read the ASBESOC review note and available next steps.";
-    action = <Link className={secondaryButton} to="/dashboard/membership">Review decision</Link>;
+    description =
+      "Open Membership to read the ASBESOC review note and available next steps.";
+    action = (
+      <Link className={secondaryButton} to="/dashboard/membership">
+        Review decision
+      </Link>
+    );
   }
 
   return (
@@ -1359,9 +1723,13 @@ function NextAction({
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff7e6] text-[#d97706]">
           <Icon name="arrow" />
         </div>
-        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Next action</p>
+        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Next action
+        </p>
         <h2 className="mt-2 text-xl font-black text-[#063b25]">{title}</h2>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">{description}</p>
+        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
+          {description}
+        </p>
         {action && <div className="mt-6">{action}</div>}
       </div>
     </Card>
@@ -1460,9 +1828,7 @@ function Profile({ user }: { user: User }) {
               {user.displayName?.trim() || "ASBESOC Member"}
             </h2>
 
-            <p className="truncate text-sm text-slate-400">
-              {user.email}
-            </p>
+            <p className="truncate text-sm text-slate-400">{user.email}</p>
           </div>
         </div>
       </div>
@@ -1490,13 +1856,8 @@ function Profile({ user }: { user: User }) {
           </>
         ) : (
           <form onSubmit={save} aria-busy={busy}>
-            <fieldset
-              disabled={busy}
-              className="max-w-2xl space-y-6"
-            >
-              <legend className="sr-only">
-                Edit your profile
-              </legend>
+            <fieldset disabled={busy} className="max-w-2xl space-y-6">
+              <legend className="sr-only">Edit your profile</legend>
 
               <label className="block text-sm font-bold text-[#063b25]">
                 Full name
@@ -1516,7 +1877,6 @@ function Profile({ user }: { user: User }) {
                 <span className="ml-1 font-normal text-slate-400">
                   (optional)
                 </span>
-
                 <input
                   className={input}
                   type="tel"
@@ -1529,9 +1889,8 @@ function Profile({ user }: { user: User }) {
               </label>
 
               <div className="rounded-2xl bg-[#f7faf8] p-4 text-xs leading-6 text-slate-500">
-                Changing your profile information does not change a
-                membership application that has already been submitted
-                for review.
+                Changing your profile information does not change a membership
+                application that has already been submitted for review.
               </div>
 
               <button className={primaryButton} type="submit">
@@ -1624,14 +1983,11 @@ function AccountSettings({ user }: { user: User }) {
           </p>
 
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Request a secure password-reset email if you need to change
-            your password.
+            Request a secure password-reset email if you need to change your
+            password.
           </p>
 
-          <Link
-            className={`${secondaryButton} mt-4`}
-            to="/forgot-password"
-          >
+          <Link className={`${secondaryButton} mt-4`} to="/forgot-password">
             Reset password
           </Link>
         </div>
@@ -1644,17 +2000,10 @@ function AccountSettings({ user }: { user: User }) {
 /*                            CHAT WITH ASBESOC                               */
 /* -------------------------------------------------------------------------- */
 
-function formatChatTime(message: ChatMessage) {
-  const date = message.createdAt?.toDate?.();
-  if (!date) return "Sending…";
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
-
 function MemberChat({ user }: { user: User }) {
-  const [conversation, setConversation] = useState<ChatConversation|null>(null);
+  const [conversation, setConversation] = useState<ChatConversation | null>(
+    null,
+  );
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
@@ -1662,7 +2011,13 @@ function MemberChat({ user }: { user: User }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => watchMemberChat(user, setConversation, caught => setError(chatError(caught))), [user]);
+  useEffect(
+    () =>
+      watchMemberChat(user, setConversation, (caught) =>
+        setError(chatError(caught)),
+      ),
+    [user],
+  );
   const sendLock = useRef(false);
 
   useEffect(() => {
@@ -1713,10 +2068,31 @@ function MemberChat({ user }: { user: User }) {
   }, [messages]);
 
   useEffect(() => {
-    const unread = (conversation?.lastAdminMessageAt?.toMillis() || 0) > (conversation?.memberReadAt?.toMillis() || 0);
-    const mark = () => { if (!loading && unread && document.visibilityState === 'visible') void markChatRead(user, user.uid).catch(caught => setError(chatError(caught))); };
-    mark(); document.addEventListener('visibilitychange', mark); return () => document.removeEventListener('visibilitychange', mark);
-  }, [conversation, loading, user]);
+    const unread =
+      (conversation?.lastAdminMessageAt?.toMillis() || 0) >
+      (conversation?.memberReadAt?.toMillis() || 0);
+    const mark = () => {
+      if (
+        !loading &&
+        unread &&
+        messages.some(
+          (item) =>
+            item.senderRole === "admin" &&
+            !item.pending &&
+            (!item.createdAt ||
+              item.createdAt.toMillis() >=
+                (conversation?.lastAdminMessageAt?.toMillis() || 0)),
+        ) &&
+        document.visibilityState === "visible"
+      )
+        void markChatRead(user, user.uid).catch((caught) =>
+          setError(chatError(caught)),
+        );
+    };
+    mark();
+    document.addEventListener("visibilitychange", mark);
+    return () => document.removeEventListener("visibilitychange", mark);
+  }, [conversation, messages, loading, user]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sendLock.current) return;
@@ -1758,7 +2134,13 @@ function MemberChat({ user }: { user: User }) {
               <h2 className="truncate text-sm font-black text-[#063b25] sm:text-base">
                 ASBESOC Admin
               </h2>
-              <p className="mt-0.5 text-xs text-slate-400">{conversation?.status === "waiting" ? "Waiting for an agent" : conversation?.status === "resolved" ? "Resolved · Send a message to reopen" : "Private member support"}</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                {conversation?.status === "waiting"
+                  ? "Waiting for an agent"
+                  : conversation?.status === "resolved"
+                    ? "Resolved · Send a message to reopen"
+                    : "Private member support"}
+              </p>
             </div>
           </div>
 
@@ -1772,7 +2154,10 @@ function MemberChat({ user }: { user: User }) {
           <div className="h-[52vh] min-h-[420px] max-h-[650px] overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
             {loading ? (
               <div className="flex h-full items-center justify-center">
-                <p role="status" className="text-sm font-semibold text-slate-500">
+                <p
+                  role="status"
+                  className="text-sm font-semibold text-slate-500"
+                >
                   Opening your private conversation…
                 </p>
               </div>
@@ -1786,7 +2171,8 @@ function MemberChat({ user }: { user: User }) {
                     Start a conversation
                   </h3>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
-                    Send a message about your membership, application, certificate or another member-related question.
+                    Send a message about your membership, application,
+                    certificate or another member-related question.
                   </p>
                 </div>
               </div>
@@ -1796,11 +2182,18 @@ function MemberChat({ user }: { user: User }) {
                   const mine = item.senderRole === "member";
 
                   return (
-                    <div key={item.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                      <div className={`flex max-w-[86%] flex-col sm:max-w-[72%] ${mine ? "items-end" : "items-start"}`}>
+                    <div
+                      key={item.id}
+                      className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`flex max-w-[86%] flex-col sm:max-w-[72%] ${mine ? "items-end" : "items-start"}`}
+                      >
                         {!mine && (
                           <p className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#087247]">
-                            {item.senderRole === "system" ? "Automatic acknowledgement" : "ASBESOC Admin"}
+                            {item.senderRole === "system"
+                              ? "Automatic acknowledgement"
+                              : "ASBESOC Admin"}
                           </p>
                         )}
                         <div
@@ -1810,10 +2203,12 @@ function MemberChat({ user }: { user: User }) {
                               : "rounded-bl-md border border-slate-200/80 bg-white text-slate-700"
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words text-sm leading-6">{item.text}</p>
+                          <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                            {item.text}
+                          </p>
                         </div>
                         <p className="mt-1.5 px-1 text-[10px] font-semibold text-slate-400">
-                          {formatChatTime(item)}
+                          {chatMessageTime(item)}
                         </p>
                       </div>
                     </div>
@@ -1826,11 +2221,19 @@ function MemberChat({ user }: { user: User }) {
 
           {error && (
             <div className="border-t border-rose-100 bg-rose-50 px-4 py-3 sm:px-6">
-              <p role="alert" className="text-xs font-semibold leading-5 text-rose-700">{error}</p>
+              <p
+                role="alert"
+                className="text-xs font-semibold leading-5 text-rose-700"
+              >
+                {error}
+              </p>
             </div>
           )}
 
-          <form onSubmit={send} className="border-t border-slate-200 bg-white p-3 sm:p-4">
+          <form
+            onSubmit={send}
+            className="border-t border-slate-200 bg-white p-3 sm:p-4"
+          >
             <div className="flex items-end gap-2 sm:gap-3">
               <label className="min-w-0 flex-1">
                 <span className="sr-only">Message ASBESOC</span>
@@ -1838,7 +2241,11 @@ function MemberChat({ user }: { user: User }) {
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    if (
+                      event.key === "Enter" &&
+                      !event.shiftKey &&
+                      !event.nativeEvent.isComposing
+                    ) {
                       event.preventDefault();
                       event.currentTarget.form?.requestSubmit();
                     }
@@ -1878,58 +2285,19 @@ function MemberChat({ user }: { user: User }) {
       </Card>
 
       <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-900/10 bg-emerald-50/50 px-4 py-3.5">
-        <Icon name="shield" className="mt-0.5 h-4 w-4 shrink-0 text-[#087247]" />
+        <Icon
+          name="shield"
+          className="mt-0.5 h-4 w-4 shrink-0 text-[#087247]"
+        />
         <p className="text-xs leading-5 text-slate-500">
-          Your messages are private between your member account and authorized ASBESOC administrators. Other members cannot access this conversation.
+          Your messages are private between your member account and authorized
+          ASBESOC administrators. Other members cannot access this conversation.
         </p>
       </div>
     </div>
   );
 }
 
-
 /* -------------------------------------------------------------------------- */
 /*                               COMING SOON                                  */
 /* -------------------------------------------------------------------------- */
-
-function ComingSoon({
-  icon,
-  eyebrow,
-  title,
-  heading,
-  description,
-  action,
-}: {
-  icon: IconName;
-  eyebrow: string;
-  title: string;
-  heading: string;
-  description: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="mx-auto max-w-5xl">
-      <PageHeading
-        eyebrow={eyebrow}
-        title={title}
-        description="Your private ASBESOC member space."
-      />
-
-      <Card className="mt-7 p-7 sm:p-10">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-[#087247]">
-          <Icon name={icon} className="h-6 w-6" />
-        </div>
-
-        <h2 className="mt-6 text-xl font-black text-[#063b25] sm:text-2xl">
-          {heading}
-        </h2>
-
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-          {description}
-        </p>
-
-        {action && <div className="mt-6">{action}</div>}
-      </Card>
-    </div>
-  );
-}
