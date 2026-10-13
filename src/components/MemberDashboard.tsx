@@ -1,4 +1,5 @@
 import "./member-v2.css";
+import AnnualMembership from "./AnnualMembership";
 import {
   useMemberUpdates,
   type MemberUpdates,
@@ -30,13 +31,14 @@ import {
   chatError,
   chatMessageTime,
   watchMemberChat,
-  markChatRead,
+  markMemberReplyRead,
   type ChatConversation,
   ensureMemberChat,
   sendMemberMessage,
   watchMemberMessages,
   type ChatMessage,
 } from "../firebase/chat";
+import { hasUnreadReply, latestReadReply } from "../firebase/chatReadState";
 import {
   applicationLabel,
   certificateLabel,
@@ -44,7 +46,6 @@ import {
   getPaymentStatus,
   isCertifiedMember,
   memberError,
-  paymentLabel,
   saveMemberProfile,
   type Application,
 } from "../firebase/membership";
@@ -368,6 +369,7 @@ function Dashboard({ user }: { user: User }) {
   const location = useLocation();
   const updates = useMemberUpdates(
     membership.application?.status === "approved",
+    isCertifiedMember(membership.application),
   );
   const [chat, setChat] = useState<ChatConversation | null>();
   const [chatLoadError, setChatLoadError] = useState("");
@@ -378,9 +380,7 @@ function Dashboard({ user }: { user: User }) {
       ),
     [user],
   );
-  const unreadChat =
-    (chat?.lastAdminMessageAt?.toMillis() || 0) >
-    (chat?.memberReadAt?.toMillis() || 0);
+  const unreadChat = hasUnreadReply(chat);
   const [seen, setSeen] = useState(() => {
     try {
       return (
@@ -1479,101 +1479,7 @@ function MembershipPanel({ application }: { application: Application | null }) {
 }
 
 function CertificatePaymentCard({ application }: { application: Application }) {
-  const payment = getPaymentStatus(application);
-  const certificate = getCertificateStatus(application);
-  const approved = application.status === "approved";
-  const certified = isCertifiedMember(application);
-
-  return (
-    <div className="mt-6 overflow-hidden rounded-[22px] border border-[#063b25]/10 bg-[#f8fbf9]">
-      <div className="flex flex-col gap-4 border-b border-[#063b25]/10 bg-[#063b25] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/70">
-            Certificate & payment
-          </p>
-          <h3 className="mt-1 text-lg font-black">Membership certificate</h3>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-bold text-white/80">
-          Fee: To be configured
-        </div>
-      </div>
-
-      <div className="grid gap-px bg-slate-200/70 sm:grid-cols-2">
-        <div className="bg-white p-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-            Payment status
-          </p>
-          <p className="mt-2 font-black text-[#063b25]">
-            {paymentLabel(payment)}
-          </p>
-        </div>
-        <div className="bg-white p-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-            Certificate status
-          </p>
-          <p className="mt-2 font-black text-[#063b25]">
-            {certificateLabel(certificate)}
-          </p>
-        </div>
-      </div>
-
-      <div className="p-5">
-        {certified ? (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-black text-[#063b25]">
-                Certified membership active
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Your payment and certificate stages are complete.
-              </p>
-            </div>
-            {application.certificateUrl && (
-              <a
-                className={primaryButton}
-                href={application.certificateUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View certificate
-              </a>
-            )}
-          </div>
-        ) : payment === "paid" ? (
-          <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-800">
-            Payment confirmed. ASBESOC is processing your membership
-            certificate.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="max-w-xl">
-              <p className="font-black text-[#063b25]">
-                {approved ? "Certificate payment" : "Available after approval"}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                {approved
-                  ? "Your certificate payment stage is ready. The secure checkout will activate when the payment provider and certificate fee are configured."
-                  : "Certificate payment unlocks after ASBESOC approves your membership application."}
-              </p>
-            </div>
-            <button
-              type="button"
-              disabled
-              className={`${primaryButton} shrink-0`}
-              title={
-                approved
-                  ? "Payment gateway setup is pending"
-                  : "Available after application approval"
-              }
-            >
-              <Icon name="shield" className="h-4 w-4" />
-              Pay for certificate
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <AnnualMembership application={application} />;
 }
 
 function ApplicationMessage({ application }: { application: Application }) {
@@ -2068,30 +1974,27 @@ function MemberChat({ user }: { user: User }) {
   }, [messages]);
 
   useEffect(() => {
-    const unread =
-      (conversation?.lastAdminMessageAt?.toMillis() || 0) >
-      (conversation?.memberReadAt?.toMillis() || 0);
+    const reply = latestReadReply(messages);
     const mark = () => {
       if (
         !loading &&
-        unread &&
-        messages.some(
-          (item) =>
-            item.senderRole === "admin" &&
-            !item.pending &&
-            (!item.createdAt ||
-              item.createdAt.toMillis() >=
-                (conversation?.lastAdminMessageAt?.toMillis() || 0)),
-        ) &&
+        hasUnreadReply(conversation) &&
+        reply &&
         document.visibilityState === "visible"
       )
-        void markChatRead(user, user.uid).catch((caught) =>
+        void markMemberReplyRead(user, reply).catch((caught) =>
           setError(chatError(caught)),
         );
     };
     mark();
     document.addEventListener("visibilitychange", mark);
-    return () => document.removeEventListener("visibilitychange", mark);
+    window.addEventListener("online", mark);
+    window.addEventListener("focus", mark);
+    return () => {
+      document.removeEventListener("visibilitychange", mark);
+      window.removeEventListener("online", mark);
+      window.removeEventListener("focus", mark);
+    };
   }, [conversation, messages, loading, user]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

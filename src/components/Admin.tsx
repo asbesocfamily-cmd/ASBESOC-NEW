@@ -24,6 +24,7 @@ import {
   ActivityPanel,
   RequestWorkflow,
 } from "./AdminOperations";
+import AdminCertification from "./AdminCertification";
 import AdminMedia from "./AdminMedia";
 import PublicGalleryPublisher from "./PublicGalleryPublisher";
 import ApplicationReview from "./ApplicationReview";
@@ -282,6 +283,7 @@ function Admin() {
           {sessionError}
         </p>
       )}
+      {activeView === "certification" && <AdminCertification />}
       {activeView === "members" && <MemberDirectory />}
       {activeView === "broadcasts" && <BroadcastCentre />}
       {activeView === "activity" && <ActivityPanel />}

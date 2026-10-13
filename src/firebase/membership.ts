@@ -31,7 +31,8 @@ export type CertificateStatus =
   | "not_available"
   | "payment_required"
   | "processing"
-  | "issued";
+  | "issued"
+  | "revoked";
 
 export type Application = MembershipSubmission & {
   userId: string;
@@ -55,6 +56,7 @@ export type Application = MembershipSubmission & {
   certificateNumber?: string;
   certificateUrl?: string;
   certificateIssuedAt?: unknown;
+  membershipExpiresAt?: { toMillis: () => number };
 };
 
 export const statusLabels: Record<ApplicationStatus, string> = {
@@ -80,6 +82,7 @@ export const certificateStatusLabels: Record<
   payment_required: "Payment required",
   processing: "Certificate processing",
   issued: "Certificate issued",
+  revoked: "Certificate revoked",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -149,7 +152,8 @@ export function isCertifiedMember(
   return (
     application?.status === "approved" &&
     getPaymentStatus(application) === "paid" &&
-    getCertificateStatus(application) === "issued"
+    getCertificateStatus(application) === "issued" &&
+    (application?.membershipExpiresAt?.toMillis() ?? 0) > Date.now()
   );
 }
 

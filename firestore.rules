@@ -517,6 +517,19 @@ service cloud.firestore {
 
 
     function ownChat(uid) { return verified() && request.auth.uid == uid; }
+    function certified() {
+      let member = get(/databases/$(database)/documents/memberships/$(request.auth.uid)).data;
+      return verified() && member.status == 'active' && member.startsAt <= request.time && member.expiresAt > request.time;
+    }
+    match /memberships/{uid} {
+      allow get: if isOwner(uid) || admin();
+      allow list: if admin();
+      allow write: if false;
+    }
+    match /paymentOrders/{id} { allow read: if admin() || (verified() && resource.data.uid == request.auth.uid); allow write: if false; }
+    match /certificates/{id} { allow read: if admin() || (verified() && resource.data.uid == request.auth.uid); allow write: if false; }
+    match /membershipAudit/{id} { allow read: if admin(); allow write: if false; }
+    match /membershipReminders/{uid}/items/{id} { allow read: if isOwner(uid) || admin(); allow write: if false; }
     function approved() { return verified() && get(/databases/$(database)/documents/membershipApplications/$(request.auth.uid)).data.status == 'approved'; }
     function page(id) { return id in ['home','about','programs','projects','gallery','contact','footer']; }
     match /memberChats/{uid} {
@@ -534,7 +547,13 @@ service cloud.firestore {
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastAdminMessageAt']) || request.resource.data.lastAdminMessageAt == request.time)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['adminReadAt']) || request.resource.data.adminReadAt == request.time))
         || (ownChat(uid) && (
-          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberReadAt']) && request.resource.data.memberReadAt == request.time)
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberReadAt','memberReadMessageId'])
+            && request.resource.data.memberReadMessageId is string
+            && request.resource.data.memberReadAt is timestamp
+            && request.resource.data.memberReadAt <= resource.data.lastAdminMessageAt
+            && (resource.data.get('memberReadAt', null) == null || request.resource.data.memberReadAt >= resource.data.memberReadAt)
+            && get(/databases/$(database)/documents/memberChats/$(uid)/messages/$(request.resource.data.memberReadMessageId)).data.senderRole == 'admin'
+            && get(/databases/$(database)/documents/memberChats/$(uid)/messages/$(request.resource.data.memberReadMessageId)).data.createdAt == request.resource.data.memberReadAt)
           || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastMemberMessageAt','acknowledgedAt'])
             && request.resource.data.updatedAt == request.time && request.resource.data.lastMemberMessageAt == request.time
             && request.resource.data.status == (resource.data.get('status','active') == 'resolved' ? 'waiting' : resource.data.get('status','active'))
@@ -571,7 +590,8 @@ service cloud.firestore {
       allow delete: if admin();
     }
     match /memberFeed/{id} {
-      allow read: if admin() || (verified() && resource.data.published == true);
+      allow read: if admin() || (verified() && resource.data.published == true
+        && (resource.data.type != 'training' || certified()));
       allow create, update: if admin() && text(request.resource.data.title,1,180) && text(request.resource.data.body,1,10000)
         && request.resource.data.published is bool && request.resource.data.type in ['announcement','training','opportunity'];
       allow delete: if admin();

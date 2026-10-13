@@ -47,12 +47,13 @@ export function watchMemberPosts(
   onValue: (items: MemberPost[]) => void,
   onError?: (error: Error) => void,
   publishedOnly = false,
+  certified = false,
 ): Unsubscribe {
   return onSnapshot(
     query(
       collection(db, "memberFeed"),
       ...(publishedOnly
-        ? [where("published", "==", true)]
+        ? [where("published", "==", true), ...(!certified ? [where("type", "in", ["announcement", "opportunity"])] : [])]
         : [orderBy("createdAt", "desc")]),
     ),
     (snapshot) =>

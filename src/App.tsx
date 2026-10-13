@@ -12,6 +12,7 @@ import Gallery from "./components/Gallery";
 import Footer from "./components/Footer";
 import RequireAuth from "./components/RequireAuth";
 
+const VerifyCertificate = lazy(() => import("./components/VerifyCertificate"));
 const Admin = lazy(() => import("./components/Admin"));
 const SignUp = lazy(() => import("./components/SignUp"));
 const Login = lazy(() => import("./components/Login"));
@@ -67,6 +68,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/verify-certificate/:id" element={<VerifyCertificate />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
 

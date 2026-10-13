@@ -5,9 +5,9 @@ import {
   type Broadcast,
 } from "../firebase/broadcasts";
 import { watchMemberPosts, type MemberPost } from "../firebase/memberContent";
-export function useMemberUpdates(approved: boolean) {
+export function useMemberUpdates(approved: boolean, certified = false) {
   const [state, setState] = useState<{
-    audience: boolean;
+    audience: string;
     broadcasts: Broadcast[];
     posts: MemberPost[];
     pending: boolean[];
@@ -21,7 +21,7 @@ export function useMemberUpdates(approved: boolean) {
       errors = ["", ""];
     const emit = () =>
       setState({
-        audience: approved,
+        audience: `${approved}-${certified}`,
         broadcasts,
         posts,
         pending: [...pending],
@@ -58,6 +58,7 @@ export function useMemberUpdates(approved: boolean) {
         emit();
       },
       true,
+      certified,
     );
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => {
@@ -65,8 +66,8 @@ export function useMemberUpdates(approved: boolean) {
       b();
       clearInterval(timer);
     };
-  }, [approved]);
-  const current = state?.audience === approved ? state : undefined;
+  }, [approved, certified]);
+  const current = state?.audience === `${approved}-${certified}` ? state : undefined;
   const items = [
     ...(current?.broadcasts || [])
       .filter((item) => activeBroadcast(item, now))

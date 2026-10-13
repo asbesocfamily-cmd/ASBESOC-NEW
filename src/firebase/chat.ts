@@ -14,6 +14,7 @@ import type { User } from "firebase/auth";
 
 import { db } from "./firebaseConfig";
 import { ADMIN_UID } from "./membership";
+import { saveMemberReadReceipt } from "./chatReadReceipt";
 
 export type ChatSenderRole = "member" | "admin" | "system";
 export type ChatStatus = "waiting" | "active" | "resolved";
@@ -204,6 +205,11 @@ export async function markChatRead(user: User, uid: string) {
   });
 }
 
+export async function markMemberReplyRead(user: User, message: ChatMessage) {
+  verified(user);
+  await saveMemberReadReceipt(db, user.uid, message);
+}
+
 export function chatStatus(value: unknown): ChatStatus {
   return value === "waiting" || value === "resolved" ? value : "active";
 }
@@ -256,11 +262,12 @@ export function watchMemberChat(
 
   return onSnapshot(
     doc(db, "memberChats", user.uid),
+    { includeMetadataChanges: true },
     (snapshot) =>
       onChat(
         snapshot.exists()
           ? ({
-              ...snapshot.data({ serverTimestamps: "estimate" }),
+              ...snapshot.data({ serverTimestamps: "previous" }),
               id: snapshot.id,
               status: chatStatus(snapshot.data().status),
             } as ChatConversation)

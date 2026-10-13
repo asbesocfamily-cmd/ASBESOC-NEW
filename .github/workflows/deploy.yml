@@ -26,6 +26,7 @@ jobs:
       - run: npm run build
         env:
           VITE_MEDIA_API_URL: https://asbesoc-media.asbesocngo.workers.dev
+          VITE_MEMBERSHIP_SERVICE_ENABLED: "false"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
