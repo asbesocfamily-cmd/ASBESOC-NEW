@@ -892,3 +892,4 @@ export const membershipRenewalReminders =
       }
     }
   );
+export { memberChatAutoReply } from './chatAI.js';

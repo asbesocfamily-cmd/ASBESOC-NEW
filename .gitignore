@@ -28,3 +28,10 @@ work/
 functions/.env*
 !functions/.env.example
 functions/.secret*
+
+/cloudflare-ai/.dev.vars
+/cloudflare-ai/.wrangler/
+/cloudflare-ai/src/index.backup.js
+*serviceAccountKey*.json
+*firebase-adminsdk*.json
+*service-account*.json

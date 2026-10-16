@@ -1,5 +1,6 @@
-import "./member-v2.css";
+﻿import "./member-v2.css";
 import AnnualMembership from "./AnnualMembership";
+import MemberPaymentHistory from "./MemberPaymentHistory";
 import {
   useMemberUpdates,
   type MemberUpdates,
@@ -96,6 +97,11 @@ const navigation: {
     path: "/dashboard/membership",
     label: "Membership",
     icon: "membership",
+  },
+  {
+    path: "/dashboard/payments",
+    label: "Payment History",
+    icon: "document",
   },
   {
     path: "/dashboard/inbox",
@@ -584,7 +590,7 @@ function Dashboard({ user }: { user: User }) {
                 <Icon name="home" />
                 <input
                   aria-label="Find a dashboard section"
-                  placeholder="Find a dashboard section…"
+                  placeholder="Find a dashboard sectionâ€¦"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                 />
@@ -717,7 +723,23 @@ function Dashboard({ user }: { user: User }) {
                 }
               />
 
-              <Route path="inbox" element={<MemberChat user={user} />} />
+              <Route
+  path="payments"
+  element={
+    <div className="mx-auto max-w-5xl">
+      <PageHeading
+        eyebrow="Membership payments"
+        title="Payment History"
+        description="Review your ASBESOC membership transactions and payment status."
+      />
+
+      <div className="mt-7">
+        <MemberPaymentHistory />
+      </div>
+    </div>
+  }
+/>
+<Route path="inbox" element={<MemberChat user={user} />} />
 
               <Route
                 path="notifications"
@@ -732,7 +754,7 @@ function Dashboard({ user }: { user: User }) {
                       <h2>Stay in the loop</h2>
                       <p>
                         {updates.loading
-                          ? "Checking updates…"
+                          ? "Checking updatesâ€¦"
                           : `${unreadUpdates} unread updates on this device`}
                       </p>
                       <button
@@ -754,9 +776,9 @@ function Dashboard({ user }: { user: User }) {
                         to="/dashboard/membership"
                         className="member-notification-status"
                       >
-                        Membership ·{" "}
+                        Membership Â·{" "}
                         {membership.loading
-                          ? "Loading…"
+                          ? "Loadingâ€¦"
                           : membership.error
                             ? "Unavailable"
                             : membership.application
@@ -873,7 +895,7 @@ function SidebarContent({
             className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 text-xs font-bold text-white/75 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon name="logout" className="h-4 w-4" />
-            {busy ? "Logging out…" : "Logout"}
+            {busy ? "Logging outâ€¦" : "Logout"}
           </button>
 
           {error && (
@@ -911,7 +933,7 @@ function Overview({
   chatLoading: boolean;
 }) {
   const status = membershipLoading
-    ? "Loading…"
+    ? "Loadingâ€¦"
     : membershipError
       ? "Unavailable"
       : application
@@ -971,7 +993,7 @@ function Overview({
             starts with community.
           </h2>
           <p>
-            Stay close to your membership journey and discover what’s happening
+            Stay close to your membership journey and discover whatâ€™s happening
             at ASBESOC.
           </p>
           <Link to="/dashboard/membership" className={primaryButton}>
@@ -995,7 +1017,7 @@ function Overview({
           label="Certificate"
           value={
             membershipLoading
-              ? "Loading…"
+              ? "Loadingâ€¦"
               : membershipError
                 ? "Unavailable"
                 : certificateLabel(getCertificateStatus(application))
@@ -1007,9 +1029,9 @@ function Overview({
           label="Community updates"
           value={
             updates.loading
-              ? "…"
+              ? "â€¦"
               : updates.error
-                ? "—"
+                ? "â€”"
                 : String(updates.items.length)
           }
           description="Published updates available to you"
@@ -1019,7 +1041,7 @@ function Overview({
           label="Private messages"
           value={
             chatLoading && !chatErrorMessage
-              ? "Loading…"
+              ? "Loadingâ€¦"
               : chatErrorMessage
                 ? "Unavailable"
                 : unreadChat
@@ -1045,7 +1067,7 @@ function Overview({
           </header>
           <div className="member-readiness">
             {membershipLoading || membershipError ? (
-              <p>Checklist {membershipError ? "unavailable" : "loading…"}</p>
+              <p>Checklist {membershipError ? "unavailable" : "loadingâ€¦"}</p>
             ) : (
               <div className="member-ring">
                 <svg
@@ -1100,14 +1122,14 @@ function Overview({
         <section className="member-panel">
           <header className="member-panel-heading">
             <div>
-              <p className="member-eyebrow">Explore what’s available</p>
+              <p className="member-eyebrow">Explore whatâ€™s available</p>
               <h2>Community bulletin</h2>
             </div>
             <Icon name="community" />
           </header>
           {updates.loading || updates.error ? (
             <p className="member-empty">
-              {updates.error || "Loading updates…"}
+              {updates.error || "Loading updatesâ€¦"}
             </p>
           ) : (
             <div className="member-bars">
@@ -1262,7 +1284,7 @@ function MembershipJourney({
           </h2>
         </div>
         <p className="text-xs font-semibold text-slate-400">
-          {loading ? "Checking progress…" : "Live status"}
+          {loading ? "Checking progressâ€¦" : "Live status"}
         </p>
       </div>
       <div className="mt-8 overflow-x-auto pb-2">
@@ -1312,7 +1334,7 @@ function MembershipLoading() {
       </div>
 
       <p role="status" className="sr-only">
-        Loading your application…
+        Loading your applicationâ€¦
       </p>
     </Card>
   );
@@ -1429,7 +1451,7 @@ function MembershipPanel({ application }: { application: Application | null }) {
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-black text-[#063b25]">
                 View submitted application
                 <span className="text-slate-400 transition group-open:rotate-90">
-                  →
+                  â†’
                 </span>
               </summary>
 
@@ -1742,7 +1764,7 @@ function Profile({ user }: { user: User }) {
       <div className="p-6 sm:p-7">
         {loading ? (
           <p role="status" className="text-sm text-slate-500">
-            Loading your profile…
+            Loading your profileâ€¦
           </p>
         ) : loadError ? (
           <>
@@ -1800,7 +1822,7 @@ function Profile({ user }: { user: User }) {
               </div>
 
               <button className={primaryButton} type="submit">
-                {busy ? "Saving…" : "Save changes"}
+                {busy ? "Savingâ€¦" : "Save changes"}
               </button>
             </fieldset>
           </form>
@@ -2041,7 +2063,7 @@ function MemberChat({ user }: { user: User }) {
                 {conversation?.status === "waiting"
                   ? "Waiting for an agent"
                   : conversation?.status === "resolved"
-                    ? "Resolved · Send a message to reopen"
+                    ? "Resolved Â· Send a message to reopen"
                     : "Private member support"}
               </p>
             </div>
@@ -2061,7 +2083,7 @@ function MemberChat({ user }: { user: User }) {
                   role="status"
                   className="text-sm font-semibold text-slate-500"
                 >
-                  Opening your private conversation…
+                  Opening your private conversationâ€¦
                 </p>
               </div>
             ) : messages.length === 0 ? (
@@ -2156,7 +2178,7 @@ function MemberChat({ user }: { user: User }) {
                   disabled={sending || loading}
                   maxLength={4000}
                   rows={1}
-                  placeholder="Write a message…"
+                  placeholder="Write a messageâ€¦"
                   className="max-h-36 min-h-12 w-full resize-none rounded-2xl border border-slate-200 bg-[#f8faf9] px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:bg-white focus:ring-4 focus:ring-emerald-700/10 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
@@ -2177,7 +2199,7 @@ function MemberChat({ user }: { user: User }) {
 
             <div className="mt-2 flex items-center justify-between gap-3 px-1">
               <p className="text-[10px] leading-4 text-slate-400">
-                Enter to send · Shift + Enter for a new line
+                Enter to send Â· Shift + Enter for a new line
               </p>
               <p className="shrink-0 text-[10px] font-semibold text-slate-400">
                 {message.length}/4000
@@ -2204,3 +2226,4 @@ function MemberChat({ user }: { user: User }) {
 /* -------------------------------------------------------------------------- */
 /*                               COMING SOON                                  */
 /* -------------------------------------------------------------------------- */
+
