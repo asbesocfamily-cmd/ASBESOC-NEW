@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   runTransaction,
   updateDoc,
+  increment,
   type Timestamp,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -168,6 +169,7 @@ export async function sendAdminMessage(
     });
     transaction.update(target, {
       status: "active",
+      aiEpoch: increment(1),
       updatedAt: serverTimestamp(),
       lastAdminMessageAt: serverTimestamp(),
       adminReadAt: serverTimestamp(),
@@ -188,6 +190,8 @@ export async function setChatStatus(
 
   await updateDoc(doc(db, "memberChats", uid), {
     status,
+    aiEpoch: increment(1),
+    aiEscalated: false,
     updatedAt: serverTimestamp(),
   });
 }

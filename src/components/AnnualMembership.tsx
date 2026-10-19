@@ -154,14 +154,15 @@ export default function AnnualMembership({
     if (!paymentReference) return;
 
     await act(async () => {
-      await membershipCall(
+      const result = await membershipCall<{ confirmed: boolean; status?: string }>(
         'confirmMembershipPayment',
         { reference: paymentReference }
       );
 
-      setMessage(
-        'Payment verified by the server. Your membership record will update automatically.'
-      );
+      setMessage(result.confirmed
+        ? 'Payment verified by the server. Your membership record will update automatically.'
+        : result.status === 'failed' ? 'The provider reports this payment was unsuccessful. You can start a new checkout.'
+        : 'Payment is still pending with the provider. Please check again later; membership has not been activated.');
     });
   }
 

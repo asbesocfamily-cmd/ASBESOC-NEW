@@ -1,5 +1,6 @@
 import type { IconName } from "./AdminIcon";
 export const adminViews = [
+  { id: "analytics", label: "Visitor Analytics", icon: "activity", description: "Privacy-conscious visit and conversion estimates" },
   { id: "certification", label: "Certification & Payments", icon: "members", description: "Annual membership, verified payments and certificates" },
   {
     id: "overview",

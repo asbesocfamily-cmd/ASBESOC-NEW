@@ -27,6 +27,21 @@ before(async () => {
 after(async()=>{if(env)await env.cleanup()});
 const run=(name,fn)=>test(name,{skip:!enabled},fn);
 const dbFor=uid=>env.authenticatedContext(uid,{email_verified:true,email:`${uid}@example.org`}).firestore();
+run('analytics and AI control records reject direct client access and forged automation',async()=>{
+  for(const uid of ['member-123',admin]) {
+    for(const path of ['analyticsEvents/private','analyticsVisitors/private','analyticsSessions/private','systemConfig/supportAI','systemConfig/analytics']) {
+      await assertFails(getDoc(doc(dbFor(uid),path)));
+      await assertFails(setDoc(doc(dbFor(uid),path),{enabled:true}));
+    }
+  }
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'memberChats/member-123'),{status:'waiting',memberId:'member-123',aiEpoch:0});
+  });
+  await assertFails(updateDoc(doc(dbFor('member-123'),'memberChats/member-123'),{aiEpoch:1,aiEscalated:false}));
+  await assertFails(setDoc(doc(dbFor('member-123'),'memberChats/member-123/messages/forged-ai'),{senderId:'asbesoc-ai',senderRole:'system',text:'Approved',createdAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(doc(dbFor(admin),'memberChats/member-123'),{status:'active',aiEpoch:1,updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(doc(dbFor(admin),'memberChats/member-123'),{status:'waiting',aiEpoch:2,aiEscalated:false,updatedAt:serverTimestamp()}));
+});
 run('applicant cannot mark self paid or certified',async()=>{
   await assertFails(updateDoc(doc(dbFor('member-123'),'membershipApplications/member-123'),{paymentStatus:'paid',certificateStatus:'issued'}));
 });

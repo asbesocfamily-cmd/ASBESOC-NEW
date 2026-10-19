@@ -11,6 +11,8 @@ import Contact from "./components/Contact";
 import Gallery from "./components/Gallery";
 import Footer from "./components/Footer";
 import RequireAuth from "./components/RequireAuth";
+import WebsiteAnalytics from "./components/WebsiteAnalytics";
+const Privacy = lazy(() => import("./components/Privacy"));
 
 const VerifyCertificate = lazy(() => import("./components/VerifyCertificate"));
 const Admin = lazy(() => import("./components/Admin"));
@@ -47,6 +49,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
+      <WebsiteAnalytics />
 
       {!isAdminPage && <Navbar />}
 
@@ -66,6 +69,7 @@ function App() {
           {/* Public website */}
           <Route path="/" element={<Hero />} />
           <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/verify-certificate/:id" element={<VerifyCertificate />} />

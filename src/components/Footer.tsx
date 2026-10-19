@@ -9,6 +9,7 @@ const footerLinks = [
   { label: "Gallery", to: "/gallery" },
   { label: "Membership", to: "/membership" },
   { label: "Contact Us", to: "/contact" },
+  { label: "Privacy & Analytics", to: "/privacy" },
 ];
 
 const focusClass =

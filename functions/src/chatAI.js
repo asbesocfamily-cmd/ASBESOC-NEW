@@ -1,128 +1,89 @@
+import { createHmac, randomUUID } from 'node:crypto';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { defineSecret } from 'firebase-functions/params';
 
-const MAX_MESSAGE_LENGTH = 4000;
+const bridgeSecret = defineSecret('AI_BRIDGE_SECRET');
+const INTRO = "Hello! I'm Miss Chididmma, ASBESOC's automated support assistant. ";
+const FALLBACK = 'An ASBESOC administrator will need to assist with this question. Your message is in the support inbox.';
 
-const TOPICS = [
-  {
-    keywords: ["hello", "hi", "good morning", "good evening"],
-    answer:
-      "Hello! I'm the ASBESOC virtual assistant. I can help with membership, certificates, training and general information. How can I assist you?",
-  },
-  {
-    keywords: ["what is asbesoc", "about asbesoc", "organization"],
-    answer:
-      "ASBESOC means Association for a Better Society. The organization focuses on peace building, human rights, empowerment and community development.",
-  },
-  {
-    keywords: ["join", "membership application", "become a member"],
-    answer:
-      "To apply for ASBESOC membership, create an account, verify your email and complete the membership application. Your application must be reviewed before approval.",
-  },
-  {
-    keywords: ["certificate", "membership payment", "pay membership"],
-    answer:
-      "After membership approval, eligible applicants can obtain their membership certificate through the official payment process when it becomes available. Never send payments to unofficial accounts.",
-  },
-  {
-    keywords: ["training", "courses", "workshop"],
-    answer:
-      "Training opportunities are announced through the member dashboard. Access depends on eligibility and active membership certification.",
-  },
-  {
-    keywords: ["application status", "pending", "approved", "rejected"],
-    answer:
-      "You can check your application status from your member dashboard. For a specific decision or review issue, please contact an ASBESOC administrator.",
-  },
-  {
-    keywords: ["support", "human agent", "administrator", "admin"],
-    answer:
-      "You are already in ASBESOC Member Chat. An administrator can take over this conversation when available.",
-  },
-];
-
-export function generateChatReply(message) {
-  if (typeof message !== "string") {
-    throw new TypeError("Message must be text.");
+export async function handleChatMessage(db, event, generate) {
+  const message = event.data?.data();
+  if (message?.senderRole !== 'member' || typeof message.text !== 'string') return;
+  const { uid, messageId } = event.params;
+  const chatRef = db.doc(`memberChats/${uid}`);
+  const replyRef = chatRef.collection('messages').doc(`ai-${messageId}`);
+  const lease = randomUUID();
+  const acquired = await db.runTransaction(async tx => {
+    const [chatSnap, replySnap] = await Promise.all([tx.get(chatRef), tx.get(replyRef)]);
+    const chat = chatSnap.data();
+    if (!chat || replySnap.exists || chat.status !== 'waiting' || chat.aiEscalated === true ||
+        !chat.lastMemberMessageAt?.isEqual(message.createdAt)) return null;
+    if (chat.aiLeaseUntil?.toMillis() > Date.now()) throw new Error('AI lease busy; retry event.');
+    const minute = Math.floor(Date.now() / 60000);
+    const count = chat.aiMinute === minute ? chat.aiCount || 0 : 0;
+    if (count >= 6) {
+      tx.update(chatRef, { aiEscalated: true, aiError: 'rate_limited' });
+      return null;
+    }
+    tx.update(chatRef, { aiLease: lease, aiLeaseUntil: Timestamp.fromMillis(Date.now() + 60000), aiMinute: minute, aiCount: count + 1 });
+    return { epoch: chat.aiEpoch || 0 };
+  });
+  if (!acquired) return;
+  let result;
+  try {
+    const history = await chatRef.collection('messages').orderBy('createdAt', 'desc').limit(12).get();
+    result = await generate(history.docs.reverse().filter(d => d.id !== 'support-ack').map(d => {
+      const m = d.data();
+      return { role: m.senderRole === 'member' ? 'user' : 'assistant', text: String(m.text || '').slice(0, 4000) };
+    }));
+    if (typeof result?.text !== 'string' || !result.text.trim()) throw new Error('Empty provider reply');
+  } catch {
+    result = { text: FALLBACK, escalate: true };
   }
-
-  const question = message.trim();
-
-  if (
-    question.length === 0 ||
-    question.length > MAX_MESSAGE_LENGTH
-  ) {
-    throw new RangeError(
-      "Message must contain between 1 and 4,000 characters."
-    );
-  }
-
-  const normalized = question.toLowerCase();
-
-  const topic = TOPICS.find(({ keywords }) =>
-    keywords.some((keyword) =>
-      normalized.includes(keyword)
-    )
-  );
-
-  return {
-    senderId: "asbesoc-ai",
-    senderRole: "system",
-    text: topic
-      ? `ASBESOC Virtual Assistant:\n\n${topic.answer}`
-      : "ASBESOC Virtual Assistant:\n\nI don't have a verified answer to that question yet. An ASBESOC administrator can assist you when available.",
-  };
+  await db.runTransaction(async tx => {
+    const [chatSnap, replySnap] = await Promise.all([tx.get(chatRef), tx.get(replyRef)]);
+    const chat = chatSnap.data();
+    if (!chat || replySnap.exists || chat.aiLease !== lease) return;
+    tx.update(chatRef, { aiLeaseUntil: Timestamp.fromMillis(0) });
+    // Epoch rejects stale generations even after a takeover/release cycle.
+    if (chat.status !== 'waiting' || (chat.aiEpoch || 0) !== acquired.epoch ||
+        chat.aiEscalated === true || !chat.lastMemberMessageAt?.isEqual(message.createdAt)) return;
+    tx.create(replyRef, { senderId: 'asbesoc-ai', senderRole: 'system',
+      text: `${chat.aiIntroduced ? '' : INTRO}${result.text.trim()}`.slice(0, 4000), createdAt: FieldValue.serverTimestamp() });
+    tx.update(chatRef, { aiIntroduced: true, aiEscalated: result.escalate === true,
+      aiError: result.escalate ? 'administrator_required' : null, updatedAt: FieldValue.serverTimestamp() });
+  });
 }
 
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-
-export const memberChatAutoReply = onDocumentCreated(
-  {
-    document: "memberChats/{uid}/messages/{messageId}",
-    region: "europe-west1",
-    retry: false,
-  },
-  async (event) => {
-    const message = event.data?.data();
-
-    // Only respond to member messages.
-    if (!message || message.senderRole !== "member") return;
-
-    const { uid, messageId } = event.params;
-    const db = getFirestore();
-
-    const chatRef = db.doc(`memberChats/${uid}`);
-    const replyRef = chatRef.collection("messages").doc(`ai-${messageId}`);
-
-    const reply = generateChatReply(message.text);
-
-    await db.runTransaction(async (transaction) => {
-      const chatSnapshot = await transaction.get(chatRef);
-      const replySnapshot = await transaction.get(replyRef);
-
-      if (!chatSnapshot.exists || replySnapshot.exists) return;
-
-      const chat = chatSnapshot.data();
-
-      // Stop responding while an admin is handling the chat.
-      if (chat.status !== "waiting") return;
-
-      // Skip older messages if a newer member message exists.
-      const latestMessage = chat.lastMemberMessageAt;
-
-      if (
-        latestMessage &&
-        message.createdAt &&
-        !latestMessage.isEqual(message.createdAt)
-      ) {
-        return;
-      }
-
-      transaction.create(replyRef, {
-        senderId: reply.senderId,
-        senderRole: reply.senderRole,
-        text: reply.text,
-        createdAt: FieldValue.serverTimestamp(),
-      });
-    });
-  }
-);
+async function respondToEvent(event) {
+  if (event.data?.data()?.senderRole !== 'member') return;
+  const db = getFirestore();
+  const config = (await db.doc('systemConfig/supportAI').get()).data();
+  if (config?.enabled !== true) return;
+  const endpoint = new URL(config.workerUrl);
+  if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.workers.dev') || endpoint.pathname !== '/internal/reply')
+    throw new Error('Invalid AI worker configuration');
+  await handleChatMessage(db, event, async messages => {
+    const body = JSON.stringify({ messages, context: String(config.verifiedContext || '').slice(0, 16000) });
+    const timestamp = String(Date.now());
+    const signature = createHmac('sha256', bridgeSecret.value()).update(`${timestamp}.${body}`).digest('hex');
+    const response = await fetch(endpoint, { method: 'POST', body,
+      headers: { 'Content-Type': 'application/json', 'X-ASB-Time': timestamp, 'X-ASB-Signature': signature },
+      signal: AbortSignal.timeout(25000) });
+    if (!response.ok) throw new Error('AI provider unavailable');
+    return response.json();
+  });
+}
+const triggerOptions = { region: 'europe-west1', retry: true, secrets: [bridgeSecret], timeoutSeconds: 60 };
+export const memberChatAutoReply = onDocumentCreated({ ...triggerOptions,
+  document: 'memberChats/{uid}/messages/{messageId}',
+}, respondToEvent);
+export const memberChatReleased = onDocumentUpdated({ ...triggerOptions, document: 'memberChats/{uid}' }, async event => {
+  const before = event.data?.before.data(), after = event.data?.after.data();
+  if (after?.status !== 'waiting' || (before?.status === 'waiting' && before?.aiEpoch === after.aiEpoch)) return;
+  const latest = await getFirestore().collection(`memberChats/${event.params.uid}/messages`)
+    .where('senderRole', '==', 'member').orderBy('createdAt', 'desc').limit(1).get();
+  if (latest.empty) return;
+  await respondToEvent({ data: latest.docs[0], params: { uid: event.params.uid, messageId: latest.docs[0].id } });
+});

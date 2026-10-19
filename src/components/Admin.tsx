@@ -25,6 +25,7 @@ import {
   RequestWorkflow,
 } from "./AdminOperations";
 import AdminCertification from "./AdminCertification";
+import AdminAnalytics from "./AdminAnalytics";
 import AdminMedia from "./AdminMedia";
 import PublicGalleryPublisher from "./PublicGalleryPublisher";
 import ApplicationReview from "./ApplicationReview";
@@ -284,6 +285,7 @@ function Admin() {
         </p>
       )}
       {activeView === "certification" && <AdminCertification />}
+      {activeView === "analytics" && <AdminAnalytics />}
       {activeView === "members" && <MemberDirectory />}
       {activeView === "broadcasts" && <BroadcastCentre />}
       {activeView === "activity" && <ActivityPanel />}

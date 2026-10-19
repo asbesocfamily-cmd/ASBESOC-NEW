@@ -17,14 +17,15 @@ import { setGlobalOptions } from 'firebase-functions/v2';
 import {
   activeMembership,
   annualPeriod,
-  assertVerifiedPayment,
   reminderStage,
   priceFor,
   requirePaymentConfiguration,
   verifySignature,
+  paymentOutcome,
 } from './policy.js';
 
 import { certificatePdf } from './pdf.js';
+import { consumeRateLimit } from './rateLimit.js';
 
 initializeApp();
 
@@ -170,6 +171,7 @@ export const membershipCheckout = onCall(
   },
   async request => {
     const uid = verified(request);
+    await consumeRateLimit(db, uid, 'checkout', 10);
     const config = await paymentConfig();
 
     const currency = request.data?.currency;
@@ -406,13 +408,24 @@ async function settle(reference, owner) {
     `/transaction/verify/${encodeURIComponent(reference)}`
   );
 
+  let outcome;
   try {
-    assertVerifiedPayment(data, snapshot.data());
+    outcome = paymentOutcome(data, snapshot.data());
   } catch {
     throw new HttpsError(
       'failed-precondition',
       'Payment is not confirmed. No membership was granted.'
     );
+  }
+
+  if (outcome !== 'paid') {
+    await db.runTransaction(async tx => {
+      const current = await tx.get(orderRef);
+      if (current.exists && current.data().status !== 'paid') tx.update(orderRef, {
+        status: outcome, providerStatus: data.status, lastCheckedAt: FieldValue.serverTimestamp(),
+      });
+    });
+    return { confirmed: false, status: outcome };
   }
 
   const certificateId = `ASBESOC-${randomUUID()}`;
@@ -560,11 +573,11 @@ export const confirmMembershipPayment = onCall(
     ...callable,
     secrets: [secret],
   },
-  request =>
-    settle(
-      request.data?.reference,
-      verified(request)
-    )
+  async request => {
+    const uid = verified(request);
+    await consumeRateLimit(db, uid, 'confirm');
+    return settle(request.data?.reference, uid);
+  }
 );
 
 // ======================================================
@@ -598,7 +611,8 @@ export const paystackWebhook = onRequest(
     }
 
     try {
-      await settle(req.body.data?.reference);
+      const result = await settle(req.body.data?.reference);
+      if (!result.confirmed) { res.status(503).send('Not confirmed; retry required'); return; }
       res.status(200).send('Received');
     } catch {
       res.status(503).send(
@@ -616,6 +630,7 @@ export const downloadMembershipCertificate = onCall(
   callable,
   async request => {
     const uid = verified(request);
+    await consumeRateLimit(db, uid, 'certificate-download');
     const id = validId(request.data?.id);
 
     const certificate = (
@@ -666,7 +681,7 @@ export const downloadMembershipCertificate = onCall(
 
 export const verifyMembershipCertificate = onCall(
   {
-    enforceAppCheck: false,
+    enforceAppCheck: true,
   },
   async request => {
     const id = validId(request.data?.id);
@@ -892,4 +907,17 @@ export const membershipRenewalReminders =
       }
     }
   );
-export { memberChatAutoReply } from './chatAI.js';
+export { memberChatAutoReply, memberChatReleased } from './chatAI.js';
+export { recordWebsiteVisit, websiteAnalyticsReport, configureWebsiteAnalytics, expireWebsiteAnalytics } from './analytics.js';
+
+export const membershipPaymentReceipt = onCall(callable, async request => {
+  const uid = verified(request);
+  await consumeRateLimit(db, uid, 'receipt');
+  const reference = validId(request.data?.reference);
+  const order = (await db.doc(`paymentOrders/${reference}`).get()).data();
+  if (!order || (order.uid !== uid && uid !== ADMIN_UID)) throw new HttpsError('not-found', 'Receipt not found.');
+  if (order.status !== 'paid' || !order.providerId || !order.confirmedAt) throw new HttpsError('failed-precondition', 'A verified successful payment is required.');
+  return { reference, receiptId: `PAYSTACK-${order.providerId}`, fullName: order.fullName,
+    amountMinor: order.amountMinor, currency: order.currency, confirmedAt: order.confirmedAt.toDate().toISOString(),
+    description: 'ASBESOC annual membership', status: 'paid' };
+});

@@ -14,6 +14,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../firebase/firebaseConfig";
+import { trackWebsiteEvent } from "../firebase/analytics";
 import { useAuth } from "../contexts/useAuth";
 
 const inputClass =
@@ -126,6 +127,7 @@ function SignUp() {
         );
 
       setPassword("");
+      void trackWebsiteEvent('signup');
       setConfirmPassword("");
 
       let profileSaved = true;

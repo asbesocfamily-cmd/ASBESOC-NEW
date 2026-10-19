@@ -3,7 +3,8 @@ import { CHIDIDMMA_INSTRUCTIONS } from "./chididmma.js";
 export async function generateGeminiReply(
   apiKey,
   messages,
-  organizationContext = ""
+  organizationContext = "",
+  model = "gemini-2.5-flash"
 ) {
   if (!apiKey) throw new Error("Gemini API key missing.");
 
@@ -18,7 +19,7 @@ export async function generateGeminiReply(
   if (!history.length) throw new Error("No messages provided.");
 
   const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       method: "POST",
       headers: {
@@ -36,7 +37,9 @@ export async function generateGeminiReply(
         contents: history,
         generationConfig: {
           temperature: 0.65,
-          maxOutputTokens: 700
+          maxOutputTokens: 1000,
+          responseMimeType: "application/json",
+          responseSchema: { type: "OBJECT", properties: { text: { type: "STRING" }, escalate: { type: "BOOLEAN" } }, required: ["text", "escalate"] }
         }
       }),
       signal: AbortSignal.timeout(20000)
@@ -56,5 +59,7 @@ export async function generateGeminiReply(
 
   if (!reply) throw new Error("Gemini returned an empty response.");
 
-  return reply;
+  const result = JSON.parse(reply);
+  if (typeof result.text !== "string" || !result.text.trim() || typeof result.escalate !== "boolean") throw new Error("Invalid support response");
+  return { text: result.text.slice(0, 3600), escalate: result.escalate };
 }

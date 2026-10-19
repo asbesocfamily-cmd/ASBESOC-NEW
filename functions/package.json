@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "test": "node --test test/policy.test.js",
+    "test": "node --test test/policy.test.js test/analytics.test.js",
     "check": "node --check src/index.js",
     "test:rules": "node --test test/run-rules.js",
     "test:server": "node --test test/run-server.js",

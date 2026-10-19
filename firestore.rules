@@ -541,7 +541,9 @@ service cloud.firestore {
         && text(request.resource.data.memberName,1,150) && request.resource.data.status == 'waiting'
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if (admin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastAdminMessageAt','adminReadAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastAdminMessageAt','adminReadAt','aiEpoch','aiEscalated'])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['aiEpoch']) || request.resource.data.aiEpoch == resource.data.get('aiEpoch',0) + 1)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['aiEscalated']) || request.resource.data.aiEscalated == false)
         && request.resource.data.status in ['waiting','active','resolved']
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt']) || request.resource.data.updatedAt == request.time)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastAdminMessageAt']) || request.resource.data.lastAdminMessageAt == request.time)

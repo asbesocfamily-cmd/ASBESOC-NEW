@@ -2117,7 +2117,7 @@ function MemberChat({ user }: { user: User }) {
                         {!mine && (
                           <p className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#087247]">
                             {item.senderRole === "system"
-                              ? "Automatic acknowledgement"
+                              ? item.senderId === "asbesoc-ai" ? "Miss Chididmma · Automated support" : "Automatic acknowledgement"
                               : "ASBESOC Admin"}
                           </p>
                         )}

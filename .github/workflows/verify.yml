@@ -1,0 +1,26 @@
+name: Verify ASBESOC
+on:
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm --prefix functions ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm --prefix functions test
+      - run: node --test cloudflare-ai/worker.test.mjs media-worker/worker.test.mjs scripts/chat-read.test.mjs
+      - run: npx --yes firebase-tools@15.32.1 emulators:exec --project demo-asbesoc-membership --only firestore "npm --prefix functions run test:emulator"

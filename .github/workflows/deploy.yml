@@ -14,19 +14,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
   build:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
         env:
           VITE_MEDIA_API_URL: https://asbesoc-media.asbesocngo.workers.dev
           VITE_MEMBERSHIP_SERVICE_ENABLED: "false"
+          VITE_WEBSITE_ANALYTICS_ENABLED: "false"
+          VITE_FIREBASE_APPCHECK_SITE_KEY: ${{ vars.FIREBASE_APPCHECK_SITE_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

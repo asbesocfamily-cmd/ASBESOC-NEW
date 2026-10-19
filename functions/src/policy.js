@@ -32,6 +32,17 @@ export function assertVerifiedPayment(data, order) {
   }
 }
 
+export function paymentOutcome(data, order) {
+  // A provider response must belong to this exact stored order even when unpaid.
+  if (data?.domain !== 'live' || data.reference !== order.reference || data.amount !== order.amountMinor ||
+      data.currency !== order.currency || data.customer?.email?.toLowerCase() !== order.email.toLowerCase() ||
+      data.metadata?.uid !== order.uid) throw new Error('Payment does not match this order.');
+  if (data.status === 'success') { assertVerifiedPayment(data, order); return 'paid'; }
+  if (['failed', 'abandoned', 'reversed'].includes(data.status)) return 'failed';
+  if (['pending', 'ongoing', 'processing', 'queued'].includes(data.status)) return 'pending';
+  throw new Error('Unknown provider payment state.');
+}
+
 export function annualPeriod(now, existingExpiry) {
   const start = new Date(Math.max(now.getTime(), existingExpiry?.getTime() || 0));
   const end = new Date(start);

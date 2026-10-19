@@ -26,6 +26,7 @@ type Chat = {
   status: ChatStatus;
   unread: boolean;
   lastIncoming: number;
+  aiEscalated: boolean;
 };
 type Message = {
   id: string;
@@ -51,6 +52,7 @@ export default function AdminChats({ adminUser }: { adminUser: User }) {
             memberName: String(item.data().memberName || "ASBESOC member"),
             memberEmail: String(item.data().memberEmail || ""),
             status: chatStatus(item.data().status),
+            aiEscalated: item.data().aiEscalated === true,
             lastIncoming: item.data().lastMemberMessageAt?.toMillis() || 0,
             unread:
               (item.data().lastMemberMessageAt?.toMillis() || 0) >
@@ -120,6 +122,7 @@ export default function AdminChats({ adminUser }: { adminUser: User }) {
               <b>{chat.memberName}</b>
               <small>
                 {chat.status}
+                {chat.aiEscalated ? " · Needs administrator" : ""}
                 {chat.unread ? " · Unread" : ""}
               </small>
             </span>
@@ -276,8 +279,8 @@ function ChatThread({ chat, adminUser }: { chat: Chat; adminUser: User }) {
             value={chat.status}
             onChange={(event) => void status(event.target.value as ChatStatus)}
           >
-            <option value="waiting">Waiting</option>
-            <option value="active">Active</option>
+            <option value="waiting">Release to automated support</option>
+            <option value="active">Administrator takeover</option>
             <option value="resolved">Resolved</option>
           </select>
         </label>
@@ -308,7 +311,7 @@ function ChatThread({ chat, adminUser }: { chat: Chat; adminUser: User }) {
               {message.senderRole === "admin"
                 ? "You"
                 : message.senderRole === "system"
-                  ? "Automatic acknowledgement"
+                  ? message.senderId === "asbesoc-ai" ? "Miss Chididmma · Automated support" : "Automatic acknowledgement"
                   : chat.memberName}{" "}
               · {chatMessageTime(message)}
             </small>
