@@ -1,0 +1,9 @@
+﻿{
+  "name": "asbesoc-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test worker.test.mjs",
+    "check": "node --check src/index.js && node --check src/gemini.js && node --check src/chididmma.js"
+  }
+}

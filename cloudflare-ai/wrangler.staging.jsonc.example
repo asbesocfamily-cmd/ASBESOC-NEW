@@ -1,0 +1,13 @@
+{
+  // Copy this to wrangler.staging.jsonc and fill in an owner-created staging
+  // Worker name and staging Firebase project ID before using Wrangler.
+  // This file intentionally omits `name`, so Wrangler cannot deploy it as-is.
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-15",
+  "workers_dev": true,
+  "vars": {
+    "FIREBASE_PROJECT_ID": "REPLACE_WITH_STAGING_FIREBASE_PROJECT_ID",
+    "AI_ENABLED": "false",
+    "GEMINI_MODEL": "gemini-2.5-flash"
+  }
+}

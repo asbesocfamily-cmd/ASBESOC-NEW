@@ -22,7 +22,11 @@ test('signed bridge sends bounded context and handles structured Gemini reply', 
   globalThis.fetch = async (url, options) => {
     assert.match(url,/generativelanguage.googleapis.com/);
     assert.equal(options.headers['x-goog-api-key'],'fixture');
-    assert.equal(JSON.parse(options.body).contents[0].parts[0].text,'How do I apply?');
+    const payload=JSON.parse(options.body);
+    assert.equal(payload.contents[0].parts[0].text,'How do I apply?');
+    assert.match(payload.systemInstruction.parts[0].text,/answer truthfully/);
+    assert.match(payload.systemInstruction.parts[0].text,/VERIFIED ASBESOC INFORMATION:[\s\S]*Verified facts/);
+    assert.equal(options.body.includes('fixture'),false);
     return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({text:'Complete your membership application.',escalate:false})}]}}]}));
   };
   try {
@@ -34,4 +38,13 @@ test('provider errors return a safe retriable response', async () => {
   const old=globalThis.fetch; globalThis.fetch=async()=>new Response('unavailable',{status:503});
   try { assert.equal((await worker.fetch(request(JSON.stringify({messages:[{role:'user',text:'Hello'}]})),env)).status,503); }
   finally { globalThis.fetch=old; }
+});
+test('invalid provider output is rejected so the backend can use its safe fallback', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({candidates:[{content:{parts:[{text:'not valid JSON'}]}}]}));
+  try {
+    const response = await worker.fetch(request(JSON.stringify({messages:[{role:'user',text:'What is my application status?'}]})),env);
+    assert.equal(response.status,503);
+    assert.deepEqual(await response.json(),{error:'Support unavailable'});
+  } finally { globalThis.fetch = old; }
 });

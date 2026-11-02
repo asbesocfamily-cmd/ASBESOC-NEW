@@ -722,4 +722,4 @@ Through this approach, ASBESOC seeks to create meaningful and lasting change in 
   );
 }
 
-export default About;
+export default About;   

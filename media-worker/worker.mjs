@@ -124,6 +124,8 @@ async function route(request, env) {
       503,
       "Media setup is not complete. Connect the Cloudinary account first.",
     );
+  if (!env.FIREBASE_API_KEY)
+    fail(503, "Media authentication is not configured.");
   if (!/^[a-zA-Z0-9_-]+$/.test(env.CLOUDINARY_CLOUD_NAME))
     fail(503, "Invalid Cloudinary configuration.");
   const user = await authenticate(request, env);

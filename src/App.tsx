@@ -8,11 +8,11 @@ import Programs from "./components/Programs";
 import Projects from "./components/Projects";
 import Membership from "./components/Membership";
 import Contact from "./components/Contact";
-import Gallery from "./components/Gallery";
 import Footer from "./components/Footer";
 import RequireAuth from "./components/RequireAuth";
 import WebsiteAnalytics from "./components/WebsiteAnalytics";
 const Privacy = lazy(() => import("./components/Privacy"));
+const Gallery = lazy(() => import("./components/Gallery"));
 
 const VerifyCertificate = lazy(() => import("./components/VerifyCertificate"));
 const Admin = lazy(() => import("./components/Admin"));

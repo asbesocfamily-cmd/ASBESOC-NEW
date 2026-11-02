@@ -22,6 +22,7 @@ import {
   requirePaymentConfiguration,
   verifySignature,
   paymentOutcome,
+  paymentStatusAfterCheck,
 } from './policy.js';
 
 import { certificatePdf } from './pdf.js';
@@ -419,13 +420,20 @@ async function settle(reference, owner) {
   }
 
   if (outcome !== 'paid') {
-    await db.runTransaction(async tx => {
+    const status = await db.runTransaction(async tx => {
       const current = await tx.get(orderRef);
-      if (current.exists && current.data().status !== 'paid') tx.update(orderRef, {
-        status: outcome, providerStatus: data.status, lastCheckedAt: FieldValue.serverTimestamp(),
-      });
+      if (!current.exists) throw new HttpsError('not-found', 'Payment order not found.');
+      const nextStatus = paymentStatusAfterCheck(current.data().status, outcome);
+      if (nextStatus !== current.data().status || nextStatus === outcome) {
+        tx.update(orderRef, {
+          status: nextStatus,
+          providerStatus: data.status,
+          lastCheckedAt: FieldValue.serverTimestamp(),
+        });
+      }
+      return nextStatus;
     });
-    return { confirmed: false, status: outcome };
+    return { confirmed: status === 'paid', status };
   }
 
   const certificateId = `ASBESOC-${randomUUID()}`;

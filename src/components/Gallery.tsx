@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import heroImage from "../assets/hero.jpg";
+import heroImage from "../assets/gallery/fullscreen/hero.webp";
 import membershipImage from "../assets/membership.jpg";
 import executiveImage1 from "../assets/executives/image1.jpg";
 import executiveImage2 from "../assets/executives/image2.jpg";

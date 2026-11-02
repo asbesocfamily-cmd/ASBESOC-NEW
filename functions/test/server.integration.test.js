@@ -54,6 +54,8 @@ test('certificate PDF requires owner or administrator', async () => {
   await assert.rejects(downloadMembershipCertificate.run({auth:auth('another-fixture-owner'),data:{id}}),{code:'not-found'});
   const result=await downloadMembershipCertificate.run({auth:auth(uid),data:{id}});
   assert.equal(Buffer.from(result.base64,'base64').subarray(0,4).toString(),'%PDF');
+  const adminResult=await downloadMembershipCertificate.run({auth:auth(admin),data:{id}});
+  assert.equal(Buffer.from(adminResult.base64,'base64').subarray(0,4).toString(),'%PDF');
 });
 test('public verification fails closed when canonical membership expires', async () => {
   await db.doc(`memberships/${uid}`).update({expiresAt:time(-1)});
@@ -84,14 +86,18 @@ async function chatFixture(name) {
   return {ref,event:{params:{uid:name,messageId:'m1'},data:{data:()=>({senderRole:'member',text:'How do I apply?',createdAt})}}};
 }
 test('AI replies once despite redelivery, introduces once, and preserves context', async()=>{
-  const {ref,event}=await chatFixture('ai-idempotency'); let calls=0;
-  const generate=async history=>{calls++;assert.equal(history.at(-1).text,'How do I apply?');return{text:'Complete the application.',escalate:false};};
+  const {ref,event}=await chatFixture('ai-idempotency');
+  const other=await chatFixture('ai-private-other-member');
+  await other.ref.collection('messages').doc('private').set({senderRole:'member',text:'Private member information',createdAt:Timestamp.now()});
+  let calls=0;
+  const generate=async history=>{calls++;assert.equal(history.at(-1).text,'How do I apply?');assert.equal(history.some(message=>message.text.includes('Private member information')),false);return{text:'Complete the application.',escalate:false};};
   await handleChatMessage(db,event,generate);await handleChatMessage(db,event,generate);
   assert.equal(calls,1);assert.match((await ref.collection('messages').doc('ai-m1').get()).data().text,/automated support assistant/);
   const createdAt=Timestamp.fromMillis(Date.now()+1);await ref.update({lastMemberMessageAt:createdAt});
   await ref.collection('messages').doc('m2').set({senderRole:'member',text:'Thank you',createdAt});
   await handleChatMessage(db,{params:{uid:'ai-idempotency',messageId:'m2'},data:{data:()=>({senderRole:'member',text:'Thank you',createdAt})}},async()=>({text:'You are welcome.',escalate:false}));
-  assert.equal((await ref.collection('messages').doc('ai-m2').get()).data().text,'You are welcome.');
+  const reply=(await ref.collection('messages').doc('ai-m2').get()).data();
+  assert.equal(reply.text,'You are welcome.');assert.doesNotMatch(reply.text,/Miss Chididmma/);
 });
 test('AI rejects replies generated across takeover and release, and resumes safely',async()=>{
   const {ref,event}=await chatFixture('ai-race');
@@ -119,12 +125,17 @@ test('analytics admin access, event idempotency, minimization, and retention',as
   await configureWebsiteAnalytics.run({auth:auth(admin),data:{enabled:true,retentionDays:90}});
   const event={eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID(),kind:'page',page:'/gallery?email=private',referrer:'https://source.example/private',device:'Mobile',browser:'Chrome',os:'Android'};
   await recordWebsiteVisit.run({data:event});await recordWebsiteVisit.run({data:event});
-  const rows=await db.collection('analyticsEvents').get();assert.equal(rows.size,1);
-  const stored=rows.docs[0].data();assert.equal(stored.page,'/other');assert.equal(stored.referrer,'source.example');
+  const applicationEvent={eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID(),kind:'application',page:'/membership',device:'Mobile',browser:'Chrome',os:'Android'};
+  await recordWebsiteVisit.run({auth:auth(uid),data:applicationEvent});
+  await recordWebsiteVisit.run({auth:auth(uid),data:{...applicationEvent,eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID()}});
+  await assert.rejects(recordWebsiteVisit.run({data:{...applicationEvent,eventId:randomUUID()}}),{code:'unauthenticated'});
+  await assert.rejects(recordWebsiteVisit.run({auth:auth('other-applicant'),data:{...applicationEvent,eventId:randomUUID()}}),{code:'failed-precondition'});
+  const rows=await db.collection('analyticsEvents').get();assert.equal(rows.size,2);
+  const stored=rows.docs.find(row=>row.data().kind==='page').data();assert.equal(stored.page,'/other');assert.equal(stored.referrer,'source.example');
   assert.equal('visitorId' in stored,false);assert.equal('email' in stored,false);
   const report=await websiteAnalyticsReport.run({auth:auth(admin),data:{}});
-  assert.equal(report.visits,1);assert.equal(report.uniqueVisitors,1);assert.equal(report.activeSessions,1);
-  await rows.docs[0].ref.update({createdAt:time(-20)});
+  assert.equal(report.visits,1);assert.equal(report.uniqueVisitors,1);assert.equal(report.activeSessions,1);assert.equal(report.applications,1);
+  await Promise.all(rows.docs.map(row=>row.ref.update({createdAt:time(-20)})));
   await configureWebsiteAnalytics.run({auth:auth(admin),data:{enabled:false,retentionDays:7}});
   await expireWebsiteAnalytics.run({});assert.equal((await db.collection('analyticsEvents').get()).size,0);
   assert.deepEqual(await recordWebsiteVisit.run({data:event}),{accepted:false});

@@ -1,0 +1,1904 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261022081541
+Username: PC\HomePC
+RunAs User: PC\HomePC
+Configuration Name: 
+Machine: PC (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\HomePC\AppData\Local\Programs\Microsoft VS Code\2d0b7506a3\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 8092
+PSVersion: 5.1.22621.963
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.22621.963
+BuildVersion: 10.0.22621.963
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+ASBESOC DIAGNOSTIC
+Root: C:\Users\HomePC\Desktop\ASBESOC-NEW
+Started: 2026-10-22T08:15:41.4398888+01:00
+This script will not deploy or change provider settings.
+
+========== REPOSITORY STATUS ==========
+
+
+ ctrl-L ................................... Complete filename, list all.
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+PS>TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+]633;D;1]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+
+$report = Get-ChildItem -Path . -Filter "asbesoc-diagnostic-*.txt" -File |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if ($report) {
+    Write-Host "`n========== REPORT FOUND ==========" -ForegroundColor Green
+    Write-Host "File: $($report.FullName)"
+    Write-Host "Last modified: $($report.LastWriteTime)"
+    Write-Host "`n========== REPORT CONTENTS ==========" -ForegroundColor Cyan
+
+    Get-Content -LiteralPath $report.FullName
+
+    $copy = Join-Path ([Environment]::GetFolderPath("Desktop")) "ASBESOC-DIAGNOSTIC-REPORT.txt"
+    Copy-Item -LiteralPath $report.FullName -Destination $copy -Force
+
+    Write-Host "`n========== DONE ==========" -ForegroundColor Green
+    Write-Host "Clean report copy saved to: $copy"
+} else {
+    Write-Host "No diagnostic report found in the project folder." -ForegroundColor Red
+    Write-Host "Expected filename: asbesoc-diagnostic-*.txt"
+}
+
+========== REPORT FOUND ==========
+File: C:\Users\HomePC\Desktop\ASBESOC-NEW\asbesoc-diagnostic-20261022-081541.txt
+Last modified: 10/22/2026 08:15:42
+
+========== REPORT CONTENTS ==========
+**********************
+Windows PowerShell transcript start
+Start time: 20261022081541
+Username: PC\HomePC
+RunAs User: PC\HomePC
+Configuration Name:
+Machine: PC (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\HomePC\AppData\Local\Programs\Microsoft VS Code\2d0b7506a3\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 8092
+PSVersion: 5.1.22621.963
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.22621.963
+BuildVersion: 10.0.22621.963
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+ASBESOC DIAGNOSTIC
+Root: C:\Users\HomePC\Desktop\ASBESOC-NEW
+Started: 2026-10-22T08:15:41.4398888+01:00
+This script will not deploy or change provider settings.
+
+========== REPOSITORY STATUS ==========
+
+
+ ctrl-L ................................... Complete filename, list all.
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+PS>TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+]633;D;1]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+
+$report = Get-ChildItem -Path . -Filter "asbesoc-diagnostic-*.txt" -File |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if ($report) {
+    Write-Host "`n========== REPORT FOUND ==========" -ForegroundColor Green
+    Write-Host "File: $($report.FullName)"
+    Write-Host "Last modified: $($report.LastWriteTime)"
+    Write-Host "`n========== REPORT CONTENTS ==========" -ForegroundColor Cyan
+
+    Get-Content -LiteralPath $report.FullName
+
+    $copy = Join-Path ([Environment]::GetFolderPath("Desktop")) "ASBESOC-DIAGNOSTIC-REPORT.txt"
+    Copy-Item -LiteralPath $report.FullName -Destination $copy -Force
+
+    Write-Host "`n========== DONE ==========" -ForegroundColor Green
+    Write-Host "Clean report copy saved to: $copy"
+} else {
+    Write-Host "No diagnostic report found in the project folder." -ForegroundColor Red
+    Write-Host "Expected filename: asbesoc-diagnostic-*.txt"
+}
+
+========== REPORT FOUND ==========
+File: C:\Users\HomePC\Desktop\ASBESOC-NEW\asbesoc-diagnostic-20261022-081541.txt
+Last modified: 10/22/2026 08:15:42
+
+========== REPORT CONTENTS ==========
+
+========== DONE ==========
+Clean report copy saved to: C:\Users\HomePC\Desktop\ASBESOC-DIAGNOSTIC-REPORT.txt
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>
+Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+
+$report = "$env:USERPROFILE\Desktop\ASBESOC-TEST-RESULTS.txt"
+"ASBESOC PROJECT DIAGNOSTIC - $(Get-Date)" | Set-Content $report
+
+function Add-Result {
+    param([string]$Title, [scriptblock]$Command)
+
+    "`r`n========== $Title ==========" | Add-Content $report
+
+    try {
+        $output = & $Command 2>&1 | Out-String -Width 200
+        $output | Add-Content $report
+    }
+    catch {
+        "ERROR: $_" | Add-Content $report
+    }
+}
+
+Add-Result "NODE AND NPM" {
+    node --version
+    npm --version
+}
+
+Add-Result "GIT STATUS" {
+    git status --short
+}
+
+Add-Result "AVAILABLE ROOT SCRIPTS" {
+    npm run
+}
+
+Add-Result "ANALYTICS TESTS" {
+    npm run test:analytics
+}
+
+Add-Result "ROOT LINT" {
+    npm run lint
+}
+
+Add-Result "ROOT TYPECHECK" {
+    npm run typecheck
+}
+
+Add-Result "ROOT BUILD" {
+    npm run build
+}
+
+Add-Result "FUNCTIONS SCRIPTS" {
+    Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW\functions"
+    npm run
+    Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+}
+
+Add-Result "WORKER TEST SCRIPTS" {
+    Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW\cloudflare-ai"
+    npm run
+    Set-Location "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+}
+
+Add-Result "IMPORTANT FILES" {
+    @(
+        "src/components/WebsiteAnalytics.tsx",
+        "src/components/AdminAnalytics.tsx",
+        "src/components/MemberDashboard.tsx",
+        "src/firebase/analytics.ts",
+        "src/firebase/submissions.ts",
+        "functions/src/chatAI.js",
+        "functions/src/index.js",
+        "cloudflare-ai/worker.mjs",
+        "src/App.tsx",
+        "package.json"
+    ) | ForEach-Object {
+        "{0} : {1}" -f $_, (Test-Path $_)
+    }
+}
+
+Write-Host "`nDiagnostic finished. Report: $report" -ForegroundColor Green
+Write-Host "Upload ASBESOC-TEST-RESULTS.txt from your Desktop."
+
+node.exe : npm error Missing script: "typecheck"
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error Missing script: "typecheck":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: 
+C:\Users\HomePC\AppData\Local\npm-cache\_logs\2026-10-22T07_42_30_109Z-debug-0.log
+node.exe : [33m[plugin builtin:vite-reporter] 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33m[plugin builtin:vite-reporter] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: 
+https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+
+Diagnostic finished. Report: C:\Users\HomePC\Desktop\ASBESOC-TEST-RESULTS.txt
+Upload ASBESOC-TEST-RESULTS.txt from your Desktop.
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>  Get-Content "$env:USERPROFILE\Desktop\ASBESOC-TEST-RESULTS.txt" -Raw
+ASBESOC PROJECT DIAGNOSTIC - 10/22/2026 08:42:01
+
+========== NODE AND NPM ==========
+v24.19.0
+11.17.0
+
+
+========== GIT STATUS ==========
+ M .env.example
+ M cloudflare-ai/worker.test.mjs
+ M functions/package.json
+ M functions/src/analytics.js
+ M functions/src/analyticsPolicy.js
+ M functions/src/chatAI.js
+ M functions/src/index.js
+ M functions/src/policy.js
+ M functions/test/analytics.test.js
+ M functions/test/firestore.rules.test.js
+ M functions/test/policy.test.js
+ M functions/test/run-rules.js
+ M functions/test/server.integration.test.js
+ M media-worker/README.md
+ M media-worker/worker.mjs
+ M media-worker/worker.test.mjs
+ M media-worker/wrangler.jsonc
+ M package.json
+ M src/App.tsx
+ M src/components/AdminAnalytics.tsx
+ M src/components/Gallery.tsx
+ M src/components/MemberDashboard.tsx
+ M src/components/Privacy.tsx
+ M src/components/SignUp.tsx
+ M src/components/WebsiteAnalytics.tsx
+ M src/firebase/analytics.ts
+ M src/firebase/firebaseConfig.ts
+ M src/firebase/media.ts
+ M src/firebase/submissions.ts
+?? "= @("
+?? ANALYTICS-SETUP.md
+?? ASBESOC-dashboard-review.zip
+?? CHAT-AI-SETUP.md
+?? PRODUCTION-READINESS-CHECKLIST.md
+?? PROJECT_TRACKER.md
+?? STAGING-SETUP.md
+?? WORK_CHANGELOG.md
+?? WORK_CHECKPOINT.md
+?? asbesoc-diagnostic-20261022-081541.txt
+?? "bject LastWriteTime -Descending \357\201\274"
+?? cloudflare-ai/wrangler.staging.jsonc.example
+?? "et -- ASBESOC-dashboard-review.zip"
+?? firebase.staging.json.example
+?? functions/test/storage.rules.test.js
+?? "rc -Recurse -File -Include \357\200\252.tsx,\357\200\252.ts \357\201\274"
+?? scripts/verify-dashboard-admin.ps1
+?? src/components/MemberDashboard.tsx.backup
+?? src/components/MemberDashboard.tsx.before-final-text-check.bak
+?? src/components/MemberDashboard.tsx.before-symbol-cleanup.bak
+?? src/components/MemberPaymentHistory.tsx.backup
+?? src/firebase/analyticsConsent.ts
+?? src/firebase/analyticsEvents.ts
+?? src/firebase/analyticsIdentifiers.ts
+?? src/firebase/firebaseStorage.ts
+?? "t \357\200\242`n========== A. CURRENCY AND PLACEHOLDER STRINGS ==========\357\200\242"
+?? tests/
+?? "ults = @()"
+
+
+========== AVAILABLE ROOT SCRIPTS ==========
+Scripts available in asbesoc-new@0.0.0 via `npm run`:
+  dev
+    vite
+  build
+    tsc -b && vite build
+  lint
+    eslint .
+  preview
+    vite preview
+  test:analytics
+    node --test tests/analytics-client.test.mjs
+
+
+========== ANALYTICS TESTS ==========
+
+> asbesoc-new@0.0.0 test:analytics
+> node --test tests/analytics-client.test.mjs
+
+G£ö disabled analytics does not initialize or send events (743.4452ms)
+G£ö analytics client stays unloaded until accepted consent and an event (578.1751ms)
+G£ö denial and withdrawal clear identifiers and stop later collection (652.1221ms)
+G£ö a previously denied visitor does not load analytics (363.6249ms)
+G£ö Do Not Track prevents deferred analytics loading (371.1108ms)
+G£ö Global Privacy Control prevents deferred analytics loading (290.887ms)
+G£ö admin routes do not initialize or send analytics (462.3923ms)
+G£ö malformed stored visitor and session identifiers are replaced so collection can continue (182.2451ms)
+G£ö membership conversion fires only after the application save succeeds (957.6784ms)
+G£ö failed membership application save emits no conversion event (295.1809ms)
+Gä¦ tests 10
+Gä¦ suites 0
+Gä¦ pass 10
+Gä¦ fail 0
+Gä¦ cancelled 0
+Gä¦ skipped 0
+Gä¦ todo 0
+Gä¦ duration_ms 5648.8907
+
+
+========== ROOT LINT ==========
+
+> asbesoc-new@0.0.0 lint
+> eslint .
+
+
+
+========== ROOT TYPECHECK ==========
+node.exe : npm error Missing script: "typecheck"
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error Missing script: "typecheck":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\HomePC\AppData\Local\npm-cache\_logs\2026-10-22T07_42_30_109Z-debug-0.log
+
+
+========== ROOT BUILD ==========
+
+> asbesoc-new@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+G£ô 126 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                1.47 kB Göé gzip:   0.68 kB
+dist/assets/image2-C3HQ3t7V.webp              22.01 kB
+dist/assets/image2-Dw7VntTV.jpg               25.75 kB
+dist/assets/image1-BIl2GqKU.webp              41.62 kB
+dist/assets/vpad-community-B26Dn43C.webp      51.93 kB
+dist/assets/vpad-participants-DFqgrlDR.webp   54.92 kB
+dist/assets/vpad-main-DqJWFdpW.webp           58.61 kB
+dist/assets/book-CfzVQUuA.jpeg                64.13 kB
+dist/assets/image1-Cjtz3WUP.jpg               71.73 kB
+dist/assets/programs-hero-CuPq_8Kb.webp       83.38 kB
+dist/assets/programs-intro-BC7vyJNI.webp      94.08 kB
+dist/assets/membership-xV1H75bJ.webp         102.03 kB
+dist/assets/image3-BGJgeJRe.webp             113.33 kB
+dist/assets/membership-CDdp_yOs.jpg          166.78 kB
+dist/assets/housing-programme-DcQ_sJ5A.webp  252.93 kB
+dist/assets/logo-Vbhmqv4L.PNG                421.19 kB
+dist/assets/hero-DTi7-RKc.webp               429.77 kB
+dist/assets/hero-DlGfjQvY.webp               687.22 kB
+dist/assets/MemberDashboard-DweG8oyL.css       9.14 kB Göé gzip:   2.36 kB
+dist/assets/Admin-DKdnFoP-.css                31.76 kB Göé gzip:   6.33 kB
+dist/assets/index-vqq7C7do.css               104.91 kB Göé gzip:  16.00 kB
+dist/assets/firebaseStorage-DBFNMZD-.js        0.13 kB Göé gzip:   0.13 kB
+dist/assets/analytics-BUwByHrE.js              0.36 kB Göé gzip:   0.27 kB
+dist/assets/certification-BAUlniez.js          0.68 kB Göé gzip:   0.47 kB
+dist/assets/VerifyCertificate-DIj5s812.js      0.76 kB Göé gzip:   0.48 kB
+dist/assets/Privacy-DYGqSsLF.js                2.85 kB Göé gzip:   1.33 kB
+dist/assets/ForgotPassword-CP8E49G_.js         4.35 kB Göé gzip:   1.76 kB
+dist/assets/react-SIfiwpqq.js                  8.18 kB Göé gzip:   3.16 kB
+dist/assets/index.esm-B6PNStgb.js              8.22 kB Göé gzip:   3.29 kB
+dist/assets/memberContent-Cvg3AVnw.js          9.36 kB Göé gzip:   3.55 kB
+dist/assets/Gallery-C0iSWl4b.js               10.70 kB Göé gzip:   3.20 kB
+dist/assets/VerifyEmail-CTWpg6cm.js           16.97 kB Göé gzip:   3.94 kB
+dist/assets/Login-DdRVTsIM.js                 17.22 kB Göé gzip:   4.27 kB
+dist/assets/SignUp-ohH9wQ-v.js                21.45 kB Göé gzip:   5.16 kB
+dist/assets/index.esm-DrX1nrtH.js             28.14 kB Göé gzip:   9.35 kB
+dist/assets/index.esm-YAgEaPqS.js             34.73 kB Göé gzip:  11.14 kB
+dist/assets/MemberDashboard-ClDbmYdS.js       57.51 kB Göé gzip:  14.89 kB
+dist/assets/Admin-D0c77CPP.js                 88.31 kB Göé gzip:  23.38 kB
+dist/assets/index-C3r7dKxr.js                425.52 kB Göé gzip: 124.16 kB
+dist/assets/firebaseConfig-BJYKtORs.js       538.30 kB Göé gzip: 158.04 kB
+
+[32mG£ô built in 948ms[39m
+node.exe : [33m[plugin builtin:vite-reporter] 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33m[plugin builtin:vite-reporter] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+
+
+========== FUNCTIONS SCRIPTS ==========
+Lifecycle scripts included in asbesoc-membership-service:
+  test
+    node --test test/policy.test.js test/analytics.test.js
+available via `npm run`:
+  check
+    node --check src/index.js
+  test:rules
+    node --test test/run-rules.js
+  test:storage-rules
+    node --test test/storage.rules.test.js
+  test:server
+    node --test test/run-server.js
+  test:emulator
+    node test/run-all.js
+
+
+========== WORKER TEST SCRIPTS ==========
+Scripts available in asbesoc-new@0.0.0 via `npm run`:
+  dev
+    vite
+  build
+    tsc -b && vite build
+  lint
+    eslint .
+  preview
+    vite preview
+  test:analytics
+    node --test tests/analytics-client.test.mjs
+
+
+========== IMPORTANT FILES ==========
+src/components/WebsiteAnalytics.tsx : True
+src/components/AdminAnalytics.tsx : True
+src/components/MemberDashboard.tsx : True
+src/firebase/analytics.ts : True
+src/firebase/submissions.ts : True
+functions/src/chatAI.js : True
+functions/src/index.js : True
+cloudflare-ai/worker.mjs : False
+src/App.tsx : True
+package.json : True
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>
+$root = "$env:USERPROFILE\Desktop\ASBESOC-NEW"
+$report = "$env:USERPROFILE\Desktop\ASBESOC-FINAL-TESTS.txt"
+
+Set-Location $root
+"ASBESOC TEST RESULTS - $(Get-Date)" | Set-Content $report
+
+function Test-Step {
+    param([string]$Name, [scriptblock]$Run)
+
+    "`r`n========== $Name ==========" | Tee-Object -FilePath $report -Append
+    try {
+        & $Run 2>&1 | ForEach-Object {
+            "$_" | Tee-Object -FilePath $report -Append
+        }
+        "COMMAND EXIT CODE: $LASTEXITCODE" |
+            Tee-Object -FilePath $report -Append
+    } catch {
+        "ERROR: $_" | Tee-Object -FilePath $report -Append
+    }
+}
+
+Test-Step "ANALYTICS TESTS" {
+    npm run test:analytics
+}
+
+Test-Step "ROOT LINT" {
+    npm run lint
+}
+
+Test-Step "ROOT BUILD AND TYPESCRIPT CHECK" {
+    npm run build
+}
+
+Test-Step "FUNCTIONS PACKAGE SCRIPTS" {
+    Set-Location "$root\functions"
+    npm run
+    Set-Location $root
+}
+
+Test-Step "FUNCTIONS SERVER TEST" {
+    Set-Location "$root\functions"
+    node --test test/run-server.js
+    Set-Location $root
+}
+
+Test-Step "FUNCTIONS FULL TEST RUNNER" {
+    Set-Location "$root\functions"
+    node test/run-all.js
+    Set-Location $root
+}
+
+Test-Step "AI WORKER FILE DISCOVERY" {
+    Get-ChildItem "$root\cloudflare-ai" -Force |
+        Select-Object Name, Mode, Length
+}
+
+Test-Step "GIT CHANGE SUMMARY" {
+    git status --short
+}
+
+Write-Host "`nReport saved to $report" -ForegroundColor Green
+
+
+========== ANALYTICS TESTS ==========
+
+> asbesoc-new@0.0.0 test:analytics
+> node --test tests/analytics-client.test.mjs
+
+Γ£ö disabled analytics does not initialize or send events (719.0654ms)
+Γ£ö analytics client stays unloaded until accepted consent and an event (478.4838ms)
+Γ£ö denial and withdrawal clear identifiers and stop later collection (506.8074ms)
+Γ£ö a previously denied visitor does not load analytics (561.9422ms)
+Γ£ö Do Not Track prevents deferred analytics loading (551.8725ms)
+Γ£ö Global Privacy Control prevents deferred analytics loading (469.2351ms)
+Γ£ö admin routes do not initialize or send analytics (294.4826ms)
+Γ£ö malformed stored visitor and session identifiers are replaced so collection can continue (154.0723ms)
+Γ£ö membership conversion fires only after the application save succeeds (666.2333ms)
+Γ£ö failed membership application save emits no conversion event (357.6792ms)
+Γä╣ tests 10
+Γä╣ suites 0
+Γä╣ pass 10
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 5343.686
+COMMAND EXIT CODE: 0
+
+========== ROOT LINT ==========
+
+> asbesoc-new@0.0.0 lint
+> eslint .
+
+COMMAND EXIT CODE: 0
+
+========== ROOT BUILD AND TYPESCRIPT CHECK ==========
+
+> asbesoc-new@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+Γ£ô 126 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                1.47 kB Γöé gzip:   0.68 kB
+dist/assets/image2-C3HQ3t7V.webp              22.01 kB
+dist/assets/image2-Dw7VntTV.jpg               25.75 kB
+dist/assets/image1-BIl2GqKU.webp              41.62 kB
+dist/assets/vpad-community-B26Dn43C.webp      51.93 kB
+dist/assets/vpad-participants-DFqgrlDR.webp   54.92 kB
+dist/assets/vpad-main-DqJWFdpW.webp           58.61 kB
+dist/assets/book-CfzVQUuA.jpeg                64.13 kB
+dist/assets/image1-Cjtz3WUP.jpg               71.73 kB
+dist/assets/programs-hero-CuPq_8Kb.webp       83.38 kB
+dist/assets/programs-intro-BC7vyJNI.webp      94.08 kB
+dist/assets/membership-xV1H75bJ.webp         102.03 kB
+dist/assets/image3-BGJgeJRe.webp             113.33 kB
+dist/assets/membership-CDdp_yOs.jpg          166.78 kB
+dist/assets/housing-programme-DcQ_sJ5A.webp  252.93 kB
+dist/assets/logo-Vbhmqv4L.PNG                421.19 kB
+dist/assets/hero-DTi7-RKc.webp               429.77 kB
+dist/assets/hero-DlGfjQvY.webp               687.22 kB
+dist/assets/MemberDashboard-DweG8oyL.css       9.14 kB Γöé gzip:   2.36 kB
+dist/assets/Admin-DKdnFoP-.css                31.76 kB Γöé gzip:   6.33 kB
+dist/assets/index-vqq7C7do.css               104.91 kB Γöé gzip:  16.00 kB
+dist/assets/firebaseStorage-DBFNMZD-.js        0.13 kB Γöé gzip:   0.13 kB
+dist/assets/analytics-BUwByHrE.js              0.36 kB Γöé gzip:   0.27 kB
+dist/assets/certification-BAUlniez.js          0.68 kB Γöé gzip:   0.47 kB
+dist/assets/VerifyCertificate-DIj5s812.js      0.76 kB Γöé gzip:   0.48 kB
+dist/assets/Privacy-DYGqSsLF.js                2.85 kB Γöé gzip:   1.33 kB
+dist/assets/ForgotPassword-CP8E49G_.js         4.35 kB Γöé gzip:   1.76 kB
+dist/assets/react-SIfiwpqq.js                  8.18 kB Γöé gzip:   3.16 kB
+dist/assets/index.esm-B6PNStgb.js              8.22 kB Γöé gzip:   3.29 kB
+dist/assets/memberContent-Cvg3AVnw.js          9.36 kB Γöé gzip:   3.55 kB
+dist/assets/Gallery-C0iSWl4b.js               10.70 kB Γöé gzip:   3.20 kB
+dist/assets/VerifyEmail-CTWpg6cm.js           16.97 kB Γöé gzip:   3.94 kB
+dist/assets/Login-DdRVTsIM.js                 17.22 kB Γöé gzip:   4.27 kB
+dist/assets/SignUp-ohH9wQ-v.js                21.45 kB Γöé gzip:   5.16 kB
+dist/assets/index.esm-DrX1nrtH.js             28.14 kB Γöé gzip:   9.35 kB
+dist/assets/index.esm-YAgEaPqS.js             34.73 kB Γöé gzip:  11.14 kB
+dist/assets/MemberDashboard-ClDbmYdS.js       57.51 kB Γöé gzip:  14.89 kB
+dist/assets/Admin-D0c77CPP.js                 88.31 kB Γöé gzip:  23.38 kB
+dist/assets/index-C3r7dKxr.js                425.52 kB Γöé gzip: 124.16 kB
+dist/assets/firebaseConfig-BJYKtORs.js       538.30 kB Γöé gzip: 158.04 kB
+
+[32mΓ£ô built in 1.04s[39m
+node.exe : [33m[plugin builtin:vite-reporter] 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33m[plugin builtin:vite-reporter] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+[33m[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: 
+https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+COMMAND EXIT CODE: 0
+
+========== FUNCTIONS PACKAGE SCRIPTS ==========
+Lifecycle scripts included in asbesoc-membership-service:
+  test
+    node --test test/policy.test.js test/analytics.test.js
+available via `npm run`:
+  check
+    node --check src/index.js
+  test:rules
+    node --test test/run-rules.js
+  test:storage-rules
+    node --test test/storage.rules.test.js
+  test:server
+    node --test test/run-server.js
+  test:emulator
+    node test/run-all.js
+COMMAND EXIT CODE: 0
+
+========== FUNCTIONS SERVER TEST ==========
+file:///C:/Users/HomePC/Desktop/ASBESOC-NEW/functions/test/run-server.js:2
+  throw new Error('Server integration tests require the localhost Firestore emulator.');
+        ^
+
+Error: Server integration tests require the localhost Firestore emulator.
+    at file:///C:/Users/HomePC/Desktop/ASBESOC-NEW/functions/test/run-server.js:2:9
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.19.0
+Γ£û test\run-server.js (96.804ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 114.7711
+
+Γ£û failing tests:
+
+test at test\run-server.js:1:1
+Γ£û test\run-server.js (96.804ms)
+  'test failed'
+COMMAND EXIT CODE: 1
+
+========== FUNCTIONS FULL TEST RUNNER ==========
+file:///C:/Users/HomePC/Desktop/ASBESOC-NEW/functions/test/run-rules.js:3
+  throw new Error('A local Firestore emulator is required for rules tests (project demo-asbesoc-membership).');
+        ^
+
+Error: A local Firestore emulator is required for rules tests (project demo-asbesoc-membership).
+    at file:///C:/Users/HomePC/Desktop/ASBESOC-NEW/functions/test/run-rules.js:3:9
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.19.0
+Γ£û C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\test\run-rules.js (86.5527ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 102.0637
+
+Γ£û failing tests:
+
+test at test\run-rules.js:1:1
+Γ£û C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\test\run-rules.js (86.5527ms)
+  'test failed'
+COMMAND EXIT CODE: 1
+
+========== AI WORKER FILE DISCOVERY ==========
+@{Name=.wrangler; Mode=d-----; Length=}
+@{Name=src; Mode=d-----; Length=}
+@{Name=.dev.vars; Mode=-a----; Length=72}
+@{Name=worker.test.mjs; Mode=-a----; Length=3402}
+@{Name=wrangler.jsonc; Mode=-a----; Length=320}
+@{Name=wrangler.staging.jsonc.example; Mode=-a----; Length=473}
+COMMAND EXIT CODE: 1
+
+========== GIT CHANGE SUMMARY ==========
+ M .env.example
+ M cloudflare-ai/worker.test.mjs
+ M functions/package.json
+ M functions/src/analytics.js
+ M functions/src/analyticsPolicy.js
+ M functions/src/chatAI.js
+ M functions/src/index.js
+ M functions/src/policy.js
+ M functions/test/analytics.test.js
+ M functions/test/firestore.rules.test.js
+ M functions/test/policy.test.js
+ M functions/test/run-rules.js
+ M functions/test/server.integration.test.js
+ M media-worker/README.md
+ M media-worker/worker.mjs
+ M media-worker/worker.test.mjs
+ M media-worker/wrangler.jsonc
+ M package.json
+ M src/App.tsx
+ M src/components/AdminAnalytics.tsx
+ M src/components/Gallery.tsx
+ M src/components/MemberDashboard.tsx
+ M src/components/Privacy.tsx
+ M src/components/SignUp.tsx
+ M src/components/WebsiteAnalytics.tsx
+ M src/firebase/analytics.ts
+ M src/firebase/firebaseConfig.ts
+ M src/firebase/media.ts
+ M src/firebase/submissions.ts
+?? "= @("
+?? ANALYTICS-SETUP.md
+?? ASBESOC-dashboard-review.zip
+?? CHAT-AI-SETUP.md
+?? PRODUCTION-READINESS-CHECKLIST.md
+?? PROJECT_TRACKER.md
+?? STAGING-SETUP.md
+?? WORK_CHANGELOG.md
+?? WORK_CHECKPOINT.md
+?? asbesoc-diagnostic-20261022-081541.txt
+?? "bject LastWriteTime -Descending \357\201\274"
+?? cloudflare-ai/wrangler.staging.jsonc.example
+?? "et -- ASBESOC-dashboard-review.zip"
+?? firebase.staging.json.example
+?? functions/test/storage.rules.test.js
+?? "rc -Recurse -File -Include \357\200\252.tsx,\357\200\252.ts \357\201\274"
+?? scripts/verify-dashboard-admin.ps1
+?? src/components/MemberDashboard.tsx.backup
+?? src/components/MemberDashboard.tsx.before-final-text-check.bak
+?? src/components/MemberDashboard.tsx.before-symbol-cleanup.bak
+?? src/components/MemberPaymentHistory.tsx.backup
+?? src/firebase/analyticsConsent.ts
+?? src/firebase/analyticsEvents.ts
+?? src/firebase/analyticsIdentifiers.ts
+?? src/firebase/firebaseStorage.ts
+?? "t \357\200\242`n========== A. CURRENCY AND PLACEHOLDER STRINGS ==========\357\200\242"
+?? tests/
+?? "ults = @()"
+COMMAND EXIT CODE: 0
+
+Report saved to C:\Users\HomePC\Desktop\ASBESOC-FINAL-TESTS.txt
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Get-ChildItem .\cloudflare-ai\src -File
+
+
+    Directory: C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        10/17/2026   1:09 PM           2268 chididmma.js
+-a----        10/17/2026   1:09 PM           2024 gemini.js
+-a----        10/15/2026   4:13 PM            710 index.backup.js
+-a----        10/17/2026   1:09 PM           2231 index.js
+
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>code .\cloudflare-ai\src\index.js
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>code .\cloudflare-ai\src\gemini.js
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Get-ChildItem -Path . -Recurse -File -Include *.js,*.ts,*.tsx | Where-Object { $_.FullName -notmatch 'node_modules|dist|\.git' -and $_.FullName -match 'cloudflare|ai|support|chat|bridge' } | Select-Object -ExpandProperty FullName
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\auth\verifyFirebaseToken.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\chididmma.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\gemini.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\index.backup.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\index.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\components\AdminChats.tsx
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\components\MemberAIAssistant.tsx
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\components\VerifyEmail.tsx
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chatReadReceipt.ts
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chatReadState.ts
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\main.tsx
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>code .\src\components\MemberAIAssistant.tsx
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>code .\src\firebase\chat.ts
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>code .\src\components\MemberAIAssistant.tsx
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Get-Content .\functions\src\chatAI.js
+import { createHmac, randomUUID } from 'node:crypto';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { defineSecret } from 'firebase-functions/params';
+
+const bridgeSecret = defineSecret('AI_BRIDGE_SECRET');
+const INTRO = "Hello! I'm Miss Chididmma, ASBESOC's automated support assistant. ";
+const FALLBACK = 'An ASBESOC administrator will need to assist with this question. Your message is in the support inbox.';
+
+export async function handleChatMessage(db, event, generate) {
+  const message = event.data?.data();
+  if (message?.senderRole !== 'member' || typeof message.text !== 'string') return;
+  const { uid, messageId } = event.params;
+  const chatRef = db.doc(`memberChats/${uid}`);
+  const replyRef = chatRef.collection('messages').doc(`ai-${messageId}`);
+  const lease = randomUUID();
+  const acquired = await db.runTransaction(async tx => {
+    const [chatSnap, replySnap] = await Promise.all([tx.get(chatRef), tx.get(replyRef)]);
+    const chat = chatSnap.data();
+    if (!chat || replySnap.exists || chat.status !== 'waiting' || chat.aiEscalated === true ||
+        !chat.lastMemberMessageAt?.isEqual(message.createdAt)) return null;
+    if (chat.aiLeaseUntil?.toMillis() > Date.now()) throw new Error('AI lease busy; retry event.');
+    const minute = Math.floor(Date.now() / 60000);
+    const count = chat.aiMinute === minute ? chat.aiCount || 0 : 0;
+    if (count >= 6) {
+      tx.update(chatRef, { aiEscalated: true, aiError: 'rate_limited' });
+      return null;
+    }
+    tx.update(chatRef, { aiLease: lease, aiLeaseUntil: Timestamp.fromMillis(Date.now() + 60000), aiMinute: minute, aiCount: count + 1 });
+    return { epoch: chat.aiEpoch || 0 };
+  });
+  if (!acquired) return;
+  let result;
+  try {
+    const history = await chatRef.collection('messages').orderBy('createdAt', 'desc').limit(12).get();
+    result = await generate(history.docs.reverse().filter(d => d.id !== 'support-ack').map(d => {
+      const m = d.data();
+      return { role: m.senderRole === 'member' ? 'user' : 'assistant', text: String(m.text || '').slice(0, 4000) };
+    }));
+    if (typeof result?.text !== 'string' || !result.text.trim()) throw new Error('Empty provider reply');
+  } catch {
+    result = { text: FALLBACK, escalate: true };
+  }
+  await db.runTransaction(async tx => {
+    const [chatSnap, replySnap] = await Promise.all([tx.get(chatRef), tx.get(replyRef)]);
+    const chat = chatSnap.data();
+    if (!chat || replySnap.exists || chat.aiLease !== lease) return;
+    tx.update(chatRef, { aiLeaseUntil: Timestamp.fromMillis(0) });
+    // Epoch rejects stale generations even after a takeover/release cycle.
+    if (chat.status !== 'waiting' || (chat.aiEpoch || 0) !== acquired.epoch ||
+        chat.aiEscalated === true || !chat.lastMemberMessageAt?.isEqual(message.createdAt)) return;
+    tx.create(replyRef, { senderId: 'asbesoc-ai', senderRole: 'system',
+      text: `${chat.aiIntroduced ? '' : INTRO}${result.text.trim()}`.slice(0, 4000), createdAt: FieldValue.serverTimestamp() });
+    tx.update(chatRef, { aiIntroduced: true, aiEscalated: result.escalate === true,
+      aiError: result.escalate ? 'administrator_required' : null, updatedAt: FieldValue.serverTimestamp() });
+  });
+}
+
+async function respondToEvent(event) {
+  if (event.data?.data()?.senderRole !== 'member') return;
+  const db = getFirestore();
+  const config = (await db.doc('systemConfig/supportAI').get()).data();
+  if (config?.enabled !== true) return;
+  await handleChatMessage(db, event, async messages => {
+    let endpoint;
+    try { endpoint = new URL(config.workerUrl); } catch { throw new Error('Invalid AI worker configuration'); }
+    if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.workers.dev') || endpoint.pathname !== '/internal/reply')
+      throw new Error('Invalid AI worker configuration');
+    const body = JSON.stringify({ messages, context: String(config.verifiedContext || '').slice(0, 16000) });
+    const timestamp = String(Date.now());
+    const signature = createHmac('sha256', bridgeSecret.value()).update(`${timestamp}.${body}`).digest('hex');
+    const response = await fetch(endpoint, { method: 'POST', body,
+      headers: { 'Content-Type': 'application/json', 'X-ASB-Time': timestamp, 'X-ASB-Signature': signature },
+      signal: AbortSignal.timeout(25000) });
+    if (!response.ok) throw new Error('AI provider unavailable');
+    return response.json();
+  });
+}
+const triggerOptions = { region: 'europe-west1', retry: true, secrets: [bridgeSecret], timeoutSeconds: 60 };
+export const memberChatAutoReply = onDocumentCreated({ ...triggerOptions,
+  document: 'memberChats/{uid}/messages/{messageId}',
+}, respondToEvent);
+export const memberChatReleased = onDocumentUpdated({ ...triggerOptions, document: 'memberChats/{uid}' }, async event => {
+  const before = event.data?.before.data(), after = event.data?.after.data();
+  if (after?.status !== 'waiting' || (before?.status === 'waiting' && before?.aiEpoch === after.aiEpoch)) return;
+  const latest = await getFirestore().collection(`memberChats/${event.params.uid}/messages`)
+    .where('senderRole', '==', 'member').orderBy('createdAt', 'desc').limit(1).get();
+  if (latest.empty) return;
+  await respondToEvent({ data: latest.docs[0], params: { uid: event.params.uid, messageId: latest.docs[0].id } });
+});
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Get-Content .\functions\src\index.js
+import { randomUUID } from 'node:crypto';
+import { initializeApp } from 'firebase-admin/app';
+import {
+  getFirestore,
+  Timestamp,
+  FieldValue,
+} from 'firebase-admin/firestore';
+import {
+  onCall,
+  onRequest,
+  HttpsError,
+} from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { defineSecret } from 'firebase-functions/params';
+import { setGlobalOptions } from 'firebase-functions/v2';
+
+import {
+  activeMembership,
+  annualPeriod,
+  reminderStage,
+  priceFor,
+  requirePaymentConfiguration,
+  verifySignature,
+  paymentOutcome,
+  paymentStatusAfterCheck,
+} from './policy.js';
+
+import { certificatePdf } from './pdf.js';
+import { consumeRateLimit } from './rateLimit.js';
+
+initializeApp();
+
+setGlobalOptions({
+  region: 'europe-west1',
+  maxInstances: 5,
+  timeoutSeconds: 30,
+});
+
+const db = getFirestore();
+const secret = defineSecret('PAYSTACK_SECRET_KEY');
+
+const ADMIN_UID = 'RJJhn4WSoBhUQ5vMF7G9vxLB98E2';
+
+const callable = {
+  enforceAppCheck: true,
+};
+
+const CHECKOUT_LOCK_MINUTES = 20;
+
+function verified(request, admin = false) {
+  if (
+    !request.auth ||
+    request.auth.token.email_verified !== true
+  ) {
+    throw new HttpsError(
+      'unauthenticated',
+      'Sign in with a verified email.'
+    );
+  }
+
+  if (admin && request.auth.uid !== ADMIN_UID) {
+    throw new HttpsError(
+      'permission-denied',
+      'Administrator access required.'
+    );
+  }
+
+  return request.auth.uid;
+}
+
+function validId(value) {
+  if (
+    typeof value !== 'string' ||
+    !/^[a-zA-Z0-9-]{10,100}$/.test(value)
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Invalid reference.'
+    );
+  }
+
+  return value;
+}
+
+async function paymentConfig() {
+  const snapshot = await db.doc('systemConfig/payments').get();
+  const config = snapshot.data();
+
+  try {
+    requirePaymentConfiguration(config, secret.value());
+  } catch {
+    throw new HttpsError(
+      'failed-precondition',
+      'Payments are not available yet.'
+    );
+  }
+
+  return config;
+}
+
+async function paystack(path, body) {
+  let response;
+  let result;
+
+  try {
+    response = await fetch(
+      `https://api.paystack.co${path}`,
+      {
+        method: body ? 'POST' : 'GET',
+        headers: {
+          Authorization: `Bearer ${secret.value()}`,
+          'Content-Type': 'application/json',
+        },
+        ...(body
+          ? { body: JSON.stringify(body) }
+          : {}),
+        signal: AbortSignal.timeout(10000),
+      }
+    );
+
+    result = await response.json();
+  } catch {
+    throw new HttpsError(
+      'unavailable',
+      'Could not connect to the payment provider. Please retry.'
+    );
+  }
+
+  if (!response.ok || result?.status !== true) {
+    throw new HttpsError(
+      'unavailable',
+      'The payment provider could not complete this request.'
+    );
+  }
+
+  return result.data;
+}
+
+function validateCheckoutUrl(value) {
+  let url;
+
+  try {
+    url = new URL(value);
+  } catch {
+    throw new HttpsError(
+      'internal',
+      'Invalid checkout destination.'
+    );
+  }
+
+  if (
+    url.protocol !== 'https:' ||
+    url.hostname !== 'checkout.paystack.com'
+  ) {
+    throw new HttpsError(
+      'internal',
+      'Invalid checkout destination.'
+    );
+  }
+
+  return url.href;
+}
+
+// ======================================================
+// MEMBERSHIP CHECKOUT
+// ======================================================
+
+export const membershipCheckout = onCall(
+  {
+    ...callable,
+    secrets: [secret],
+  },
+  async request => {
+    const uid = verified(request);
+    await consumeRateLimit(db, uid, 'checkout', 10);
+    const config = await paymentConfig();
+
+    const currency = request.data?.currency;
+
+    let amountMinor;
+
+    try {
+      amountMinor = priceFor(currency, config);
+    } catch {
+      throw new HttpsError(
+        'failed-precondition',
+        'This payment currency is not available.'
+      );
+    }
+
+    const newReference = `ASB-${randomUUID()}`;
+
+    const order = await db.runTransaction(async tx => {
+      const appRef = db.doc(
+        `membershipApplications/${uid}`
+      );
+
+      const memberRef = db.doc(
+        `memberships/${uid}`
+      );
+
+      const lockRef = db.doc(
+        `checkoutLocks/${uid}`
+      );
+
+      // Read membership and checkout state first.
+      const [appSnapshot, memberSnapshot, lockSnapshot] =
+        await Promise.all([
+          tx.get(appRef),
+          tx.get(memberRef),
+          tx.get(lockRef),
+        ]);
+
+      const application = appSnapshot.data();
+      const member = memberSnapshot.data();
+      const lock = lockSnapshot.data();
+
+      if (
+        application?.status !== 'approved' ||
+        application?.userId !== uid
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Membership approval is required.'
+        );
+      }
+
+      if (member?.status === 'revoked') {
+        throw new HttpsError(
+          'failed-precondition',
+          'Contact ASBESOC about this membership.'
+        );
+      }
+
+      const now = Date.now();
+
+      if (
+        activeMembership(member) &&
+        member.expiresAt.toMillis() - now >
+          30 * 86400000
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Renewals open 30 days before expiry.'
+        );
+      }
+
+      // Look up an existing checkout before making writes.
+      let previousOrder = null;
+
+      if (
+        lock?.reference &&
+        lock?.expiresAt?.toMillis() > now
+      ) {
+        const previousRef = db.doc(
+          `paymentOrders/${validId(lock.reference)}`
+        );
+
+        const previousSnapshot = await tx.get(
+          previousRef
+        );
+
+        if (previousSnapshot.exists) {
+          previousOrder = previousSnapshot.data();
+        }
+      }
+
+      if (
+        previousOrder?.status === 'pending' &&
+        previousOrder.uid === uid
+      ) {
+        if (previousOrder.currency !== currency) {
+          throw new HttpsError(
+            'failed-precondition',
+            'An existing checkout uses another currency. Please wait for it to expire.'
+          );
+        }
+
+        if (previousOrder.amountMinor !== amountMinor) {
+          throw new HttpsError(
+            'failed-precondition',
+            'The payment amount has changed. Please contact ASBESOC.'
+          );
+        }
+
+        return previousOrder;
+      }
+
+      // No usable pending order: create a fresh one.
+      const reference = newReference;
+
+      const value = {
+        reference,
+        uid,
+        email: request.auth.token.email,
+        fullName: application.fullName,
+        amountMinor,
+        currency,
+        status: 'pending',
+        createdAt: Timestamp.now(),
+      };
+
+      tx.create(
+        db.doc(`paymentOrders/${reference}`),
+        value
+      );
+
+      tx.set(lockRef, {
+        reference,
+        expiresAt: Timestamp.fromMillis(
+          now + CHECKOUT_LOCK_MINUTES * 60000
+        ),
+      });
+
+      return value;
+    });
+
+    // Reuse a checkout URL when already initialized.
+    if (order.authorizationUrl) {
+      return {
+        url: validateCheckoutUrl(
+          order.authorizationUrl
+        ),
+        reference: order.reference,
+      };
+    }
+
+    // Paystack initialization uses the same reference.
+    // Retrying initialization must not create another order.
+    const result = await paystack(
+      '/transaction/initialize',
+      {
+        email: order.email,
+        amount: order.amountMinor,
+        currency: order.currency,
+        reference: order.reference,
+        metadata: {
+          uid: order.uid,
+        },
+        callback_url:
+          'https://asbesoc.org/dashboard/membership',
+      }
+    );
+
+    const checkoutUrl = validateCheckoutUrl(
+      result.authorization_url
+    );
+
+    await db.runTransaction(async tx => {
+      const orderRef = db.doc(
+        `paymentOrders/${order.reference}`
+      );
+
+      const snapshot = await tx.get(orderRef);
+
+      if (!snapshot.exists) {
+        throw new HttpsError(
+          'not-found',
+          'Payment order not found.'
+        );
+      }
+
+      if (snapshot.data().status !== 'pending') {
+        return;
+      }
+
+      if (!snapshot.data().authorizationUrl) {
+        tx.update(orderRef, {
+          authorizationUrl: checkoutUrl,
+        });
+      }
+    });
+
+    return {
+      url: checkoutUrl,
+      reference: order.reference,
+    };
+  }
+);
+
+// ======================================================
+// PAYMENT VERIFICATION AND CERTIFICATE ISSUANCE
+// ======================================================
+
+async function settle(reference, owner) {
+  await paymentConfig();
+
+  const orderRef = db.doc(
+    `paymentOrders/${validId(reference)}`
+  );
+
+  const snapshot = await orderRef.get();
+
+  if (
+    !snapshot.exists ||
+    (owner && snapshot.data().uid !== owner)
+  ) {
+    throw new HttpsError(
+      'not-found',
+      'Payment order not found.'
+    );
+  }
+
+  if (snapshot.data().status === 'paid') {
+    return { confirmed: true };
+  }
+
+  const data = await paystack(
+    `/transaction/verify/${encodeURIComponent(reference)}`
+  );
+
+  let outcome;
+  try {
+    outcome = paymentOutcome(data, snapshot.data());
+  } catch {
+    throw new HttpsError(
+      'failed-precondition',
+      'Payment is not confirmed. No membership was granted.'
+    );
+  }
+
+  if (outcome !== 'paid') {
+    const status = await db.runTransaction(async tx => {
+      const current = await tx.get(orderRef);
+      if (!current.exists) throw new HttpsError('not-found', 'Payment order not found.');
+      const nextStatus = paymentStatusAfterCheck(current.data().status, outcome);
+      if (nextStatus !== current.data().status || nextStatus === outcome) {
+        tx.update(orderRef, {
+          status: nextStatus,
+          providerStatus: data.status,
+          lastCheckedAt: FieldValue.serverTimestamp(),
+        });
+      }
+      return nextStatus;
+    });
+    return { confirmed: status === 'paid', status };
+  }
+
+  const certificateId = `ASBESOC-${randomUUID()}`;
+
+  await db.runTransaction(async tx => {
+    const orderSnapshot = await tx.get(orderRef);
+
+    if (!orderSnapshot.exists) {
+      throw new HttpsError(
+        'not-found',
+        'Payment order not found.'
+      );
+    }
+
+    const order = orderSnapshot.data();
+
+    if (order.status === 'paid') {
+      return;
+    }
+
+    const memberRef = db.doc(
+      `memberships/${order.uid}`
+    );
+
+    const appRef = db.doc(
+      `membershipApplications/${order.uid}`
+    );
+
+    const receiptRef = db.doc(
+      `providerReceipts/paystack-${data.id}`
+    );
+
+    const [appSnapshot, memberSnapshot, receiptSnapshot] =
+      await Promise.all([
+        tx.get(appRef),
+        tx.get(memberRef),
+        tx.get(receiptRef),
+      ]);
+
+    const application = appSnapshot.data();
+    const member = memberSnapshot.data();
+
+    if (receiptSnapshot.exists) {
+      throw new HttpsError(
+        'already-exists',
+        'Transaction already processed.'
+      );
+    }
+
+    if (
+      application?.status !== 'approved' ||
+      application?.userId !== order.uid ||
+      member?.status === 'revoked'
+    ) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Payment needs administrator review.'
+      );
+    }
+
+    const now = new Date();
+
+    const period = annualPeriod(
+      now,
+      member?.expiresAt?.toDate()
+    );
+
+    // The new certificate covers the renewed period.
+    const certificate = {
+      id: certificateId,
+      uid: order.uid,
+      fullName: application.fullName,
+      issuedAt: Timestamp.fromDate(now),
+      startsAt: Timestamp.fromDate(
+        period.startsAt
+      ),
+      expiresAt: Timestamp.fromDate(
+        period.expiresAt
+      ),
+      status: 'active',
+      paymentReference: reference,
+    };
+
+    tx.create(
+      db.doc(`certificates/${certificateId}`),
+      certificate
+    );
+
+    // Preserve the original membership start date.
+    // Renewal extends the expiry date.
+    tx.set(memberRef, {
+      uid: order.uid,
+      fullName: application.fullName,
+      status: 'active',
+      certificateId,
+      startsAt:
+        member?.startsAt ||
+        Timestamp.fromDate(now),
+      expiresAt: certificate.expiresAt,
+      updatedAt: Timestamp.fromDate(now),
+    });
+
+    tx.update(appRef, {
+      paymentStatus: 'paid',
+      paidAt: Timestamp.fromDate(now),
+      paymentReference: reference,
+      certificateStatus: 'issued',
+      certificateNumber: certificateId,
+      certificateIssuedAt: certificate.issuedAt,
+      membershipExpiresAt: certificate.expiresAt,
+    });
+
+    tx.update(orderRef, {
+      status: 'paid',
+      providerId: data.id,
+      confirmedAt: Timestamp.fromDate(now),
+      certificateId,
+    });
+
+    tx.create(receiptRef, {
+      reference,
+      uid: order.uid,
+      createdAt: Timestamp.fromDate(now),
+    });
+
+    tx.create(
+      db.doc(`membershipAudit/${certificateId}`),
+      {
+        type:
+          'payment_verified_certificate_issued',
+        uid: order.uid,
+        reference,
+        certificateId,
+        createdAt: Timestamp.fromDate(now),
+        actor: 'paystack-verification',
+      }
+    );
+  });
+
+  return { confirmed: true };
+}
+
+export const confirmMembershipPayment = onCall(
+  {
+    ...callable,
+    secrets: [secret],
+  },
+  async request => {
+    const uid = verified(request);
+    await consumeRateLimit(db, uid, 'confirm');
+    return settle(request.data?.reference, uid);
+  }
+);
+
+// ======================================================
+// PAYSTACK WEBHOOK
+// ======================================================
+
+export const paystackWebhook = onRequest(
+  {
+    secrets: [secret],
+  },
+  async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(405).send('Method not allowed');
+      return;
+    }
+
+    if (
+      !verifySignature(
+        req.rawBody,
+        req.get('x-paystack-signature'),
+        secret.value()
+      )
+    ) {
+      res.status(401).send('Invalid signature');
+      return;
+    }
+
+    if (req.body?.event !== 'charge.success') {
+      res.status(200).send('Ignored');
+      return;
+    }
+
+    try {
+      const result = await settle(req.body.data?.reference);
+      if (!result.confirmed) { res.status(503).send('Not confirmed; retry required'); return; }
+      res.status(200).send('Received');
+    } catch {
+      res.status(503).send(
+        'Not processed; retry required'
+      );
+    }
+  }
+);
+
+// ======================================================
+// CERTIFICATE DOWNLOAD
+// ======================================================
+
+export const downloadMembershipCertificate = onCall(
+  callable,
+  async request => {
+    const uid = verified(request);
+    await consumeRateLimit(db, uid, 'certificate-download');
+    const id = validId(request.data?.id);
+
+    const certificate = (
+      await db.doc(`certificates/${id}`).get()
+    ).data();
+
+    if (
+      !certificate ||
+      (certificate.uid !== uid &&
+        uid !== ADMIN_UID)
+    ) {
+      throw new HttpsError(
+        'not-found',
+        'Certificate not found.'
+      );
+    }
+
+    const member = (
+      await db.doc(
+        `memberships/${certificate.uid}`
+      ).get()
+    ).data();
+
+    if (
+      certificate.status !== 'active' ||
+      !activeMembership(member) ||
+      certificate.expiresAt.toMillis() <=
+        Date.now()
+    ) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Certificate is no longer valid.'
+      );
+    }
+
+    return {
+      base64: (
+        await certificatePdf(certificate)
+      ).toString('base64'),
+      filename: `${id}.pdf`,
+    };
+  }
+);
+
+// ======================================================
+// PUBLIC CERTIFICATE VERIFICATION
+// ======================================================
+
+export const verifyMembershipCertificate = onCall(
+  {
+    enforceAppCheck: true,
+  },
+  async request => {
+    const id = validId(request.data?.id);
+
+    const certificate = (
+      await db.doc(`certificates/${id}`).get()
+    ).data();
+
+    if (!certificate) {
+      return { status: 'not_found' };
+    }
+
+    const member = (
+      await db.doc(
+        `memberships/${certificate.uid}`
+      ).get()
+    ).data();
+
+    if (
+      !member ||
+      !['active', 'revoked'].includes(
+        member.status
+      ) ||
+      !['active', 'revoked'].includes(
+        certificate.status
+      )
+    ) {
+      return { status: 'not_found' };
+    }
+
+    const now = Date.now();
+
+    const status =
+      certificate.status === 'revoked' ||
+      member.status === 'revoked'
+        ? 'revoked'
+        : certificate.expiresAt.toMillis() <= now ||
+            member.expiresAt?.toMillis() <= now
+          ? 'expired'
+          : certificate.startsAt.toMillis() > now ||
+              member.startsAt?.toMillis() > now
+            ? 'not_yet_valid'
+            : activeMembership(member)
+              ? 'valid'
+              : 'not_found';
+
+    return {
+      id,
+      fullName: certificate.fullName,
+      status,
+      issuedAt:
+        certificate.issuedAt
+          .toDate()
+          .toISOString(),
+      startsAt:
+        certificate.startsAt
+          .toDate()
+          .toISOString(),
+      expiresAt:
+        certificate.expiresAt
+          .toDate()
+          .toISOString(),
+    };
+  }
+);
+
+// ======================================================
+// ADMIN MEMBERSHIP REVOCATION
+// ======================================================
+
+export const revokeMembership = onCall(
+  callable,
+  async request => {
+    const actor = verified(request, true);
+
+    const uid = validId(request.data?.uid);
+
+    const reason =
+      typeof request.data?.reason === 'string'
+        ? request.data.reason.trim()
+        : '';
+
+    if (
+      reason.length < 5 ||
+      reason.length > 2000
+    ) {
+      throw new HttpsError(
+        'invalid-argument',
+        'Provide a reason (5â€“2,000 characters).'
+      );
+    }
+
+    await db.runTransaction(async tx => {
+      const memberRef = db.doc(
+        `memberships/${uid}`
+      );
+
+      const member = await tx.get(memberRef);
+
+      if (!member.exists) {
+        throw new HttpsError(
+          'not-found',
+          'Membership not found.'
+        );
+      }
+
+      if (member.data().status === 'revoked') {
+        return;
+      }
+
+      tx.update(memberRef, {
+        status: 'revoked',
+        updatedAt:
+          FieldValue.serverTimestamp(),
+      });
+
+      tx.update(
+        db.doc(
+          `membershipApplications/${uid}`
+        ),
+        {
+          certificateStatus: 'revoked',
+        }
+      );
+
+      tx.create(
+        db.collection('membershipAudit').doc(),
+        {
+          type: 'revoked',
+          uid,
+          reason,
+          actor,
+          createdAt:
+            FieldValue.serverTimestamp(),
+        }
+      );
+    });
+
+    return { revoked: true };
+  }
+);
+
+// ======================================================
+// AUTOMATIC RENEWAL REMINDERS
+// ======================================================
+
+export const membershipRenewalReminders =
+  onSchedule(
+    {
+      schedule: 'every day 08:00',
+      timeZone: 'Africa/Lagos',
+      timeoutSeconds: 120,
+    },
+    async () => {
+      const now = new Date();
+      let cursor;
+
+      for (;;) {
+        let membershipQuery = db
+          .collection('memberships')
+          .orderBy('__name__')
+          .limit(100);
+
+        if (cursor) {
+          membershipQuery =
+            membershipQuery.startAfter(cursor);
+        }
+
+        const page =
+          await membershipQuery.get();
+
+        if (page.empty) {
+          break;
+        }
+
+        for (const document of page.docs) {
+          const member = document.data();
+
+          if (member.status !== 'active') {
+            continue;
+          }
+
+          const stage = reminderStage(
+            member.expiresAt.toDate(),
+            now
+          );
+
+          if (!stage) {
+            continue;
+          }
+
+          const id =
+            `${member.certificateId}-${stage}`;
+
+          const ref = db.doc(
+            `membershipReminders/${document.id}/items/${id}`
+          );
+
+          await db.runTransaction(
+            async tx => {
+              const existing =
+                await tx.get(ref);
+
+              if (existing.exists) {
+                return;
+              }
+
+              tx.create(ref, {
+                stage,
+                expiresAt: member.expiresAt,
+                createdAt:
+                  Timestamp.fromDate(now),
+                message:
+                  stage === 'expired'
+                    ? 'Your annual membership has expired. Renew to restore certified access.'
+                    : 'Your annual membership is due for renewal. Open Membership to review your expiry date.',
+              });
+            }
+          );
+        }
+
+        cursor = page.docs.at(-1);
+      }
+    }
+  );
+export { memberChatAutoReply, memberChatReleased } from './chatAI.js';
+export { recordWebsiteVisit, websiteAnalyticsReport, configureWebsiteAnalytics, expireWebsiteAnalytics } from './analytics.js';
+
+export const membershipPaymentReceipt = onCall(callable, async request => {
+  const uid = verified(request);
+  await consumeRateLimit(db, uid, 'receipt');
+  const reference = validId(request.data?.reference);
+  const order = (await db.doc(`paymentOrders/${reference}`).get()).data();
+  if (!order || (order.uid !== uid && uid !== ADMIN_UID)) throw new HttpsError('not-found', 'Receipt not found.');
+  if (order.status !== 'paid' || !order.providerId || !order.confirmedAt) throw new HttpsError('failed-precondition', 'A verified successful payment is required.');
+  return { reference, receiptId: `PAYSTACK-${order.providerId}`, fullName: order.fullName,
+    amountMinor: order.amountMinor, currency: order.currency, confirmedAt: order.confirmedAt.toDate().toISOString(),
+    description: 'ASBESOC annual membership', status: 'paid' };
+});
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B
+PS>Get-Content .\cloudflare-ai\wrangler.jsonc
+{
+    "name":  "asbesoc-ai",
+    "main":  "src/index.js",
+    "compatibility_date":  "2026-10-15",
+    "workers_dev":  true,
+    "vars":  {
+                 "FIREBASE_PROJECT_ID":  "asbesoc-nigeria",
+                 "AI_ENABLED": "false",
+                 "GEMINI_MODEL": "gemini-2.5-flash"
+             }
+}
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cHomePC\x5cDesktop\x5cASBESOC-NEWPS C:\Users\HomePC\Desktop\ASBESOC-NEW> ]633;B

@@ -303,3 +303,13 @@ test("missing Cloudinary setup produces an actionable error without upstream cal
     assert.match((await r.json()).error, /setup/);
     assert.equal(calls.length, 0);
   }));
+test("missing Firebase API key binding fails closed before upstream calls", async () =>
+  mocked(async (calls) => {
+    const r = await worker.fetch(request("/sign-upload", { body: { path } }), {
+      ...env,
+      FIREBASE_API_KEY: "",
+    });
+    assert.equal(r.status, 503);
+    assert.match((await r.json()).error, /authentication.*configured/i);
+    assert.equal(calls.length, 0);
+  }));

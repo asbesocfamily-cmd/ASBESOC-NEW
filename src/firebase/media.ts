@@ -13,8 +13,7 @@ import {
   type DocumentData,
   type Timestamp,
 } from "firebase/firestore";
-import { deleteObject, getBlob, ref } from "firebase/storage";
-import { auth, db, storage } from "./firebaseConfig";
+import { auth, db } from "./firebaseConfig";
 import {
   uploadCloudinary,
   deleteCloudinary,
@@ -250,6 +249,10 @@ export async function mediaBlobUrl(
 ) {
   if (item.scope === "public" && item.url) return item.url;
   if (item.provider === "cloudinary") return cloudinaryBlobUrl(item.path);
+  const [{ getBlob, ref }, storage] = await Promise.all([
+    import("firebase/storage"),
+    import("./firebaseStorage").then((module) => module.default),
+  ]);
   const blob = await getBlob(ref(storage, item.path), 10 * 1024 * 1024);
   return URL.createObjectURL(blob);
 }
@@ -328,7 +331,13 @@ export async function removeMedia(item: MediaRecord) {
   });
   try {
     if (item.provider === "cloudinary") await deleteCloudinary(item.path);
-    else await deleteObject(ref(storage, item.path));
+    else {
+      const [{ deleteObject, ref }, storage] = await Promise.all([
+        import("firebase/storage"),
+        import("./firebaseStorage").then((module) => module.default),
+      ]);
+      await deleteObject(ref(storage, item.path));
+    }
   } catch (error) {
     if ((error as { code?: string }).code !== "storage/object-not-found")
       throw error;

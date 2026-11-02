@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   collection,
   onSnapshot,
@@ -150,7 +150,7 @@ function PaymentRecords({ uid }: { uid: string }) {
                 >
                   <td className="p-3">
                     {payment.createdAt?.toDate?.()
-                      .toLocaleDateString("en-NG") ?? "-"}
+                      .toLocaleDateString("en-NG") ?? "â€”"}
                   </td>
 
                   <td className="p-3 font-mono text-xs">
@@ -179,3 +179,4 @@ function PaymentRecords({ uid }: { uid: string }) {
     </section>
   );
 }
+

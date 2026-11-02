@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { analyticsAvailable, analyticsConsent, setAnalyticsConsent, trackWebsiteEvent } from '../firebase/analytics';
+import { analyticsAvailable, analyticsConsent, setAnalyticsConsent } from '../firebase/analyticsConsent';
+import { trackWebsiteEvent } from '../firebase/analyticsEvents';
 
 export default function WebsiteAnalytics() {
   const { pathname } = useLocation();

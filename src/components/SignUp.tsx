@@ -14,7 +14,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../firebase/firebaseConfig";
-import { trackWebsiteEvent } from "../firebase/analytics";
+import { trackWebsiteEvent } from "../firebase/analyticsEvents";
 import { useAuth } from "../contexts/useAuth";
 
 const inputClass =

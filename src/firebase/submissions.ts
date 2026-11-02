@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import { createApplication } from "./membership";
+import { trackWebsiteEvent } from "./analyticsEvents";
 
 export type SubmissionStatus = "new";
 
@@ -66,7 +67,9 @@ export type PartnershipSubmission = {
 export async function submitMembership(
   data: MembershipSubmission
 ) {
-  return createApplication(data);
+  const result = await createApplication(data);
+  void trackWebsiteEvent("application");
+  return result;
 }
 
 export async function submitSupport(

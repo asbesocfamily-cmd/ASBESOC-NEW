@@ -192,7 +192,7 @@ export async function setChatStatus(
     status,
     aiEpoch: increment(1),
     aiEscalated: false,
-    updatedAt: serverTimestamp(),
+     updatedAt: serverTimestamp(),
   });
 }
 

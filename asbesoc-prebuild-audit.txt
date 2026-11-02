@@ -1,0 +1,478 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261023075902
+Username: PC\HomePC
+RunAs User: PC\HomePC
+Configuration Name: 
+Machine: PC (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\HomePC\AppData\Local\Programs\Microsoft VS Code\2d0b7506a3\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19408
+PSVersion: 5.1.22621.963
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.22621.963
+BuildVersion: 10.0.22621.963
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+
+========== PROJECT LOCATION ==========
+Folder: C:\Users\HomePC\Desktop\ASBESOC-NEW
+Date: 10/23/2026 07:59:02
+
+========== GIT STATUS ==========
+
+========== Git branch and changes ==========
+
+
+========== Latest commits ==========
+
+
+========== ROOT FILES ==========
+
+
+========== PACKAGE SCRIPTS AND DEPENDENCIES ==========
+
+--- package.json ---
+Scripts:
+Mode   Name
+----   ----
+d--h-- .git
+d----- .github
+d----- cloudflare-ai
+d----- dist
+d----- functions
+d----- media-worker
+d----- node_modules
+d----- public
+d----- scripts
+d----- src
+d----- tests
+d----- work
+-a---- .env.example
+-a---- .env.local
+-a---- .firebaserc
+-a---- .gitignore
+-a---- = @(
+-a---- admin-cms-files.txt
+-a---- ANALYTICS-SETUP.md
+-a---- and add full-window viewer with swipe
+-a---- ASBESOC-dashboard-review.zip
+-a---- asbesoc-diagnostic-20261022-081541.txt
+-a---- asbesoc-prebuild-audit.txt
+-a---- bject LastWriteTime -Descending 
+-a---- build-check.log
+-a---- CHAT-AI-SETUP.md
+-a---- eslint.config.js
+-a---- et -- ASBESOC-dashboard-review.zip
+-a---- firebase.json
+-a---- firebase.staging.json.example
+-a---- firestore-debug.log
+-a---- firestore.indexes.json
+-a---- firestore.rules
+-a---- IMGL0989.jpg
+-a---- IMGL0990.jpg
+-a---- IMGL0992.jpg
+-a---- IMGL0994.jpg
+-a---- IMGL0996.jpg
+-a---- IMGL0999.jpg
+-a---- IMGL1001.jpg
+-a---- IMGL1005.jpg
+-a---- IMGL1008.jpg
+-a---- IMGL1009.jpg
+-a---- IMGL1014.jpg
+-a---- IMGL1019.jpg
+-a---- IMGL1020.jpg
+-a---- IMGL1023.jpg
+-a---- IMGL1024.jpg
+-a---- IMGL1025.jpg
+-a---- IMGL1027.jpg
+-a---- IMGL1031.jpg
+-a---- IMGL1035.jpg
+-a---- IMGL1041.jpg
+-a---- IMGL1042.jpg
+-a---- IMGL1045.jpg
+-a---- IMGL1046.jpg
+-a---- IMGL1048.jpg
+-a---- IMGL1051.jpg
+-a---- IMGL1054.jpg
+-a---- IMGL1060.jpg
+-a---- IMGL1063.jpg
+-a---- IMGL1067.jpg
+-a---- IMGL1069.jpg
+-a---- IMGL1070.jpg
+-a---- IMGL1073.jpg
+-a---- IMGL1078.jpg
+-a---- IMGL1082.jpg
+-a---- IMGL1085.jpg
+-a---- IMGL1086.jpg
+-a---- IMGL1088.jpg
+-a---- IMGL1091.jpg
+-a---- IMGL1093.jpg
+-a---- IMGL1102.jpg
+-a---- IMGL1103.jpg
+-a---- IMGL1106.jpg
+-a---- IMGL1107.jpg
+-a---- IMGL1111.jpg
+-a---- IMGL1112.jpg
+-a---- IMGL1113.jpg
+-a---- IMGL1115.jpg
+-a---- IMGL1121.jpg
+-a---- IMGL1126.jpg
+-a---- IMGL1127.jpg
+-a---- IMGL1131.jpg
+-a---- IMGL1133.jpg
+-a---- IMGL1135.jpg
+-a---- IMGL1138.jpg
+-a---- IMGL1140.jpg
+-a---- IMGL1142.jpg
+-a---- IMGL1144.jpg
+-a---- IMGL1145.jpg
+-a---- IMGL1150.jpg
+-a---- IMGL1152.jpg
+-a---- IMGL1153.jpg
+-a---- IMGL1154.jpg
+-a---- IMGL1158.jpg
+-a---- IMGL1161.jpg
+-a---- IMGL1164.jpg
+-a---- index.html
+-a---- membership-emulator-check.log
+-a---- MEMBERSHIP-ROLLOUT.md
+-a---- MEMBERSHIP-SERVICE-ROLLOUT.md
+-a---- membership.jpg
+-a---- optimize-gallery-images.mjs
+-a---- optimize-images.mjs
+-a---- optimize-program-images.mjs
+-a---- package-lock.json
+-a---- package.json
+-a---- PRODUCTION-HANDOVER-2026-10-17.md
+-a---- PRODUCTION-READINESS-CHECKLIST.md
+-a---- PROJECT_TRACKER.md
+-a---- rc -Recurse -File -Include .tsx,.ts 
+-a---- README.md
+-a---- STAGING-SETUP.md
+-a---- storage.cors.json
+-a---- storage.rules
+-a---- t `n========== A. CURRENCY AND PLACEHOLDER STRINGS ==========
+-a---- tatus
+-a---- tsconfig.app.json
+-a---- tsconfig.json
+-a---- tsconfig.node.json
+-a---- ults = @()
+-a---- vite.config.ts
+-a---- WORK_CHANGELOG.md
+-a---- WORK_CHECKPOINT.md
+
+
+
+
+dev            : vite
+build          : tsc -b && vite build
+lint           : eslint .
+preview        : vite preview
+test:analytics : node --test tests/analytics-client.test.mjs
+
+
+
+Relevant dependencies:
+dependencies @tailwindcss/vite: ^4.3.3
+dependencies firebase: ^12.19.0
+devDependencies @eslint/js: ^10.0.1
+devDependencies @vitejs/plugin-react: ^6.1.0
+devDependencies eslint: ^10.9.0
+devDependencies eslint-plugin-react-hooks: ^7.1.1
+devDependencies eslint-plugin-react-refresh: ^0.5.4
+devDependencies typescript: ~6.0.2
+devDependencies typescript-eslint: ^8.67.0
+devDependencies vite: ^8.2.2
+devDependencies wrangler: ^4.51.0
+
+--- functions/package.json ---
+Scripts:
+
+
+test               : node --test test/policy.test.js test/analytics.test.js
+check              : node --check src/index.js
+test:rules         : node --test test/run-rules.js
+test:storage-rules : node --test test/storage.rules.test.js
+test:server        : node --test test/run-server.js
+test:emulator      : node test/run-all.js
+
+
+
+Relevant dependencies:
+dependencies firebase-admin: ^13.0.0
+dependencies firebase-functions: ^6.0.0
+devDependencies @firebase/rules-unit-testing: ^6.0.0
+
+--- cloudflare-ai/package.json ---
+MISSING FILE
+
+========== CLOUDFLARE WORKER FILES ==========
+
+
+--- cloudflare-ai/wrangler.jsonc ---
+
+--- cloudflare-ai/src/index.js ---
+
+--- cloudflare-ai/src/gemini.js ---
+
+--- cloudflare-ai/src/chididmma.js ---
+
+--- cloudflare-ai/worker.test.mjs ---
+
+--- cloudflare-ai/wrangler.staging.jsonc.example ---
+
+========== SECRET FILE SAFETY ==========
+Exists: cloudflare-ai/.dev.vars
+Not present: cloudflare-ai/.gitignore
+Exists: .gitignore
+Not present: functions/.env
+Not present: functions/.env.local
+
+========== Check whether secret files are tracked (names only) ==========
+
+
+========== FIREBASE CHAT HANDLERS ==========
+
+--- functions/src/chatAI.js ---
+FullName
+--------
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\worker.test.mjs
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\wrangler.jsonc
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\wrangler.staging.jsonc.example
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\cache\cf.json
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\cache\wrangler-account.json
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\cache\miniflare-CacheObject\metadata.sqlite
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\cache\miniflare-CacheObject\metadata.sqlite-shm
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\cache\miniflare-CacheObject\metadata.sqlite-wal
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\d1\miniflare-D1DatabaseObject\metadata.sqlite
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\d1\miniflare-D1DatabaseObject\metadata.sqlite-shm
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\d1\miniflare-D1DatabaseObject\metadata.sqlite-wal
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\kv\miniflare-KVNamespaceObject\metadata.sqlite
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\kv\miniflare-KVNamespaceObject\metadata.sqlite-shm
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\kv\miniflare-KVNamespaceObject\metadata.sqlite-wal
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\a590acd76969f996ec6e4b599c...
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\a590acd76969f996ec6e4b599c...
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\a590acd76969f996ec6e4b599c...
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\metadata.sqlite
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\metadata.sqlite-shm
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\observability\miniflare-wobs-trace-store\metadata.sqlite-wal
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\r2\miniflare-R2BucketObject\metadata.sqlite
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\r2\miniflare-R2BucketObject\metadata.sqlite-shm
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\.wrangler\state\v3\r2\miniflare-R2BucketObject\metadata.sqlite-wal
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\chididmma.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\gemini.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\index.backup.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\index.js
+C:\Users\HomePC\Desktop\ASBESOC-NEW\cloudflare-ai\src\auth\verifyFirebaseToken.js
+{
+    "name":  "asbesoc-ai",
+    "main":  "src/index.js",
+    "compatibility_date":  "2026-10-15",
+    "workers_dev":  true,
+    "vars":  {
+                 "FIREBASE_PROJECT_ID":  "asbesoc-nigeria",
+                 "AI_ENABLED": "false",
+                 "GEMINI_MODEL": "gemini-2.5-flash"
+             }
+}
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
+import worker from './src/index.js';
+const env = { AI_BRIDGE_SECRET: 'local-fixture-bridge', AI_ENABLED: 'true', GEMINI_API_KEY: 'fixture' };
+function request(body, time = String(Date.now()), secret = env.AI_BRIDGE_SECRET) {
+  return new Request('https://example.workers.dev/internal/reply', { method:'POST', body,
+    headers:{'X-ASB-Time':time,'X-ASB-Signature':createHmac('sha256',secret).update(`${time}.${body}`).digest('hex')} });
+}
+test('bridge rejects missing, forged and stale authentication without provider requests', async () => {
+  for (const req of [new Request('https://example.workers.dev/internal/reply',{method:'POST',body:'{}'}), request('{}',String(Date.now()-120000)), request('{}',String(Date.now()),'wrong')])
+    assert.equal((await worker.fetch(req,env)).status,401);
+});
+test('bridge rejects malformed input and disabled service', async () => {
+  assert.equal((await worker.fetch(request('invalid'),env)).status,400);
+  assert.equal((await worker.fetch(request('{"messages":[]}'),env)).status,400);
+  assert.equal((await worker.fetch(request('{}'),{...env,AI_ENABLED:'false'})).status,503);
+  assert.equal((await worker.fetch(new Request('https://example.workers.dev/chat',{method:'POST'}),env)).status,404);
+});
+test('signed bridge sends bounded context and handles structured Gemini reply', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    assert.match(url,/generativelanguage.googleapis.com/);
+    assert.equal(options.headers['x-goog-api-key'],'fixture');
+    const payload=JSON.parse(options.body);
+    assert.equal(payload.contents[0].parts[0].text,'How do I apply?');
+    assert.match(payload.systemInstruction.parts[0].text,/answer truthfully/);
+    assert.match(payload.systemInstruction.parts[0].text,/VERIFIED ASBESOC INFORMATION:[\s\S]*Verified facts/);
+    assert.equal(options.body.includes('fixture'),false);
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({text:'Complete your membership application.',escalate:false})}]}}]}));
+  };
+  try {
+    const result = await worker.fetch(request(JSON.stringify({messages:[{role:'user',text:'How do I apply?'}],context:'Verified facts'})),env);
+    assert.equal(result.status,200); assert.deepEqual(await result.json(),{text:'Complete your membership application.',escalate:false});
+  } finally { globalThis.fetch=old; }
+});
+test('provider errors return a safe retriable response', async () => {
+  const old=globalThis.fetch; globalThis.fetch=async()=>new Response('unavailable',{status:503});
+  try { assert.equal((await worker.fetch(request(JSON.stringify({messages:[{role:'user',text:'Hello'}]})),env)).status,503); }
+  finally { globalThis.fetch=old; }
+});
+test('invalid provider output is rejected so the backend can use its safe fallback', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({candidates:[{content:{parts:[{text:'not valid JSON'}]}}]}));
+  try {
+    const response = await worker.fetch(request(JSON.stringify({messages:[{role:'user',text:'What is my application status?'}]})),env);
+    assert.equal(response.status,503);
+    assert.deepEqual(await response.json(),{error:'Support unavailable'});
+  } finally { globalThis.fetch = old; }
+});
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:6: const bridgeSecret = defineSecret('AI_BRIDGE_SECRET');
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:10: export async function handleChatMessage(db, event, generate) {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:20: if (!chat || replySnap.exists || chat.status !== 'waiting' || chat.aiEscalated === true ||
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:26: tx.update(chatRef, { aiEscalated: true, aiError: 'rate_limited' });
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:30: return { epoch: chat.aiEpoch || 0 };
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:36: result = await generate(history.docs.reverse().filter(d => d.id !== 'support-ack').map(d => {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:50: if (chat.status !== 'waiting' || (chat.aiEpoch || 0) !== acquired.epoch ||
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:51: chat.aiEscalated === true || !chat.lastMemberMessageAt?.isEqual(message.createdAt)) return;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:52: tx.create(replyRef, { senderId: 'asbesoc-ai', senderRole: 'system',
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:53: text: `${chat.aiIntroduced ? '' : INTRO}${result.text.trim()}`.slice(0, 4000), createdAt: FieldValue.serverTimestamp() });
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:54: tx.update(chatRef, { aiIntroduced: true, aiEscalated: result.escalate === true,
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:59: async function respondToEvent(event) {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:62: const config = (await db.doc('systemConfig/supportAI').get()).data();
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:64: await handleChatMessage(db, event, async messages => {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:66: try { endpoint = new URL(config.workerUrl); } catch { throw new Error('Invalid AI worker configuration'); }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:80: export const memberChatAutoReply = onDocumentCreated({ ...triggerOptions,
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:82: }, respondToEvent);
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:83: export const memberChatReleased = onDocumentUpdated({ ...triggerOptions, document: 'memberChats/{uid}' }, async event => {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:85: if (after?.status !== 'waiting' || (before?.status === 'waiting' && before?.aiEpoch === after.aiEpoch)) return;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\chatAI.js:89: await respondToEvent({ data: latest.docs[0], params: { uid: event.params.uid, messageId: latest.docs[0].id } });
+
+--- functions/src/index.js ---
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\index.js:86: const snapshot = await db.doc('systemConfig/payments').get();
+C:\Users\HomePC\Desktop\ASBESOC-NEW\functions\src\index.js:918: export { memberChatAutoReply, memberChatReleased } from './chatAI.js';
+
+--- src/firebase/chat.ts ---
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:20: export type ChatSenderRole = "member" | "admin" | "system";
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:53: Number(a.senderRole === "system") - Number(b.senderRole === "system")
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:106: export async function sendMemberMessage(
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:138: transaction.set(doc(target, "messages", "support-ack"), {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:139: senderId: "system",
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:140: senderRole: "system",
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:147: export async function sendAdminMessage(
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:172: aiEpoch: increment(1),
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:180: export async function setChatStatus(
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:193: aiEpoch: increment(1),
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:194: aiEscalated: false,
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:247: : d.senderRole === "system"
+C:\Users\HomePC\Desktop\ASBESOC-NEW\src\firebase\chat.ts:248: ? "system"
+
+========== FIRESTORE SECURITY RULES ==========
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:5: return request.auth != null && request.auth.token.email_verified == true;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:8: return verified() && request.auth.uid == 'RJJhn4WSoBhUQ5vMF7G9vxLB98E2';
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:28: allow get: if verified() && (request.auth.uid == uid || admin());
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:30: allow create, update: if verified() && request.auth.uid == uid
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:31: && request.resource.data.keys().hasOnly(['fullName', 'phone', 'updatedAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:37: match /membershipApplications/{applicationId} {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:39: allow get: if admin() || (verified() && request.auth.uid == applicationId);
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:44: && request.auth.token.email_verified == true
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:46: && request.resource.data.userId == request.auth.uid
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:48: && request.resource.data.email == request.auth.token.email
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:84: && request.resource.data.keys().hasOnly([
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:197: && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt', 'reviewedBy', 'paymentStatus', 'certificateStatus'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:199: && (request.resource.data.status == 'approved' ? (request.resource.data.paymentStatus == 'unpaid' && request.resource.data.certificateStatus == 'payment_required') : request.resource.data.status == 'rejected' ? (request.resource.data.paymentStatus == 'not_available' && request.resource.data.certificateStatus == 'not_available') : (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus', 'certificateStatus'])))
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:200: && request.resource.data.reviewedBy == request.auth.uid
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:203: && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)/reviews/$(request.resource.data.status)).data.createdAt == request.time;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:206: allow read: if admin() || (verified() && request.auth.uid == applicationId);
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:208: && request.resource.data.keys().hasOnly(['status', 'previousStatus', 'note', 'reviewedBy', 'createdAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:210: && request.resource.data.previousStatus == get(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.status
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:212: && request.resource.data.reviewedBy == request.auth.uid
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:214: && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.status == decision
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:215: && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.reviewNote == request.resource.data.note
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:216: && getAfter(/databases/$(database)/documents/membershipApplications/$(applicationId)).data.reviewedAt == request.time;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:220: match /supportRequests/{id} {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:235: && request.resource.data.keys().hasOnly([
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:318: && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'updatedBy'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:320: && request.resource.data.updatedAt == request.time && request.resource.data.updatedBy == request.auth.uid;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:341: && request.resource.data.keys().hasOnly([
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:450: && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'updatedBy'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:452: && request.resource.data.updatedAt == request.time && request.resource.data.updatedBy == request.auth.uid;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:456: function isOwner(uid) { return verified() && request.auth.uid == uid; }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:513: && values.hasOnly(allowed)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:519: function ownChat(uid) { return verified() && request.auth.uid == uid; }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:521: let member = get(/databases/$(database)/documents/memberships/$(request.auth.uid)).data;
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:529: match /paymentOrders/{id} { allow read: if admin() || (verified() && resource.data.uid == request.auth.uid); allow write: if false; }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:530: match /certificates/{id} { allow read: if admin() || (verified() && resource.data.uid == request.auth.uid); allow write: if false; }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:533: function approved() { return verified() && get(/databases/$(database)/documents/membershipApplications/$(request.auth.uid)).data.status == 'approved'; }
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:535: match /memberChats/{uid} {
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:539: && request.resource.data.keys().hasOnly(['memberId','memberEmail','memberName','status','createdAt','updatedAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:540: && request.resource.data.memberId == uid && request.resource.data.memberEmail == request.auth.token.email
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:544: && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastAdminMessageAt','adminReadAt','aiEpoch','aiEscalated'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:545: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['aiEpoch']) || request.resource.data.aiEpoch == resource.data.get('aiEpoch',0) + 1)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:546: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['aiEscalated']) || request.resource.data.aiEscalated == false)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:548: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt']) || request.resource.data.updatedAt == request.time)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:549: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastAdminMessageAt']) || request.resource.data.lastAdminMessageAt == request.time)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:550: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['adminReadAt']) || request.resource.data.adminReadAt == request.time))
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:552: (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberReadAt','memberReadMessageId'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:557: && get(/databases/$(database)/documents/memberChats/$(uid)/messages/$(request.resource.data.memberReadMessageId)).data.senderRole == 'admin'
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:558: && get(/databases/$(database)/documents/memberChats/$(uid)/messages/$(request.resource.data.memberReadMessageId)).data.createdAt == request.resource.data.memberReadAt)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:559: || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastMemberMessageAt','acknowledgedAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:562: && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['acknowledgedAt']) ||
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:565: && getAfter(/databases/$(database)/documents/memberChats/$(uid)/messages/support-ack).data.createdAt == request.time))
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:570: allow create: if request.resource.data.keys().hasOnly(['senderId','senderRole','text','createdAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:572: && ((admin() && request.resource.data.senderId == request.auth.uid && request.resource.data.senderRole == 'admin'
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:573: && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.lastAdminMessageAt == request.time)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:574: || (ownChat(uid) && request.resource.data.senderId == uid && request.resource.data.senderRole == 'member'
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:575: && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.lastMemberMessageAt == request.time)
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:576: || (ownChat(uid) && id == 'support-ack' && request.resource.data.senderId == 'system' && request.resource.data.senderRole == 'system'
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:578: && get(/databases/$(database)/documents/memberChats/$(uid)).data.get('acknowledgedAt',null) == null
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:579: && get(/databases/$(database)/documents/memberChats/$(uid)).data.get('lastMemberMessageAt',null) == null
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:580: && get(/databases/$(database)/documents/memberChats/$(uid)).data.status == 'waiting'
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:581: && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.lastMemberMessageAt == request.time
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:582: && getAfter(/databases/$(database)/documents/memberChats/$(uid)).data.acknowledgedAt == request.time));
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:604: allow create, update: if admin() && page(id) && request.resource.data.keys().hasOnly(['content','updatedAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:617: && request.resource.data.keys().hasOnly(['id','kind','url','title','alt','caption','description','category','album','createdAt','updatedAt'])
+C:\Users\HomePC\Desktop\ASBESOC-NEW\firestore.rules:633: && request.resource.data.createdAt == request.time && request.resource.data.uploadedBy == request.auth.uid;
+
+========== WORKER CONFIGURATION SAFETY ==========
+AI_ENABLED false configured: True
+Worker config contains workers_dev: True
+Worker config contains project ID setting: True
+
+========== AVAILABLE LOCAL TOOLS ==========
+
+========== Node version ==========
+
+
+========== npm version ==========
+
+
+========== Git version ==========
+
+
+========== Wrangler version ==========
+
+
+========== SAFE TESTS AND BUILD ==========
+Worker tests skipped: cloudflare-ai/package.json is missing.
+
+========== Functions tests ==========
+
+
+========== Frontend production build ==========
+
+
+========== Frontend lint ==========
+
+
+========== Analytics tests ==========
+
+
+========== AUDIT COMPLETE ==========
+Report saved to: C:\Users\HomePC\Desktop\ASBESOC-NEW\asbesoc-prebuild-audit.txt
+No deploy, commit, or push was requested.
+**********************
+Windows PowerShell transcript end
+End time: 20261023080031
+**********************

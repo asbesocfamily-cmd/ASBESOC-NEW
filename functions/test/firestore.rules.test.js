@@ -62,6 +62,13 @@ run('membership and certificate records isolate owners and deny anonymous reads'
   await assertSucceeds(getDoc(doc(dbFor('member-123'),'certificates/private-certificate')));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'certificates/private-certificate')));
 });
+run('admin access requires the configured verified UID and cannot be claimed with a profile role',async()=>{
+  await assertSucceeds(getDocs(collection(dbFor(admin),'membershipApplications')));
+  const roleClaim=env.authenticatedContext('role-claim-member',{email_verified:true,email:'role-claim-member@example.org',role:'admin'}).firestore();
+  const unverifiedAdmin=env.authenticatedContext(admin,{email_verified:false,email:`${admin}@example.org`}).firestore();
+  await assertFails(getDocs(collection(roleClaim,'membershipApplications')));
+  await assertFails(getDocs(collection(unverifiedAdmin,'membershipApplications')));
+});
 run('training requires current unrevoked membership',async()=>{
   await assertSucceeds(getDoc(doc(dbFor('active-member'),'memberFeed/training')));
   for(const uid of ['member-123','expired-member','revoked-member','future-member']) await assertFails(getDoc(doc(dbFor(uid),'memberFeed/training')));

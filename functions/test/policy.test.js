@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { activeMembership, annualPeriod, assertVerifiedPayment, priceFor, reminderStage, requirePaymentConfiguration, verifySignature } from '../src/policy.js';
-import { paymentOutcome } from '../src/policy.js';
+import { paymentOutcome, paymentStatusAfterCheck } from '../src/policy.js';
 const config = { enabled: true, verificationConfigured: true, annualPolicy: 'anniversary', enabledCurrencies: ['NGN', 'USD'] };
 const order = { reference: 'ASB-test-reference', amountMinor: 500000, currency: 'NGN', email: 'member@example.org', uid: 'member-123' };
 const payment = { reference: order.reference, amount: 500000, currency: 'NGN', customer: {email:order.email}, metadata:{uid:order.uid}, paid_at:'2026-10-10T12:00:00Z', status:'success',domain:'live',id:12345 };
@@ -23,6 +23,13 @@ test('pending and failed provider states never count as paid and still require a
   assert.equal(paymentOutcome({...payment,status:'failed',paid_at:null},order),'failed');
   assert.throws(()=>paymentOutcome({...payment,status:'pending',amount:1},order));
   assert.throws(()=>paymentOutcome({...payment,status:'unknown'},order));
+});
+test('payment status checks do not regress a failed order to pending', () => {
+  assert.equal(paymentStatusAfterCheck('pending', 'failed'), 'failed');
+  assert.equal(paymentStatusAfterCheck('failed', 'pending'), 'failed');
+  assert.equal(paymentStatusAfterCheck('failed', 'paid'), 'paid');
+  assert.equal(paymentStatusAfterCheck('pending', 'pending'), 'pending');
+  assert.equal(paymentStatusAfterCheck('paid', 'pending'), 'paid');
 });
 for (const [field,value] of Object.entries({status:'pending',domain:'test',reference:'other',amount:499999,currency:'USD',id:0,customer:{email:'attacker@example.org'},metadata:{uid:'attacker'},paid_at:'bad'})) {
   test(`reject mismatched ${field}`,()=>assert.throws(()=>assertVerifiedPayment({...payment,[field]:value},order)));

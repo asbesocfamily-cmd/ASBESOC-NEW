@@ -61,10 +61,11 @@ async function respondToEvent(event) {
   const db = getFirestore();
   const config = (await db.doc('systemConfig/supportAI').get()).data();
   if (config?.enabled !== true) return;
-  const endpoint = new URL(config.workerUrl);
-  if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.workers.dev') || endpoint.pathname !== '/internal/reply')
-    throw new Error('Invalid AI worker configuration');
   await handleChatMessage(db, event, async messages => {
+    let endpoint;
+    try { endpoint = new URL(config.workerUrl); } catch { throw new Error('Invalid AI worker configuration'); }
+    if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.workers.dev') || endpoint.pathname !== '/internal/reply')
+      throw new Error('Invalid AI worker configuration');
     const body = JSON.stringify({ messages, context: String(config.verifiedContext || '').slice(0, 16000) });
     const timestamp = String(Date.now());
     const signature = createHmac('sha256', bridgeSecret.value()).update(`${timestamp}.${body}`).digest('hex');

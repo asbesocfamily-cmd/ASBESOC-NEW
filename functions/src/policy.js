@@ -43,6 +43,14 @@ export function paymentOutcome(data, order) {
   throw new Error('Unknown provider payment state.');
 }
 
+export function paymentStatusAfterCheck(currentStatus, outcome) {
+  // A late verification response must not move a known failure back to pending.
+  // Successful settlement is handled separately and may still recover the order.
+  if (currentStatus === 'paid') return 'paid';
+  if (currentStatus === 'failed' && outcome === 'pending') return 'failed';
+  return outcome;
+}
+
 export function annualPeriod(now, existingExpiry) {
   const start = new Date(Math.max(now.getTime(), existingExpiry?.getTime() || 0));
   const end = new Date(start);

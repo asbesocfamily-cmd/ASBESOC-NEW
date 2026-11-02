@@ -1,0 +1,13 @@
+warning: in the working copy of 'media-worker/wrangler.jsonc', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/media-worker/wrangler.jsonc b/media-worker/wrangler.jsonc[m
+[1mindex 6862088..d89fa60 100644[m
+[1m--- a/media-worker/wrangler.jsonc[m
+[1m+++ b/media-worker/wrangler.jsonc[m
+[36m@@ -5,7 +5,6 @@[m
+   "workers_dev": true,[m
+   "vars": {[m
+     "FIREBASE_PROJECT_ID": "asbesoc-nigeria",[m
+[31m-    "FIREBASE_API_KEY": "AIzaSyCqiTZP3knWeCdJrNz-OmlXYqZ3HwltTno",[m
+     "ADMIN_UID": "RJJhn4WSoBhUQ5vMF7G9vxLB98E2",[m
+     "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:5174,https://asbesoc.org,https://www.asbesoc.org,https://asbesoc-nigeria.web.app"[m
+   }[m

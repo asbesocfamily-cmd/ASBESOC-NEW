@@ -16,20 +16,30 @@ export const recordWebsiteVisit = onCall({ enforceAppCheck: true, maxInstances: 
   if (config?.enabled !== true) return { accepted: false };
   let event;
   try { event = normalizeEvent(request.data); } catch { throw new HttpsError('invalid-argument', 'Invalid analytics event.'); }
-  if (event.kind === 'signup' && !request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
+  if (['signup', 'application'].includes(event.kind) && !request.auth)
+    throw new HttpsError('unauthenticated', 'Sign in first.');
+  if (event.kind === 'application') {
+    if (request.auth.token.email_verified !== true)
+      throw new HttpsError('permission-denied', 'A verified account is required.');
+    const application = await db.doc(`membershipApplications/${request.auth.uid}`).get();
+    if (!application.exists || application.data().submissionType !== 'membership')
+      throw new HttpsError('failed-precondition', 'A completed membership application is required.');
+  }
   const now = Date.now();
   const retention = Math.min(RETENTION_DAYS, Math.max(1, Number(config.retentionDays) || RETENTION_DAYS));
   const expiresAt = Timestamp.fromMillis(now + retention * 86400000);
   const visitor = hash(event.visitorId), session = hash(`${event.visitorId}:${event.sessionId}`);
   const visitorRef = db.doc(`analyticsVisitors/${visitor}`);
   const sessionRef = db.doc(`analyticsSessions/${session}`);
-  const eventRef = db.doc(`analyticsEvents/${event.kind === 'signup' ? `signup-${hash(request.auth.uid)}` : event.eventId}`);
+  const dedupeId = ['signup', 'application'].includes(event.kind)
+    ? `${event.kind}-${hash(request.auth.uid)}` : event.eventId;
+  const eventRef = db.doc(`analyticsEvents/${dedupeId}`);
   const accepted = await db.runTransaction(async tx => {
     const [seen, visitorSnap, sessionSnap] = await Promise.all([tx.get(eventRef), tx.get(visitorRef), tx.get(sessionRef)]);
     if (seen.exists) return true;
     const previous = sessionSnap.data();
     // Heartbeats at most once/minute; page changes at most once/second/session.
-    const minimum = event.kind === 'heartbeat' ? 55000 : event.kind === 'signup' ? 0 : 1000;
+    const minimum = event.kind === 'heartbeat' ? 55000 : ['signup', 'application'].includes(event.kind) ? 0 : 1000;
     if (previous?.lastEventAt?.toMillis() > now - minimum) return false;
     const minute = Math.floor(now / 60000);
     const count = previous?.minute === minute ? previous.count || 0 : 0;
