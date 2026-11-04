@@ -807,7 +807,6 @@ function AdminMemberChats({ adminUser }: { adminUser: User }) {
 
   useEffect(() => {
     if (!selectedUid) {
-      setMessages([]);
       return;
     }
     const messagesQuery = query(
@@ -916,8 +915,6 @@ function WebsiteContentManager({ initialPage = "home" }: { initialPage?: SitePag
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    setNotice("");
-    setLoadError("");
     return watchSitePage(page, setContent, () => setLoadError("Could not load saved content. The website fallback content is still safe."));
   }, [page]);
 
