@@ -23,4 +23,4 @@ jobs:
       - run: npm run build
       - run: npm --prefix functions test
       - run: node --test cloudflare-ai/worker.test.mjs media-worker/worker.test.mjs scripts/chat-read.test.mjs
-      - run: npx --yes firebase-tools@15.32.1 emulators:exec --project demo-asbesoc-membership --only firestore "npm --prefix functions run test:emulator"
+      - run: npx --yes firebase-tools@15.32.1 emulators:exec --project demo-asbesoc-membership --only firestore,storage "npm --prefix functions run test:emulator"

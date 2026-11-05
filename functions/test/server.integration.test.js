@@ -24,7 +24,7 @@ before(async () => {
   assert.equal(process.env.GCLOUD_PROJECT, 'demo-asbesoc-membership');
   environment = await initializeTestEnvironment({ projectId: 'demo-asbesoc-membership' });
   await environment.clearFirestore();
-  await db.doc(`membershipApplications/${uid}`).set({ status: 'approved', userId: uid, fullName: 'Local Test Fixture', paymentStatus:'unpaid' });
+  await db.doc(`membershipApplications/${uid}`).set({ status: 'approved', submissionType: 'membership', userId: uid, fullName: 'Local Test Fixture', paymentStatus:'unpaid' });
   await db.doc(`memberships/${uid}`).set({ status:'active',startsAt:time(-2),expiresAt:time(6),certificateId:id });
   await db.doc(`certificates/${id}`).set({id,uid,fullName:'Local Test Fixture',status:'active',issuedAt:time(-2),startsAt:time(-2),expiresAt:time(6),paymentReference:'PRIVATE-REFERENCE'});
 });
@@ -125,7 +125,7 @@ test('analytics admin access, event idempotency, minimization, and retention',as
   await configureWebsiteAnalytics.run({auth:auth(admin),data:{enabled:true,retentionDays:90}});
   const event={eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID(),kind:'page',page:'/gallery?email=private',referrer:'https://source.example/private',device:'Mobile',browser:'Chrome',os:'Android'};
   await recordWebsiteVisit.run({data:event});await recordWebsiteVisit.run({data:event});
-  const applicationEvent={eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID(),kind:'application',page:'/membership',device:'Mobile',browser:'Chrome',os:'Android'};
+  const applicationEvent={eventId:randomUUID(),visitorId:event.visitorId,sessionId:event.sessionId,kind:'application',page:'/membership',device:'Mobile',browser:'Chrome',os:'Android'};
   await recordWebsiteVisit.run({auth:auth(uid),data:applicationEvent});
   await recordWebsiteVisit.run({auth:auth(uid),data:{...applicationEvent,eventId:randomUUID(),visitorId:randomUUID(),sessionId:randomUUID()}});
   await assert.rejects(recordWebsiteVisit.run({data:{...applicationEvent,eventId:randomUUID()}}),{code:'unauthenticated'});

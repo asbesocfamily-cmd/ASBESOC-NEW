@@ -13,7 +13,7 @@ service cloud.firestore {
     function location(data) {
       return text(data.country, 1, 120)
         && text(data.get('state', ''), 0, 120)
-        && text(data.get('lga', ''), 0, 120)Get-ChildItem .\cloudflare-ai\src -File
+        && text(data.get('lga', ''), 0, 120)
         && text(data.get('region', ''), 0, 120)
         && text(data.get('city', ''), 0, 120);
     }
